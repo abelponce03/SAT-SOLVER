@@ -442,3 +442,55 @@ int analyze_conflict(Solver *S, int conflict_clause, int *learnt, int *learnt_si
     free(seen);
     return backtrack_level;
 }
+
+int solve(Solver *S)
+{
+    while (1)
+    {
+        //Propagar
+        int confl = propagate(S);
+
+        if (confl != -1)
+        {
+            //Conflicto encontrado
+            S->conflicts++;
+
+            if (S->decision_level == 0)
+            {
+                return 0; // UNSAT
+            }
+
+            // Analizar conflicto y aprender cláusula
+            int learnt[S->nvars];
+            int learnt_size;
+            int backtrack_level = analyze_conflict(S, confl, learnt, &learnt_size);
+
+            // Retroceder
+            backtrack(S, backtrack_level);
+
+            // Agregar clausula aprendida
+            add_learned_clause(S, learnt, learnt_size);
+
+            //Decaer actividades
+            decay_activities(S);
+
+            // Reiniciar si es necesario
+            if (S->conflicts >= S->restart_limit)
+            {
+                restart(S);
+                S->restart_limit *= 1.5; // Aumentar el límite para la próxima vez
+            }
+        }
+        else
+        {
+            // sin conlficto, decidir siguiente variable
+            if (!decide(S)) return 1; // SAT
+        }
+    }
+}
+
+void restart(Solver *S)
+{
+    backtrack(S, 0);
+    S->conflicts = 0;
+}
