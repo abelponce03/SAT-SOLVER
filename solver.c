@@ -386,3 +386,59 @@ void backtrack(Solver *S, int level)
     S->decision_level = level;
 }
 
+int analyze_conflict(Solver *S, int conflict_clause, int *learnt, int *learnt_size)
+{
+    Clause *c = &S->clauses[conflict_clause];
+    int counter = 0;
+    int p = -1; // literal UIP
+    *learnt_size = 0;
+
+    // Marcar literales del conflicto 
+    int *seen = calloc(S->nvars + 1, sizeof(int));
+
+    do
+    {
+        // Agregar literales de la cláusula conflictiva
+        for (int i = 0; i < c->size; i++)
+        {
+            int lit = c->lits[i];
+            int var = var_of(lit);
+
+            if (!seen[var] && S->level[var] > 0)
+            {
+                seen[var] = 1;
+                bump_activity(S, var);
+
+                // Contar cuántas variables están en el nivel de decisión actual
+                if (S->level[var] == S->decision_level) counter++;
+                
+                // Agregar a la cláusula aprendida
+                else learnt[(*learnt_size)++] = lit;
+            }
+        }
+
+        // Buscar el siguiente literal en el trail
+        while (!seen[var_of(S->trail[--S->trail_size])]);
+        
+        p = S->trail[S->trail_size + 1];  // último literal procesado
+        c = &S->clauses[S->antecedent[var_of(p)]]; // cláusula que implicó p
+        seen[var_of(p)] = 0; // desmarcar
+        counter--;
+
+    } while (counter > 0);
+
+    // p es el UIP, agregarlo negado
+    learnt[(*learnt_size)++] = -p;
+
+    // Encontrar el nivel de retroceso
+    int backtrack_level = 0;
+    for (int i = 0; i < *learnt_size - 1; i++)
+    {
+        int var = var_of(learnt[i]);
+        if (S->level[var] > backtrack_level)
+            backtrack_level = S->level[var];
+    }
+
+    free(seen);
+    return backtrack_level;
+}
