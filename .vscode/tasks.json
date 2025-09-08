@@ -1,0 +1,47 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "compilar solver",
+			"type": "shell",
+			"command": "gcc",
+			"args": [
+				"-Wall",
+				"-O2",
+				"main.c",
+				"solver.c",
+				"-o",
+				"solver"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"label": "Compilar LaTeX",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"if (Get-Command pdflatex -ErrorAction SilentlyContinue) { pdflatex -interaction=nonstopmode documentation.tex } elseif (Get-Command xelatex -ErrorAction SilentlyContinue) { xelatex -interaction=nonstopmode documentation.tex } elseif (Get-Command lualatex -ErrorAction SilentlyContinue) { lualatex -interaction=nonstopmode documentation.tex } else { Write-Host 'No se encontró un compilador de LaTeX. Por favor instala MiKTeX o TeX Live.'; Write-Host 'Puedes descargar MiKTeX desde: https://miktex.org/download'; Write-Host 'O TeX Live desde: https://tug.org/texlive/'; exit 1 }"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Compilar LaTeX (completo)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-Command",
+				"if (Get-Command pdflatex -ErrorAction SilentlyContinue) { pdflatex -interaction=nonstopmode documentation.tex; pdflatex -interaction=nonstopmode documentation.tex } else { Write-Host 'Error: No se encontró pdflatex'; exit 1 }"
+			],
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

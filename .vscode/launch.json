@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Ejecutar solver (sin gdb)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/solver",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "MIMode": "gdb", 
+            "preLaunchTask": "compilar solver"
+        }
+    ]
+}
