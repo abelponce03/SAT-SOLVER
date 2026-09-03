@@ -372,12 +372,14 @@ void Internal::rephase () {
 
   // Fase 0.5: traza de rephase (reset de fase) con el tipo elegido (aditivo).
   if (FILE *tf = bandit_trace_file ()) {
-    fprintf (tf, "P,%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%g,%g,%d,%" PRId64
-                 ",%c\n",
+    fprintf (tf,
+             "P,%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%g,%g,%d,%" PRId64
+             ",%c,%" PRId64 ",%" PRId64 "\n",
              stats.conflicts, stats.restarts, level, stats.reusedlevels,
              (double) averages.current.glue.fast,
              (double) averages.current.glue.slow, stable ? 1 : 0,
-             stats.rephased.total, type);
+             stats.rephased.total, type, stats.learned.clauses,
+             stats.decisions);
     fflush (tf); // rephase es poco frecuente: flush siempre
   }
 

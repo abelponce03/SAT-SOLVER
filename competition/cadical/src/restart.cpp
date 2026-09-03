@@ -171,10 +171,13 @@ void Internal::restart () {
 
   // Fase 0.5: traza de restart con las señales del bandit (aditivo).
   if (FILE *tf = bandit_trace_file ()) {
-    fprintf (tf, "R,%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%g,%g,%d,,\n",
+    fprintf (tf,
+             "R,%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%g,%g,%d,,,%" PRId64
+             ",%" PRId64 "\n",
              stats.conflicts, stats.restarts, level, stats.reusedlevels,
              (double) averages.current.glue.fast,
-             (double) averages.current.glue.slow, stable ? 1 : 0);
+             (double) averages.current.glue.slow, stable ? 1 : 0,
+             stats.learned.clauses, stats.decisions);
     if ((stats.restarts & 8191) == 0) // flush periódico: traza usable si hay timeout
       fflush (tf);
   }

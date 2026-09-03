@@ -29,7 +29,8 @@ inline FILE *bandit_trace_file () {
       if (file)
         fprintf (file,
                  "event,conflicts,restarts,level,cum_reusedlevels,"
-                 "glue_fast,glue_slow,stable,rephase_total,rephase_type\n");
+                 "glue_fast,glue_slow,stable,rephase_total,rephase_type,"
+                 "learned,decisions\n");
     }
   }
   return file;
