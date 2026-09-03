@@ -1,5 +1,7 @@
 #include "internal.hpp"
 
+#include "bandit_trace.hpp" // Fase 0.5: traza de eventos (instrumentación)
+
 namespace CaDiCaL {
 
 // As observed by Chanseok Oh and implemented in MapleSAT solvers too,
@@ -166,6 +168,14 @@ void Internal::restart () {
   if (stable)
     stats.restartstable++;
   LOG ("restart %" PRId64 "", stats.restarts);
+
+  // Fase 0.5: traza de restart con las señales del bandit (aditivo).
+  if (FILE *tf = bandit_trace_file ())
+    fprintf (tf, "R,%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%g,%g,%d,,\n",
+             stats.conflicts, stats.restarts, level, stats.reusedlevels,
+             (double) averages.current.glue.fast,
+             (double) averages.current.glue.slow, stable ? 1 : 0);
+
   backtrack (reuse_trail ());
 
   lim.restart = stats.conflicts + opts.restartint;
