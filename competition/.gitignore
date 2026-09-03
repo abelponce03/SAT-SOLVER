@@ -10,3 +10,7 @@ results/*.log
 # Benchmarks descargados/derivados (regenerables con scripts/setup_benchmarks.sh)
 benchmarks/downloaded/
 benchmarks/dev/
+
+# Cache de Python
+scripts/__pycache__/
+__pycache__/
