@@ -1,0 +1,22 @@
+ventana = 20 restarts   recompensa = éxito si rw_glr > EMA(0.8)
+
+traza                      result    n_win  glr_med  glr_cv  glr_slope succ_rate
+----------------------------------------------------------------------------------
+_php_SOLVED                SOLVED      668    0.794    0.15      0.430    58.3%
+_uuf250_SOLVED             SOLVED      399    0.252    0.61      0.314    31.9%
+argumentation_TIMEOUT      TIMEOUT    2798    0.738    0.09     -0.008    58.5%
+bitvector_TIMEOUT          TIMEOUT    1497    0.110    0.55      0.077    38.0%
+cryptography_SOLVED        SOLVED     1232    0.437    0.17     -0.067    53.2%
+hardware-verification_SOLVED SOLVED     1189    0.027    1.81      0.828    23.9%
+planning_SOLVED            SOLVED      721    0.250    0.57      2.336    45.0%
+scheduling_TIMEOUT         TIMEOUT    3162    0.149    0.60      0.590    39.6%
+software-verification_SOLVED SOLVED      232    0.242    0.53      3.992    51.1%
+station-repacking_TIMEOUT  TIMEOUT    2882    0.689    0.19      0.039    53.0%
+
+============================================================
+VALIDACIÓN
+============================================================
+V1 no-degeneración: rw_glr CV mediana = 0.54 (OK, varía)
+V2 nivel rw_glr      : SOLVED med=+0.251  TIMEOUT med=+0.419  Δ=-0.168
+V2 pendiente rw_glr  : SOLVED med=+0.629  TIMEOUT med=+0.058  Δ=+0.571
+V3 tasa de éxito EMA : SOLVED=48.0%  TIMEOUT=46.3%  (no trivial si ~30-70%)

@@ -1,0 +1,16 @@
+# Build artifacts del fork de CaDiCaL (regenerables con scripts/build.sh)
+cadical/build/
+cadical/makefile
+
+# Resultados de corridas (CSV/logs) — se regeneran; guarda a mano los que quieras versionar
+results/*.csv
+results/*.log
+!results/.gitkeep
+
+# Benchmarks descargados/derivados (regenerables con scripts/setup_benchmarks.sh)
+benchmarks/downloaded/
+benchmarks/dev/
+
+# Cache de Python
+scripts/__pycache__/
+__pycache__/

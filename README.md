@@ -1,98 +1,45 @@
-# 🧠 SAT-SOLVER — CDCL SAT Solver in C
+# SAT-SOLVER — CaDiCaL fork para la SAT Competition 2027
 
-![Language](https://img.shields.io/badge/Language-C-blue)
-![Status](https://img.shields.io/badge/Status-Complete-brightgreen)
+Repositorio de trabajo para preparar una entrada a la **Main Track** de la
+[SAT Competition](https://satcompetition.github.io/). La estrategia: partir de
+un **fork de CaDiCaL** (solver CDCL de referencia, MIT) y aportar una mejora
+algorítmica medible, con vista a la edición **2027**.
 
-A high-performance **Conflict-Driven Clause Learning (CDCL)** SAT solver implemented in C. It reads Boolean satisfiability problems in standard DIMACS CNF format and determines whether a satisfying assignment exists, employing modern techniques found in industrial-grade solvers.
-
----
-
-## 📑 Table of Contents
-
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [How to Build & Run](#how-to-build--run)
-- [How It Works](#how-it-works)
-- [Academic Context](#academic-context)
-
----
-
-## ✨ Features
-
-- **Two-Watched-Literal (2WL) Propagation** — Efficient unit propagation with lazy data structures
-- **Boolean Constraint Propagation (BCP)** — Fast deduction of implied literals
-- **Implication Graph & Conflict Analysis** — Builds an implication graph to analyze conflicts and find the First UIP cut
-- **Clause Learning** — Learns new clauses from conflicts to prune the search space
-- **VSIDS-like Heuristics** — Activity-based variable selection for intelligent branching decisions
-- **DIMACS CNF Input** — Standard input format compatible with SAT competition benchmarks
-- **LaTeX Documentation** — Comprehensive academic report included
-
----
-
-## 🛠 Tech Stack
-
-| Component       | Technology       |
-|-----------------|------------------|
-| Language         | C (C99)         |
-| Build            | GCC             |
-| Input Format     | DIMACS CNF      |
-| Documentation    | LaTeX           |
-
----
-
-## 📁 Project Structure
+Todo el trabajo vive en [`competition/`](competition/):
 
 ```
-SAT-SOLVER/
-├── main.c              # Entry point — reads CNF input and invokes the solver
-├── solver.c            # Core CDCL solver implementation
-├── solver.h            # Solver interface and data structure definitions
-├── documentation.tex   # LaTeX academic report
-├── conflicto.cnf       # Example CNF instance (unsatisfiable)
-└── ejemplo.cnf         # Example CNF instance (satisfiable)
+competition/
+├── cadical/        Fork de CaDiCaL (base sobre la que hacemos los cambios)
+├── benchmarks/     Instancias de prueba (muestra + suites oficiales descargadas)
+├── scripts/        build.sh, gen_benchmarks.py, run_baseline.sh, par2.py
+├── results/        CSV de las corridas de baseline / A-B
+└── README.md       Metodología, requisitos de la Main Track y plan de trabajo
 ```
 
----
+Empieza por [`competition/README.md`](competition/README.md).
 
-## 🚀 How to Build & Run
-
-### Compile
+## Arranque rápido
 
 ```bash
-gcc -o sat_solver main.c solver.c -Wall -O2
+cd competition
+./scripts/build.sh                          # compila el fork
+./scripts/run_baseline.sh -s cadical/build/cadical -b benchmarks/sample \
+    -o results/baseline.csv -t 60 -n vanilla
+python3 scripts/par2.py results/baseline.csv
 ```
 
-### Run
+## Estado
 
-```bash
-./sat_solver ejemplo.cnf
-```
-
-The solver reads a `.cnf` file in DIMACS format and outputs **SAT** (with a satisfying assignment) or **UNSAT**.
-
-### DIMACS CNF Format Example
-
-```
-p cnf 3 2
-1 -2 3 0
--1 2 0
-```
-
----
-
-## ⚙️ How It Works
-
-1. **Parsing** — Reads the CNF formula from a DIMACS file into internal clause and literal data structures.
-2. **Decision** — Selects an unassigned variable using VSIDS-like activity scores.
-3. **BCP (Unit Propagation)** — Propagates forced assignments using the two-watched-literal scheme.
-4. **Conflict Analysis** — When a conflict is detected, traverses the implication graph to derive a learned clause via the First UIP scheme.
-5. **Clause Learning** — Adds the derived clause to the clause database, preventing the same conflict from recurring.
-6. **Non-Chronological Backtracking** — Backtracks to the appropriate decision level determined by the learned clause.
-7. **Repeat** — Continues until a satisfying assignment is found (SAT) or an empty clause is derived at decision level 0 (UNSAT).
-
----
-
-## 🎓 Academic Context
-
-> **Course Project** — Compilation / Logic, University of Havana
+- [x] Fork de CaDiCaL vendorizado y compilando
+- [x] Harness de baseline (runner con timeout + métrica PAR-2 + comparación A/B)
+- [x] Baseline sobre subconjunto de benchmarks oficiales (SATLIB) — ver `competition/docs/baseline.md` (PAR-2 = 31.74 s, 30/34)
+- [x] Investigación de la contribución — ver `competition/docs/research/01-panorama-modificaciones-cadical.md`
+- [x] **Fase 0**: caracterizar dinámica restart/LBD — ver `competition/docs/research/02-fase0-caracterizacion.md` (hallazgo: reinicios degeneran a ~99.7% reuse en pigeonhole)
+- [x] **Fase 0 (datos reales de tesis)** — ver `competition/docs/research/03-fase0-datos-tesis.md` (gap vs Kissat es estructural/miter; el reset-bandit debe apuntar a la inestabilidad por seed: 62 instancias flaky, varianza temporal hasta 102×)
+- [x] **Conseguir las instancias `.cnf.xz`** — descargadas de GBD por hash (62 flaky + 27 control) vía `scripts/fetch_gbd.py`
+- [x] **Fase 0.5**: instrumentación de trazas (`CADICAL_TRACE`) + caracterización real — ver `competition/docs/research/04-fase05-instrumentacion-trazas.md` (hallazgo: el thrashing es family-dependent y NO predice el fallo → la señal del bandit debe ser progreso genérico, no reuso)
+- [x] **Fase 1 · validación de recompensa** — ver `competition/docs/research/05-fase1-validacion-recompensa.md` (recompensa = GLR relativo al EMA; validado: el nivel absoluto no sirve/se invierte, la mejora sí)
+- [x] **Estado del arte** de modificaciones y bandits (SAT Comp 2025/2026) — ver `competition/docs/research/06-estado-del-arte-modificaciones.md` (los bandits sobre Kissat ganan SAT; CaDiCaL gana UNSAT sin bandits; nuestro nicho ya poblado → diferenciar por recompensa + robustez)
+- [ ] **Decidir contribución** a la luz del estado del arte (matriz de decisión, opciones B+D)
+- [ ] **Fase 1 · implementación**: bandit en `rephasing()`/`restart()` con recompensa validada
+- [ ] **Fase 1 · A/B a escala** (flaky→resuelta + ↓varianza por seed), en hardware capaz
