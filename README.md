@@ -34,5 +34,6 @@ python3 scripts/par2.py results/baseline.csv
 - [x] Harness de baseline (runner con timeout + métrica PAR-2 + comparación A/B)
 - [x] Baseline sobre subconjunto de benchmarks oficiales (SATLIB) — ver `competition/docs/baseline.md` (PAR-2 = 31.74 s, 30/34)
 - [x] Investigación de la contribución — ver `competition/docs/research/01-panorama-modificaciones-cadical.md`
-- [ ] **Fase 0**: instrumentar CaDiCaL y caracterizar dinámica de restart/LBD
-- [ ] **Fase 1**: implementar y validar A/B la contribución (reset-bandit)
+- [x] **Fase 0**: caracterizar dinámica restart/LBD — ver `competition/docs/research/02-fase0-caracterizacion.md` (hallazgo: reinicios degeneran a ~99.7% reuse en pigeonhole)
+- [ ] **Fase 0.5**: instrumentación ligera para serie temporal (reuse/LBD por ventana)
+- [ ] **Fase 1**: implementar y validar A/B el reset-bandit
