@@ -55,7 +55,9 @@ def main():
     for r in R:
         cum = num(r["cum_reusedlevels"], int) or 0
         lvl = num(r["level"], int) or 0
-        d = cum - prev
+        # cum_reusedlevels es acumulativo y monótono salvo por reinicios internos
+        # del contador (compact/restore): tratamos el salto negativo como 0.
+        d = max(0, cum - prev)
         prev = cum
         if lvl > 0:
             reuse_frac.append(min(d / lvl, 1.0))

@@ -371,13 +371,15 @@ void Internal::rephase () {
   assert (type);
 
   // Fase 0.5: traza de rephase (reset de fase) con el tipo elegido (aditivo).
-  if (FILE *tf = bandit_trace_file ())
+  if (FILE *tf = bandit_trace_file ()) {
     fprintf (tf, "P,%" PRId64 ",%" PRId64 ",%d,%" PRId64 ",%g,%g,%d,%" PRId64
                  ",%c\n",
              stats.conflicts, stats.restarts, level, stats.reusedlevels,
              (double) averages.current.glue.fast,
              (double) averages.current.glue.slow, stable ? 1 : 0,
              stats.rephased.total, type);
+    fflush (tf); // rephase es poco frecuente: flush siempre
+  }
 
   // clear after walk such that random walk can still access the target
   // by using the saved phases
