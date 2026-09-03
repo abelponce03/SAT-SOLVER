@@ -38,4 +38,6 @@ python3 scripts/par2.py results/baseline.csv
 - [x] **Fase 0 (datos reales de tesis)** — ver `competition/docs/research/03-fase0-datos-tesis.md` (gap vs Kissat es estructural/miter; el reset-bandit debe apuntar a la inestabilidad por seed: 62 instancias flaky, varianza temporal hasta 102×)
 - [x] **Conseguir las instancias `.cnf.xz`** — descargadas de GBD por hash (62 flaky + 27 control) vía `scripts/fetch_gbd.py`
 - [x] **Fase 0.5**: instrumentación de trazas (`CADICAL_TRACE`) + caracterización real — ver `competition/docs/research/04-fase05-instrumentacion-trazas.md` (hallazgo: el thrashing es family-dependent y NO predice el fallo → la señal del bandit debe ser progreso genérico, no reuso)
-- [ ] **Fase 1**: implementar y validar A/B el reset-bandit (métrica: flaky→resuelta + ↓varianza por seed), en hardware capaz
+- [x] **Fase 1 · validación de recompensa** — ver `competition/docs/research/05-fase1-validacion-recompensa.md` (recompensa = GLR relativo al EMA; validado: el nivel absoluto no sirve/se invierte, la mejora sí)
+- [ ] **Fase 1 · implementación**: reset-bandit (UCB/Thompson) en `rephasing()` con recompensa GLR-EMA
+- [ ] **Fase 1 · A/B a escala** (flaky→resuelta + ↓varianza por seed), en hardware capaz
