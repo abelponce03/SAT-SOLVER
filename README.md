@@ -35,5 +35,7 @@ python3 scripts/par2.py results/baseline.csv
 - [x] Baseline sobre subconjunto de benchmarks oficiales (SATLIB) — ver `competition/docs/baseline.md` (PAR-2 = 31.74 s, 30/34)
 - [x] Investigación de la contribución — ver `competition/docs/research/01-panorama-modificaciones-cadical.md`
 - [x] **Fase 0**: caracterizar dinámica restart/LBD — ver `competition/docs/research/02-fase0-caracterizacion.md` (hallazgo: reinicios degeneran a ~99.7% reuse en pigeonhole)
-- [ ] **Fase 0.5**: instrumentación ligera para serie temporal (reuse/LBD por ventana)
-- [ ] **Fase 1**: implementar y validar A/B el reset-bandit
+- [x] **Fase 0 (datos reales de tesis)** — ver `competition/docs/research/03-fase0-datos-tesis.md` (gap vs Kissat es estructural/miter; el reset-bandit debe apuntar a la inestabilidad por seed: 62 instancias flaky, varianza temporal hasta 102×)
+- [ ] **Fase 0.5**: instrumentación ligera para serie temporal (reuse/LBD por ventana), priorizando familias reales inestables
+- [ ] **Conseguir las instancias `.cnf.xz`** del banco de tesis para experimentar localmente
+- [ ] **Fase 1**: implementar y validar A/B el reset-bandit (métrica: flaky→resuelta + ↓varianza por seed)
