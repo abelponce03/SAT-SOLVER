@@ -7,5 +7,6 @@ results/*.csv
 results/*.log
 !results/.gitkeep
 
-# Benchmarks grandes descargados (no versionar suites completas)
+# Benchmarks descargados/derivados (regenerables con scripts/setup_benchmarks.sh)
 benchmarks/downloaded/
+benchmarks/dev/

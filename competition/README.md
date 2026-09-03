@@ -1,14 +1,10 @@
-# Workspace de competición — SAT Competition 2026 (Main Track)
+# Workspace de competición — SAT Competition 2027 (Main Track)
 
 Base de trabajo para preparar una entrada a la **Main Track** de la
-[SAT Competition 2026](https://satcompetition.github.io/2026/). La estrategia
-acordada: **partir de un fork de CaDiCaL** (solver CDCL de referencia, MIT) y
-aportar **una** mejora medible, en lugar de escribir un solver desde cero o
-construir un portfolio tipo SATzilla (ver justificación abajo).
-
-> El solver del curso universitario (`../solver.c`, `../main.c`, etc.) queda
-> archivado como material histórico / punto de partida de la tesis. El código de
-> competición vive aquí, aislado.
+[SAT Competition](https://satcompetition.github.io/) (edición objetivo: **2027**).
+La estrategia acordada: **partir de un fork de CaDiCaL** (solver CDCL de
+referencia, MIT) y aportar **una** mejora medible, en lugar de escribir un solver
+desde cero o construir un portfolio tipo SATzilla (ver justificación abajo).
 
 ## Estructura
 
@@ -99,8 +95,9 @@ empezar a editar, para poder comparar siempre contra la misma referencia.
 - **Descripción del sistema** (1–2 pág., IEEE): base = CaDiCaL v3.0.1, % líneas
   modificadas, técnica añadida, y **disclosure de uso de IA** (obligatorio 2026).
 - **20 benchmarks nuevos** propios (ver `benchmarks/README.md`).
-- Fechas 2026: registro **19 abr**, solver secuencial **3–10 may**,
-  documentación **17 may**.
+- Calendario objetivo **2027** (aún sin publicar). Referencia 2026: registro
+  ~**abr**, solver secuencial ~**may**, documentación ~**may**. Con vista a 2027
+  tenemos margen amplio: el año extra es para la contribución de investigación.
 
 ## Atribución
 
