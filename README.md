@@ -32,6 +32,7 @@ python3 scripts/par2.py results/baseline.csv
 
 - [x] Fork de CaDiCaL vendorizado y compilando
 - [x] Harness de baseline (runner con timeout + métrica PAR-2 + comparación A/B)
-- [ ] Baseline sobre subconjunto de benchmarks oficiales
-- [ ] Investigación de la contribución (ver `competition/docs/research/`)
-- [ ] Implementación y validación A/B de la mejora
+- [x] Baseline sobre subconjunto de benchmarks oficiales (SATLIB) — ver `competition/docs/baseline.md` (PAR-2 = 31.74 s, 30/34)
+- [x] Investigación de la contribución — ver `competition/docs/research/01-panorama-modificaciones-cadical.md`
+- [ ] **Fase 0**: instrumentar CaDiCaL y caracterizar dinámica de restart/LBD
+- [ ] **Fase 1**: implementar y validar A/B la contribución (reset-bandit)
