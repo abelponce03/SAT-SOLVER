@@ -39,5 +39,7 @@ python3 scripts/par2.py results/baseline.csv
 - [x] **Conseguir las instancias `.cnf.xz`** — descargadas de GBD por hash (62 flaky + 27 control) vía `scripts/fetch_gbd.py`
 - [x] **Fase 0.5**: instrumentación de trazas (`CADICAL_TRACE`) + caracterización real — ver `competition/docs/research/04-fase05-instrumentacion-trazas.md` (hallazgo: el thrashing es family-dependent y NO predice el fallo → la señal del bandit debe ser progreso genérico, no reuso)
 - [x] **Fase 1 · validación de recompensa** — ver `competition/docs/research/05-fase1-validacion-recompensa.md` (recompensa = GLR relativo al EMA; validado: el nivel absoluto no sirve/se invierte, la mejora sí)
-- [ ] **Fase 1 · implementación**: reset-bandit (UCB/Thompson) en `rephasing()` con recompensa GLR-EMA
+- [x] **Estado del arte** de modificaciones y bandits (SAT Comp 2025/2026) — ver `competition/docs/research/06-estado-del-arte-modificaciones.md` (los bandits sobre Kissat ganan SAT; CaDiCaL gana UNSAT sin bandits; nuestro nicho ya poblado → diferenciar por recompensa + robustez)
+- [ ] **Decidir contribución** a la luz del estado del arte (matriz de decisión, opciones B+D)
+- [ ] **Fase 1 · implementación**: bandit en `rephasing()`/`restart()` con recompensa validada
 - [ ] **Fase 1 · A/B a escala** (flaky→resuelta + ↓varianza por seed), en hardware capaz
