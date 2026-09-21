@@ -26,6 +26,7 @@ A/B (mismo binario, la feature detrás de una opción — ADR-0002 §3):
 """
 import argparse
 import csv
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import math
@@ -37,6 +38,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import tempfile
 import sys
 import time
 from datetime import datetime, timezone
@@ -46,6 +48,7 @@ CSV_FIELDS = [
     "wall_s", "cpu_s", "max_rss_mb",
     "conflicts", "decisions", "propagations", "restarts", "rephased",
     "budget_kind", "budget_value", "opts", "instance_sha1", "started_at",
+    "parallel_jobs",
 ]
 
 # Extensiones que Kissat descomprime por sí solo (vía xz/gzip/bzip2/7z externos).
@@ -98,7 +101,11 @@ def parse_stats(text):
 
 
 def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_grace):
-    """Ejecuta una corrida y devuelve (status, exit_code, wall_s, cpu_s, rss_mb, stats)."""
+    """Ejecuta una corrida y devuelve (status, exit_code, wall_s, cpu_s, rss_mb, stats).
+
+    El tiempo de CPU se toma de `wait4` sobre ESTE hijo concreto (no de
+    RUSAGE_CHILDREN acumulado), para que la medición siga siendo correcta
+    cuando hay varias corridas en vuelo (`--jobs > 1`)."""
     cmd = [solver, "-n", "-s", f"--seed={seed}"]
     if budget_kind == "time":
         # Kissat solo acepta segundos enteros en --time.
@@ -110,21 +117,30 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
     cmd.extend(extra_opts)
     cmd.append(instance)
 
-    before = resource.getrusage(resource.RUSAGE_CHILDREN)
     t0 = time.monotonic()
     killed = False
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=hard_limit)
-        out, code = proc.stdout, proc.returncode
-    except subprocess.TimeoutExpired as e:
-        killed = True
-        out, code = (e.stdout or ""), -signal.SIGKILL
-        if isinstance(out, bytes):
-            out = out.decode("utf-8", "replace")
-    wall = time.monotonic() - t0
-    after = resource.getrusage(resource.RUSAGE_CHILDREN)
-    cpu = (after.ru_utime + after.ru_stime) - (before.ru_utime + before.ru_stime)
-    rss_mb = after.ru_maxrss / 1024.0  # Linux: ru_maxrss viene en KiB
+    with tempfile.TemporaryFile() as fout:
+        proc = subprocess.Popen(cmd, stdout=fout, stderr=subprocess.DEVNULL)
+        deadline = (t0 + hard_limit) if hard_limit else None
+        delay = 0.002
+        while True:
+            pid, wstatus, ru = os.wait4(proc.pid, os.WNOHANG)
+            if pid:
+                break
+            if deadline and time.monotonic() > deadline:
+                killed = True
+                proc.kill()
+                pid, wstatus, ru = os.wait4(proc.pid, 0)
+                break
+            time.sleep(delay)
+            delay = min(delay * 1.5, 0.05)
+        proc.returncode = os.waitstatus_to_exitcode(wstatus)  # el hijo ya está recogido
+        wall = time.monotonic() - t0
+        fout.seek(0)
+        out = fout.read().decode("utf-8", "replace")
+    cpu = ru.ru_utime + ru.ru_stime
+    rss_mb = ru.ru_maxrss / 1024.0   # en Linux ru_maxrss viene en KiB
+    code = -signal.SIGKILL if killed else proc.returncode
 
     if code == 10:
         status = "SAT"
@@ -153,6 +169,11 @@ def main():
     ap.add_argument("--opts", default="", help="opciones extra para el solver, entre comillas")
     ap.add_argument("--limit", type=int, default=None, help="usar solo las primeras N instancias (pruebas rápidas)")
     ap.add_argument("--append", action="store_true", help="añadir al CSV en vez de sobrescribir")
+    ap.add_argument("--jobs", type=int, default=1,
+                    help="corridas simultáneas. >1 multiplica el rendimiento del CRIBADO, "
+                         "pero contamina la medición de tiempo (contención de memoria y caché): "
+                         "los CSV así generados llevan parallel_jobs>1 y NO valen como "
+                         "medición final de PAR-2 (ADR-0003 §4)")
     args = ap.parse_args()
 
     if (args.timeout is None) == (args.conflicts is None):
@@ -164,6 +185,9 @@ def main():
     extra_opts = args.opts.split() if args.opts else []
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
 
+    if args.jobs > 1:
+        print(f"[AVISO] --jobs={args.jobs}: los tiempos quedan contaminados por contención.\n"
+              f"        Vale para cribar (qué resuelve cada configuración), no para el PAR-2 final.")
     if not os.access(args.solver, os.X_OK):
         sys.exit(f"ERROR: solver no ejecutable: {args.solver}")
     instances = find_instances(args.bench)
@@ -190,7 +214,8 @@ def main():
         "git_dirty": bool(git("status", "--porcelain")),
         "bench": os.path.abspath(args.bench), "n_instances": len(instances),
         "seeds": seeds, "budget_kind": budget_kind, "budget_value": budget_value,
-        "opts": args.opts, "host": socket.gethostname(), "nproc": os.cpu_count(),
+        "opts": args.opts, "parallel_jobs": args.jobs,
+        "host": socket.gethostname(), "nproc": os.cpu_count(),
         "platform": platform.platform(), "loadavg": os.getloadavg(),
         "cc": (shutil.which("gcc") or "?"),
         "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -212,28 +237,41 @@ def main():
         print(f"{'instancia':<42} {'seed':>4} {'estado':<8} {'cpu(s)':>9} {'confl':>10}")
         print("-" * 78)
 
-        for inst in instances:
-            sha = sha1_of(inst)
-            fam = family_of(inst, args.bench)
-            for seed in seeds:
-                started = datetime.now(timezone.utc).isoformat(timespec="seconds")
-                status, code, wall, cpu, rss, stats = run_one(
-                    args.solver, inst, seed, budget_kind, budget_value,
-                    extra_opts, hard_grace=30.0)
-                done += 1
-                row = {
-                    "label": label, "instance": os.path.basename(inst), "family": fam,
-                    "seed": seed, "status": status, "exit_code": code,
-                    "wall_s": f"{wall:.3f}", "cpu_s": f"{cpu:.3f}",
-                    "max_rss_mb": f"{rss:.1f}",
-                    "budget_kind": budget_kind, "budget_value": budget_value,
-                    "opts": args.opts, "instance_sha1": sha, "started_at": started,
-                    **stats,
-                }
-                w.writerow(row)
-                f.flush()
-                print(f"{os.path.basename(inst):<42} {seed:>4} {status:<8} "
-                      f"{cpu:>9.3f} {str(stats['conflicts']):>10}")
+        sha_cache = {inst: sha1_of(inst) for inst in instances}
+        tasks = [(inst, seed) for inst in instances for seed in seeds]
+
+        def work(task):
+            inst, seed = task
+            started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            status, code, wall, cpu, rss, stats = run_one(
+                args.solver, inst, seed, budget_kind, budget_value,
+                extra_opts, hard_grace=30.0)
+            return {
+                "label": label, "instance": os.path.basename(inst),
+                "family": family_of(inst, args.bench),
+                "seed": seed, "status": status, "exit_code": code,
+                "wall_s": f"{wall:.3f}", "cpu_s": f"{cpu:.3f}",
+                "max_rss_mb": f"{rss:.1f}",
+                "budget_kind": budget_kind, "budget_value": budget_value,
+                "opts": args.opts, "instance_sha1": sha_cache[inst],
+                "started_at": started, "parallel_jobs": args.jobs, **stats,
+            }
+
+        if args.jobs > 1:
+            pool = ThreadPoolExecutor(max_workers=args.jobs)
+            results = pool.map(work, tasks)       # mantiene el orden de entrada
+        else:
+            results = map(work, tasks)
+
+        for row in results:
+            done += 1
+            w.writerow(row)
+            f.flush()
+            print(f"{row['instance']:<42} {row['seed']:>4} {row['status']:<8} "
+                  f"{float(row['cpu_s']):>9.3f} {str(row['conflicts']):>10}"
+                  f"   [{done}/{total}]")
+        if args.jobs > 1:
+            pool.shutdown()
 
     print(f"\nListo: {args.out}  (metadatos en {os.path.basename(meta_path)})")
     print(f"Analiza con:  python3 scripts/par2.py {args.out}")
