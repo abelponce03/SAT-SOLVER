@@ -1,0 +1,26 @@
+{
+  "label": "nolucky",
+  "solver": "/home/user/SAT-SOLVER/solver/kissat/build/kissat",
+  "solver_version": "4.0.4",
+  "git_commit": "3d1802ba6768ad3091bc9c6b600589faa2d0d474",
+  "git_dirty": false,
+  "bench": "/home/user/SAT-SOLVER/bench/calib2",
+  "n_instances": 20,
+  "seeds": [
+    1
+  ],
+  "budget_kind": "time",
+  "budget_value": 180.0,
+  "opts": "--luckyearly=0 --luckylate=0",
+  "parallel_jobs": 4,
+  "host": "vm",
+  "nproc": 4,
+  "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "loadavg": [
+    0.75048828125,
+    1.17431640625,
+    1.77587890625
+  ],
+  "cc": "/usr/bin/gcc",
+  "started_at": "2026-09-21T22:15:19+00:00"
+}

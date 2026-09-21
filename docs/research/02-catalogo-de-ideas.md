@@ -22,6 +22,7 @@
 | **B1** | Ruptura de simetrías **condicional** | −964 s incond. / **−1287 s** cond. | alto | alto (satsuma) | Solo condicional |
 | **B2** | Hiper-resolución binaria condicional (hypre) | −615 s | medio-alto | alto | Alternativa a B1 |
 | **B3** | Detector barato de estructura para condicionar B1/B2 | habilita +322 s sobre B1 | medio | **bajo** | **Diferencial** |
+| **B3'** | **Condicionar las fases *lucky* por tamaño de fórmula** | **−13.4 s medidos en local (EXP-002)** | **muy bajo** | **ninguno** | **Hacer ya** |
 | **C1** | Robustez: ↓varianza por seed, flaky→estable | no medible en PAR-2 solo | bajo | **muy bajo** | Métrica, no técnica |
 | **D1** | Bandit sobre rephase/restart | **+25 a +280 s (PEOR)** | medio | muy alto | **Descartada como idea principal** |
 | **D2** | Gestión de cláusulas más allá de LBD | desconocido | medio | medio | Aparcada |
@@ -206,6 +207,27 @@ valor de responderla, y son casi un tercio de lo que ganó el campeón entero.
 
 Es una contribución pequeña, autocontenida, medible, y **útil para cualquier
 solver**, no solo para el nuestro — buen material de artículo corto.
+
+## B3' · Condicionar las fases *lucky* — **ya medido, y positivo**
+
+Mientras se ejecutaba EXP-001 apareció una instancia de la línea B3 que se podía
+cerrar de inmediato, y salió bien. Resumen (detalle en
+[`EXP-002`](../experiments/EXP-002-fases-lucky.md)):
+
+- `kissat_lucky` **no consulta el límite de tiempo**: con `--time=30` una
+  instancia de 3.56 M variables terminó a los **348.5 s** (11.6× el límite).
+  Desactivando las fases lucky, a los 20.0 s exactos.
+- Desactivarlas **siempre** es mala idea: en fórmulas de decenas de millones de
+  variables son **la razón de que se resuelvan** (dos instancias pasan de SAT a
+  TIMEOUT al quitarlas). En el banco fácil empeoran el PAR-2 un 92.8 %
+  (Wilcoxon p = 0.0019).
+- Desactivarlas **en las pequeñas** sí: `variables ≤ 50 000` da **−13.4 s de
+  PAR-2 (−10.5 %)** sobre 60 instancias reales, capturando el **64 %** del hueco
+  del oráculo, con todo el barrido de umbrales en ese sentido en negativo.
+
+Coste de implementación: un `if` en `src/search.c` usando un dato que el solver
+ya tiene. Es la mejora con mejor relación evidencia/esfuerzo de todo el
+catálogo, y de paso un fallo que reportar a upstream.
 
 ---
 
