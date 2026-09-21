@@ -1,0 +1,32 @@
+# --- Artefactos de compilación del fork (regenerables con scripts/build.sh) ---
+solver/kissat/build/
+solver/kissat/makefile
+solver/*/build/
+*.o
+*.a
+
+# --- Resultados de corridas ---
+# Los CSV/logs se regeneran; solo se versionan los de referencia, que llevan
+# sufijo .reference.csv (ver ADR-0003 §4).
+results/*.csv
+results/*.log
+results/*.json
+!results/*.reference.csv
+!results/.gitkeep
+
+# --- Benchmarks descargados (pesados; regenerables con scripts/) ---
+bench/downloaded/
+bench/dev/
+bench/test/
+*.cnf.xz
+!bench/smoke/*.cnf
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- Entorno ---
+.DS_Store
+*.swp
