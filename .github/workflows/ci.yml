@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "claude/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Build + corrección (gcc release)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Herramientas de verificación (drat-trim)
+        run: ./scripts/get_tools.sh
+      - name: Suite de humo (build, tests de Kissat, modelos, pruebas DRAT, determinismo)
+        run: ./scripts/smoke_test.sh
+
+  sanitize:
+    name: Build con sanitizers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar con ASan/UBSan
+        run: ./scripts/build.sh --clean --sanitize
+      - name: Resolver el banco de humo bajo sanitizers
+        run: |
+          # Cualquier lectura fuera de rango o desbordamiento en nuestros
+          # parches aborta aquí, antes de contaminar una medición de PAR-2.
+          set -e
+          for f in bench/smoke/*.cnf; do
+            ./solver/kissat/build/kissat -q -n "$f" || code=$?
+            case "${code:-0}" in 0|10|20) ;; *) echo "FALLO en $f (código ${code})"; exit 1 ;; esac
+            unset code
+          done
+
+  clang:
+    name: Build con clang (portabilidad)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar con clang
+        run: CC=clang ./scripts/build.sh --clean
+      - name: Comprobación rápida
+        run: ./scripts/smoke_test.sh --quick
+
+  scripts:
+    name: Scripts de análisis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Sintaxis
+        run: python3 -m compileall -q scripts/
+      - name: El analizador funciona de punta a punta
+        run: |
+          ./scripts/build.sh
+          python3 scripts/run_experiment.py --solver solver/kissat/build/kissat \
+            --bench bench/smoke --out /tmp/a.csv --timeout 10 --seeds 1,2 --label A
+          python3 scripts/par2.py /tmp/a.csv --by-family
+          python3 scripts/par2.py /tmp/a.csv /tmp/a.csv --md

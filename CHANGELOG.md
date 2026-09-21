@@ -1,0 +1,24 @@
+# Changelog
+
+Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
+Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
+
+## [No publicado]
+
+### Añadido
+- Base del solver: fork de **Kissat 4.0.4** (`rel-4.0.4`, commit upstream
+  `8af8e56`) vendorizado en `solver/kissat/` con `git subtree` (ADR-0002).
+- Harness de experimentación: `run_experiment.py` (presupuesto por tiempo o por
+  conflictos, seeds, métricas internas, metadatos de reproducibilidad),
+  `par2.py` (PAR-2 + Wilcoxon + bootstrap + McNemar + métricas de robustez),
+  `verify_model.py`, `check_proof.sh` (drat-trim), `smoke_test.sh`.
+- Registros de decisión ADR-0001 (migración a Kissat), ADR-0002 (estructura y
+  vendorizado), ADR-0003 (protocolo experimental).
+- CI en GitHub Actions: release + sanitizers + clang + scripts.
+
+### Cambiado
+- **Estructura del repositorio** aplanada: desaparece `competition/`.
+
+### Eliminado
+- **Fork de CaDiCaL 3.0.1** y su instrumentación `CADICAL_TRACE` (ADR-0001).
+  La investigación de esa etapa se conserva en `docs/archive/cadical-era/`.
