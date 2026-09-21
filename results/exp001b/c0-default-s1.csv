@@ -1,0 +1,2 @@
+label,instance,family,seed,status,exit_code,wall_s,cpu_s,max_rss_mb,conflicts,decisions,propagations,restarts,rephased,budget_kind,budget_value,opts,instance_sha1,started_at,parallel_jobs
+c0-default-s1,ae48df6541d190c096b1e5ba22d1b534.cnf.xz,2d-strip-packing,1,UNSAT,20,53.797,52.485,22.9,766707,2332074,251896605,28609,21,time,180.0,,d3ca1ce06022721a7b7ee679c84a457b5f8097a6,2026-09-21T19:51:08+00:00,4

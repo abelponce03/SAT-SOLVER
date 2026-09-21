@@ -1,0 +1,26 @@
+{
+  "label": "c3-unsat",
+  "solver": "/home/user/SAT-SOLVER/solver/kissat/build/kissat",
+  "solver_version": "4.0.4",
+  "git_commit": "21bb76aa51c352852f7f77e2b692db1ce7cba065",
+  "git_dirty": true,
+  "bench": "/home/user/SAT-SOLVER/bench/downloaded/gbd",
+  "n_instances": 89,
+  "seeds": [
+    1
+  ],
+  "budget_kind": "time",
+  "budget_value": 20.0,
+  "opts": "--unsat",
+  "parallel_jobs": 4,
+  "host": "vm",
+  "nproc": 4,
+  "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "loadavg": [
+    4.24853515625,
+    4.21484375,
+    3.4658203125
+  ],
+  "cc": "/usr/bin/gcc",
+  "started_at": "2026-09-21T19:45:49+00:00"
+}

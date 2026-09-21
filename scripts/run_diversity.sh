@@ -5,7 +5,9 @@
 # entre ellas (ver docs/experiments/EXP-001-diversidad-intrinseca-kissat.md).
 #
 # Uso:
-#   ./scripts/run_diversity.sh [-b banco] [-t timeout_s] [-j jobs] [-o dir_salida]
+#   ./scripts/run_diversity.sh [-b banco] [-t timeout_s] [-j jobs] [-o dir_salida] [-c ids]
+#
+# -c limita a un subconjunto de configuraciones: -c c0-default-s1,c2-sat
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BENCH="$ROOT/bench/downloaded/gbd"
@@ -13,10 +15,12 @@ TIMEOUT=30
 JOBS=3
 OUT="$ROOT/results/exp001"
 
-while getopts "b:t:j:o:h" o; do
+ONLY=""
+while getopts "b:t:j:o:c:h" o; do
     case "$o" in
         b) BENCH="$OPTARG" ;; t) TIMEOUT="$OPTARG" ;;
         j) JOBS="$OPTARG" ;;  o) OUT="$OPTARG" ;;
+        c) ONLY="$OPTARG" ;;   # lista de ids separada por comas; vacío = todas
         h|*) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 1 ;;
     esac
 done
@@ -40,6 +44,7 @@ CONFIGS=(
 
 for entry in "${CONFIGS[@]}"; do
     IFS='|' read -r id seed opts <<< "$entry"
+    if [ -n "$ONLY" ] && ! printf '%s' ",$ONLY," | grep -q ",$id,"; then continue; fi
     csv="$OUT/$id.csv"
     if [ -s "$csv" ]; then echo "== $id ya está ($csv), se salta"; continue; fi
     echo "== $id   seed=$seed   opciones: ${opts:-(ninguna)}"

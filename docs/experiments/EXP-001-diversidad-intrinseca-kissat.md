@@ -115,10 +115,71 @@ python3 scripts/analyze_diversity.py results/exp001/*.csv
 
 ## 6. Resultados
 
-<!-- se rellena al terminar; si contradice la hipótesis, se escribe igual -->
+### Fase 1 (banco GBD heredado, T = 20 s) — **detenida por falta de resolución**
 
-_Pendiente de ejecución._
+Se ejecutaron 3 de las 7 configuraciones sobre las 89 instancias. Se paró ahí,
+porque el problema ya era evidente y seguir costaba media hora de CPU sin
+aportar información:
+
+| configuración | resueltas de 89 | PAR-2 |
+|---|---:|---:|
+| c1-default-s2 | 18 | 33.414 |
+| c0-default-s1 | 15 | 34.321 |
+| c2-sat | 13 | 34.828 |
+| **VBS de las 3** | **20** | **32.446** |
+
+| hipótesis | resultado |
+|---|---|
+| H1 (VBS mejora ≥15 %) | ❌ **2.9 %** (+2 instancias) |
+| H2 (opciones > seed) | ❌ la diversidad por seed aportó más que `--sat` en este régimen |
+| H3 (cartera k=2,3 mejora) | ❌ **empeora**: k=2 → +1.45 s, k=3 → +2.16 s |
+
+### Por qué salió así: el banco no era medible con ese presupuesto
+
+De las 89 instancias, con 2 configuraciones: **14 triviales** (las resuelven
+todas), **5 de frontera** (unas sí, otras no) y **70 fuera de alcance** (ninguna).
+El 79 % del banco no aporta ninguna información sobre complementariedad, y el
+PAR-2 está tan dominado por la penalización `2T` que las diferencias reales se
+comprimen a la nada.
+
+### El hallazgo metodológico (vale para todos los experimentos siguientes)
+
+H3 no falló porque la idea sea mala: falló porque **el reparto de tiempo solo
+puede funcionar si el presupuesto es grande respecto a lo que tarda el solver en
+resolver**. Comparación de los dos regímenes:
+
+| | T | mediana del tiempo de resolución | **ratio T / mediana** | ¿funciona la cartera? |
+|---|---:|---:|---:|---|
+| Main Track 2026 (datos oficiales) | 5000 s | 297.9 s | **≈ 17** | sí: −798 s con k=3 |
+| EXP-001 fase 1 (este banco) | 20 s | ≥ 20 s (más de la mitad no resuelve) | **< 1** | no: empeora |
+
+Con ratio 17, partir en tres deja a cada miembro 1667 s, por encima del p75 de
+los tiempos de resolución (1409 s): se pierde poco. Con ratio < 1, partir en
+tres deja 6.7 s a cada miembro y **no resuelve nada**.
+
+> **Regla de diseño que se adopta a partir de aquí**: un experimento local sobre
+> reparto de presupuesto debe reproducir el **ratio T/mediana** de la
+> competición (≈15–20), no su T absoluto. Medir con un banco cuya mediana de
+> resolución esté cerca del timeout garantiza un resultado negativo
+> artificial — y es, muy probablemente, la razón por la que muchos trabajos
+> descartan las carteras midiendo con timeouts cortos.
+
+### Fase 1b (banco de calibración `bench/calib`, T = 180 s) — en ejecución
+
+Rediseño según la regla anterior: **40 instancias reales del Main Track 2026**
+que el Kissat de referencia resolvió en ≤ 120 s en la competición, muestreadas
+de forma estratificada en 8 bandas de tiempo (mediana oficial 19.6 s, máximo
+112.9 s, 28 familias, 27 SAT / 13 UNSAT), **disjuntas de `bench/test`**. Con
+T = 180 s el ratio esperado queda en el orden correcto aunque nuestra máquina
+sea más lenta que la de la competición.
+
+Configuraciones: c0, c1 (contraste de seed), c2-sat, c4-focused, c6-plain.
+
+_Resultados pendientes._
 
 ## 7. Conclusión
 
-_Pendiente._
+_Pendiente de la fase 1b._ La fase 1 no refuta la línea A: refuta el **diseño
+experimental** de la fase 1, y de paso produce la regla de diseño de arriba, que
+era exactamente el tipo de error que el ADR-0003 pretendía cazar antes de sacar
+conclusiones.

@@ -41,3 +41,7 @@ tools/
 
 # Datos oficiales de competición y metadatos de GBD (regenerables)
 data/
+
+# Banco de calibración (regenerable por hash)
+bench/calib/
+bench/boundary/
