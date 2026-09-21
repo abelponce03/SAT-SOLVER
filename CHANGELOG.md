@@ -6,6 +6,12 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 ## [No publicado]
 
 ### Añadido
+- **Análisis empírico** de los resultados oficiales SC2026 (`docs/research/01`) y
+  **catálogo de ideas** priorizado por techo medido (`docs/research/02`).
+- `analyze_competition.py` (ranking / familias / VBS / cartera / techo),
+  `build_dev_set.py` (bancos dev y test estratificados y disjuntos),
+  `analyze_diversity.py` y `run_diversity.sh` (EXP-001).
+- Listas de instancias `bench/dev.list.csv` y `bench/test.list.csv`.
 - Base del solver: fork de **Kissat 4.0.4** (`rel-4.0.4`, commit upstream
   `8af8e56`) vendorizado en `solver/kissat/` con `git subtree` (ADR-0002).
 - Harness de experimentación: `run_experiment.py` (presupuesto por tiempo o por

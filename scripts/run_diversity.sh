@@ -25,25 +25,27 @@ BIN="$ROOT/solver/kissat/build/kissat"
 [ -x "$BIN" ] || { echo "Falta el binario; ejecuta ./scripts/build.sh"; exit 1; }
 mkdir -p "$OUT"
 
-# id:opciones — el id acaba en el nombre del CSV y en la columna 'label'
+# id|seed|opciones — el id acaba en el nombre del CSV y en la columna 'label'.
+# c0 y c1 solo se diferencian en la seed: son el contraste que separa la
+# diversidad por aleatorización de la diversidad por configuración (H2).
 CONFIGS=(
-    "c0-default-s1:--seed=1"
-    "c1-default-s2:--seed=2"
-    "c2-sat:--seed=1 --sat"
-    "c3-unsat:--seed=1 --unsat"
-    "c4-focused:--seed=1 --stable=0"
-    "c5-stable:--seed=1 --stable=2"
-    "c6-plain:--seed=1 --plain"
+    "c0-default-s1|1|"
+    "c1-default-s2|2|"
+    "c2-sat|1|--sat"
+    "c3-unsat|1|--unsat"
+    "c4-focused|1|--stable=0"
+    "c5-stable|1|--stable=2"
+    "c6-plain|1|--plain"
 )
 
 for entry in "${CONFIGS[@]}"; do
-    id="${entry%%:*}"; opts="${entry#*:}"
+    IFS='|' read -r id seed opts <<< "$entry"
     csv="$OUT/$id.csv"
     if [ -s "$csv" ]; then echo "== $id ya está ($csv), se salta"; continue; fi
-    echo "== $id   opciones: $opts"
+    echo "== $id   seed=$seed   opciones: ${opts:-(ninguna)}"
     python3 "$ROOT/scripts/run_experiment.py" \
         --solver "$BIN" --bench "$BENCH" --out "$csv" \
-        --timeout "$TIMEOUT" --seeds 1 --jobs "$JOBS" \
+        --timeout "$TIMEOUT" --seeds "$seed" --jobs "$JOBS" \
         --label "$id" --opts="$opts" | tail -2
 done
 

@@ -27,6 +27,7 @@ la convierte en PAR-2 bajo las reglas de la Main Track secuencial.
 | E2 | Doce variantes peores que la base superan juntas al campeón | ídem | ✅ medido |
 | E3 | Una cartera secuencial k=3 con T/3 da −798 s sin oráculo | `analyze_competition.py portfolio` | ✅ medido (simulación) |
 | E4 | El efecto no depende de la ruptura de simetrías | VBS excluyendo satsuma: 311 / 2583.0 s | ✅ medido |
+| E4b | El hueco solver-vs-VBS se repite entre ediciones | VBS oficial SC2024: 347 / 1681.3 vs ganador 306 / 2788.1 (+41, −1107 s) | ✅ medido |
 | E5 | La complementariedad existe también entre configuraciones del **mismo** binario | EXP-001 | ⏳ en ejecución |
 | E6 | La cartera baja además la varianza por seed (robustez) | EXP-002 | ⏳ pendiente |
 | E7 | El reparto adaptativo bate al reparto ciego | EXP-003 | ⏳ pendiente |
@@ -37,9 +38,12 @@ la convierte en PAR-2 bajo las reglas de la Main Track secuencial.
 - **Sobreajuste de la selección**: la cartera voraz de E3 elige miembros mirando
   el mismo banco en que se evalúa. Hay que rehacerlo con validación cruzada por
   familias o con selección sobre 2025 y evaluación sobre 2026.
-- **Composición del banco**: 2026 fue rico en combinatoria simétrica. Repetir el
-  análisis sobre SC2024 y SC2025 para comprobar que el fenómeno del VBS no es de
-  un año concreto. **Es la comprobación más importante que falta.**
+- **Composición del banco**: 2026 fue rico en combinatoria simétrica.
+  **Parcialmente resuelto**: el VBS oficial de SC2024 (347 / 1681.3) también
+  queda muy por encima del ganador (306 / 2788.1), así que el fenómeno no es de
+  un año. Falta **2025**, cuya tabla instancia-por-instancia los organizadores
+  no publicaron; habría que reconstruirla ejecutando las fuentes publicadas, lo
+  que es caro pero factible, o pedírsela a los organizadores.
 - **Diversidad ≠ configuración**: si EXP-001 dice que las configuraciones del
   Kissat de fábrica apenas se complementan, la tesis del artículo se limita a
   "hacen falta parches distintos", que es una afirmación mucho más débil.

@@ -62,14 +62,34 @@ está en [ADR-0003](docs/adr/0003-protocolo-experimental-y-metricas.md).
 
 ## Estado
 
-- [x] Migración de CaDiCaL a Kissat 4.0.4 (ADR-0001)
-- [x] Estructura, vendorizado y convenciones (ADR-0002)
-- [x] Protocolo experimental y métricas (ADR-0003)
+- [x] Migración de CaDiCaL a Kissat 4.0.4 ([ADR-0001](docs/adr/0001-migracion-cadical-a-kissat.md))
+- [x] Estructura, vendorizado y convenciones ([ADR-0002](docs/adr/0002-estructura-repo-y-vendorizado.md))
+- [x] Protocolo experimental y métricas ([ADR-0003](docs/adr/0003-protocolo-experimental-y-metricas.md))
 - [x] Harness: runner, PAR-2 + estadística, verificación de modelos y pruebas DRAT
 - [x] CI: release, sanitizers, clang, scripts
-- [ ] Baseline de Kissat sobre banco real (en curso)
-- [ ] Catálogo de ideas de mejora priorizado
-- [ ] Primer experimento A/B
+- [x] **Análisis empírico de la SAT Competition 2026** — [`docs/research/01`](docs/research/01-analisis-empirico-sc2026.md)
+- [x] **Catálogo de ideas priorizado por techo medido** — [`docs/research/02`](docs/research/02-catalogo-de-ideas.md)
+- [x] Bancos `dev`/`test` estratificados y disjuntos del banco oficial 2026
+- [ ] **EXP-001**: diversidad intrínseca de Kissat (en ejecución)
+- [ ] EXP-002: A/B de la cartera secuencial
+- [ ] EXP-003: reparto adaptativo del presupuesto
+
+### El hallazgo que orienta el proyecto
+
+Sobre las 400 instancias del Main Track 2026 (datos oficiales):
+
+| | resueltas | PAR-2 |
+|---|---:|---:|
+| Kissat de fábrica (nuestra base) | 238 | 4611.5 s |
+| Ganador de 2026 (`satsuma-iter-kissat`) | 276 | 3647.0 s |
+| **VBS de 21 variantes de Kissat** (oráculo) | **321** | **2354.8 s** |
+| Cartera secuencial k=3, sin oráculo | 274 | 3813.1 s |
+
+Las **12 variantes que quedaron individualmente peores** que el Kissat de fábrica
+resuelven **juntas 277 instancias — más que el campeón del año**. La
+complementariedad entre configuraciones es un recurso mayor que la mejor técnica
+nueva publicada, y nadie lo está cobrando. Detalle en
+[`docs/research/01`](docs/research/01-analisis-empirico-sc2026.md).
 
 ## Licencia
 

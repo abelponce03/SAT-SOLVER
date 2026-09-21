@@ -195,6 +195,45 @@ directamente medible en local y es el experimento EXP-001.
 
 ---
 
+## 3.bis ¿Es un fenómeno de 2026 o se repite todos los años?
+
+La amenaza más seria a la conclusión anterior es que el banco de 2026 fuera
+atípico. Comprobación con la edición **2024**, cuya tabla oficial de resultados
+publica **la fila del VBS** calculada por los propios organizadores:
+
+| SAT Competition 2024 (Main Track) | resueltas | PAR-2 |
+|---|---:|---:|
+| **VBS oficial de la edición** | **347** | **1681.3** |
+| 1º kissat-sc2024 (ganador) | 306 | 2788.13 |
+| 2º Kissat_MAB-DC | 290 | 3435.23 |
+| 3º hKis-bva | 285 | 3461.15 |
+| CaDiCaL | 284 | 3494.11 |
+
+| SAT Competition 2026 (Main Track) | resueltas | PAR-2 |
+|---|---:|---:|
+| VBS calculado sobre las 33 entradas | 354 | 1495.5 |
+| 1º satsuma-iter-kissat | 276 | 3647.0 |
+| Kissat de fábrica (nuestra base) | 238 | 4611.5 |
+
+| edición | ganador | VBS | Δ resueltas | Δ PAR-2 |
+|---|---:|---:|---:|---:|
+| 2024 | 306 / 2788.1 | 347 / 1681.3 | **+41** | **−1106.8** |
+| 2026 | 276 / 3647.0 | 354 / 1495.5 | **+78** | **−2151.5** |
+
+**El hueco entre el mejor solver y el VBS no es una peculiaridad de 2026: está
+en las dos ediciones que hemos podido verificar, y en 2026 es el doble de
+grande.** Es decir, cada año el campo deja sobre la mesa entre 41 y 78
+instancias que *alguna* de las entradas presentadas sí resuelve.
+
+> Nota de procedencia, para que nadie lo cite mal después: `results.html` del
+> sitio de la competición devuelve **la misma página (la de 2024)** bajo las
+> URL de 2024, 2025 y 2026. La tabla de arriba es la de **2024**, verificada
+> contra fuentes independientes (kissat-sc2024: PAR-2 2788.13, 306 resueltas,
+> oro en las tres categorías). Los datos de 2026 no vienen de ahí, sino del
+> `scores.csv` instancia-por-instancia de 2026. **Falta 2025**: los
+> organizadores no publicaron `scores.csv` de esa edición, solo las fuentes de
+> los solvers y las transparencias.
+
 ## 4. Qué se lleva el proyecto de aquí
 
 | Hallazgo | Consecuencia para el plan |
