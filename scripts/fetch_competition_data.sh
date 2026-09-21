@@ -32,6 +32,7 @@ get "https://satcompetition.github.io/$YEAR/downloads/track_main_$YEAR.uri"   "$
 
 echo "== Metadatos de GBD (familia de cada instancia)"
 get "https://benchmark-database.de/getdatabase" "$OUT/gbd.db"
+get "https://benchmark-database.de/getdatabase/base" "$OUT/gbd_base.db"
 
 echo ""
 echo "Listo en $OUT. Analiza con:"
