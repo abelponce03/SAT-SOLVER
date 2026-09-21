@@ -30,3 +30,6 @@ venv/
 # --- Entorno ---
 .DS_Store
 *.swp
+
+# Herramientas de terceros descargadas por scripts/get_tools.sh
+tools/

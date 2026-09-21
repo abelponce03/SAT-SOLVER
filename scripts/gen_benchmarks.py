@@ -10,11 +10,11 @@ Produce dos familias clasicas y controlables:
                          estandar de la comunidad para comparar solvers.
 
 NO pretende sustituir a los benchmarks oficiales de la SAT Competition (ver
-benchmarks/README.md). Sirve para validar el harness y tener una curva de
+bench/README.md). Sirve para validar el harness y tener una curva de
 referencia reproducible sin descargar gigabytes.
 
 Uso:
-    python3 gen_benchmarks.py --out ../benchmarks/sample
+    python3 gen_benchmarks.py --out bench/smoke
 """
 import argparse
 import os
@@ -67,7 +67,7 @@ def random_3sat(n_vars, ratio, seed):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="../benchmarks/sample",
+    ap.add_argument("--out", default="bench/smoke",
                     help="directorio de salida")
     ap.add_argument("--php", default="4,5,6,7",
                     help="valores de n para pigeonhole, separados por coma")

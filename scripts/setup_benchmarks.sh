@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 #
-# setup_benchmarks.sh - descarga suites reales de SATLIB, las normaliza y
-# arma un "dev set" curado con espectro de dificultad para el baseline.
+# setup_benchmarks.sh - descarga suites de SATLIB, las normaliza y arma el
+# banco de nivel 1 (`bench/satlib`): rapido, offline tras la primera descarga.
+#
+# AVISO DE ALCANCE: SATLIB es academico/antiguo y NO representa el regimen de la
+# Main Track (instancias de aplicacion de cientos de miles de variables). Sirve
+# para validar el harness y detectar regresiones groseras, NO para concluir nada
+# sobre PAR-2 de competicion. Para eso esta `scripts/build_dev_set.py`, que arma
+# bench/dev y bench/test con instancias reales de la Global Benchmark Database.
 #
 # Idempotente: si ya descargó algo, no vuelve a bajarlo. Reconstruye dev/.
 #
-# Resultado: competition/benchmarks/dev/  con instancias reales (SATLIB) +
+# Resultado: bench/satlib/  con instancias reales (SATLIB) +
 # crafted duras generadas (pigeonhole), etiquetadas por estado esperado en el
 # nombre cuando se conoce. Ninguna de estas requiere red para re-ejecutarse una
 # vez descargadas.
@@ -22,9 +28,9 @@
 #
 set -eu
 HERE="$(cd "$(dirname "$0")" && pwd)"
-BENCH="$HERE/../benchmarks"
+BENCH="$HERE/../bench"
 DL="$BENCH/downloaded"
-DEV="$BENCH/dev"
+DEV="$BENCH/satlib"
 NORM="python3 $HERE/normalize_cnf.py"
 GEN="python3 $HERE/gen_benchmarks.py"
 BASE_URL="https://www.cs.ubc.ca/~hoos/SATLIB/Benchmarks/SAT"
@@ -77,5 +83,6 @@ n=$(find "$DEV" -name '*.cnf' | wc -l)
 echo ""
 echo "== Listo: $n instancias en $DEV"
 echo "   Corre el baseline con:"
-echo "   ./scripts/run_baseline.sh -s cadical/build/cadical -b benchmarks/dev \\"
-echo "        -o results/baseline_dev.csv -t 120 -n cadical-3.0.1-vanilla"
+echo "   python3 scripts/run_experiment.py --solver solver/kissat/build/kissat \\"
+echo "        --bench bench/satlib --out results/satlib.csv --timeout 120 --seeds 1,2,3 \\"
+echo "        --label kissat-4.0.4-vanilla"

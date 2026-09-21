@@ -1,0 +1,7 @@
+# Dependencias de los scripts de análisis (los de ejecución del solver no
+# necesitan nada fuera de la biblioteca estándar, a propósito: el runner debe
+# poder correr en una máquina pelada).
+numpy>=1.26
+scipy>=1.11        # contrastes estadísticos de referencia (ADR-0003 §3)
+pandas>=2.1        # análisis exploratorio de los CSV de resultados
+matplotlib>=3.8    # cactus plots / scatter para los informes

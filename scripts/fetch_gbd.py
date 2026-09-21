@@ -4,14 +4,14 @@ fetch_gbd.py - descarga instancias de la Global Benchmark Database (GBD) por
 hash, usando el endpoint público https://benchmark-database.de/file/<hash>.
 
 Los nombres de instancia del estudio de tesis SON hashes GBD, así que se pueden
-recuperar directamente sin la máquina local del autor. CaDiCaL lee .cnf.xz de
-forma nativa, así que se guardan comprimidas.
+recuperar directamente sin la máquina local del autor. Kissat lee .cnf.xz de
+forma nativa (descomprime por tuberia), así que se guardan comprimidas.
 
 Entrada: un CSV con al menos la columna `hash` (opcionalmente `group` para
 organizar en subcarpetas). Salida: <outdir>/<group>/<hash>.cnf.xz
 
 Uso:
-  python3 fetch_gbd.py --list results/phase1_download_list.csv --out benchmarks/downloaded/gbd
+  python3 fetch_gbd.py --list <lista.csv> --out bench/downloaded/gbd
   python3 fetch_gbd.py --hash <hash> --out /tmp/x        # una sola
 """
 import argparse
