@@ -175,11 +175,102 @@ sea más lenta que la de la competición.
 
 Configuraciones: c0, c1 (contraste de seed), c2-sat, c4-focused, c6-plain.
 
+#### Resultados (40 instancias × 5 configuraciones, T = 180 s, `--jobs 4`)
+
+| configuración | resueltas de 40 | PAR-2 |
+|---|---:|---:|
+| c0-default-s1 | 39 | 36.578 |
+| c2-sat | 39 | 45.404 |
+| c1-default-s2 | 37 | 48.303 |
+| c4-focused | 34 | 82.965 |
+| c6-plain | 26 | 151.772 |
+| **VBS de las 5** | **39** | **26.808** |
+
+| hipótesis | resultado |
+|---|---|
+| **H1** (VBS mejora ≥ 15 %) | ✅ **26.7 %** (36.578 → 26.808 s) |
+| **H2** (las opciones aportan más que la seed) | ✅ solo-seed 33.070 s · seed + opciones **27.711 s** (−5.36 s) |
+| **H3** (cartera con reparto T/k mejora) | ❌ k=2 → +0.44 s, k=3 → +16.6 s, k=4 → +33.4 s |
+
+#### Lo que hay detrás del 26.7 %
+
+**Cada configuración es la mejor en su parcela**, y el reparto es casi uniforme:
+
+| configuración | es la más rápida en | su PAR-2 global |
+|---|---:|---:|
+| c0-default-s1 | 9 de 40 | 36.6 s (la mejor) |
+| c1-default-s2 | 9 de 40 | 48.3 s |
+| c2-sat | 8 de 40 | 45.4 s |
+| c4-focused | 7 de 40 | 83.0 s |
+| **c6-plain** | **7 de 40** | **151.8 s (la peor, con diferencia)** |
+
+`c6-plain` (CDCL sin técnicas avanzadas) resuelve 26 de 40 y tiene un PAR-2
+cuatro veces peor que el de la configuración por defecto — **y aun así es la más
+rápida en 7 instancias**. Es, en pequeño y dentro de un mismo binario, el mismo
+fenómeno que en los datos oficiales de 2026, donde las 12 variantes peores que
+la base resuelven juntas más que el campeón.
+
+La ganancia está **muy concentrada**: 6 instancias acumulan el **78 %** de los
+390.8 s que el oráculo le saca a la configuración por defecto. Ejemplos:
+
+| instancia | por defecto | mejor configuración | ganancia |
+|---|---:|---|---:|
+| `75429ff7…` | 154.5 s | c4-focused → 44.4 s | −110.0 s |
+| `15e666a4…` | 58.5 s | c1-default-s2 → 5.5 s | −53.0 s |
+| `f497bda3…` | 94.9 s | c4-focused → 42.7 s | −52.2 s |
+
+Que la distribución sea de cola pesada es justo lo que hace explotable la
+diversidad: no se trata de ganar un 5 % en todas partes, sino de evitar unos
+pocos desastres de 100 s.
+
+#### Por qué H3 falla aquí y qué significa
+
+En este banco la mejor configuración ya resuelve **39 de 40**. Repartir el
+presupuesto no puede ganar instancias —no quedan— y sí puede perderlas, así que
+el reparto ciego solo resta. **H3 no está refutada en general: está sin probar**,
+porque este banco no tiene el margen donde el reparto cobra. Eso es lo que mide
+la fase 1c (`bench/calib2`, banda de frontera).
+
+### Fase 1c (banda de frontera `bench/calib2`, T = 180 s) — en ejecución
+
+20 instancias con tiempo oficial entre 132 s y 691 s (mediana 388 s), 20
+familias, 13 UNSAT / 7 SAT, disjuntas de `test` y de `calib`. Con T = 180 s
+local caen alrededor y por encima del timeout: ahí unas configuraciones
+resolverán y otras no, que es el régimen donde el reparto puede pagar.
+
 _Resultados pendientes._
 
 ## 7. Conclusión
 
-_Pendiente de la fase 1b._ La fase 1 no refuta la línea A: refuta el **diseño
-experimental** de la fase 1, y de paso produce la regla de diseño de arriba, que
-era exactamente el tipo de error que el ADR-0003 pretendía cazar antes de sacar
-conclusiones.
+**La premisa de la línea A se sostiene: Kissat tiene diversidad intrínseca
+suficiente.** Sin tocar una línea de código, cinco configuraciones del binario
+de fábrica dan un VBS un **26.7 % mejor** que la mejor de ellas, y la
+complementariedad viene sobre todo de las **opciones** (−5.36 s adicionales
+sobre la diversidad por seed sola), no de la aleatorización.
+
+Aplicando la tabla de decisión que se escribió **antes** de ejecutar:
+
+> | resultado | decisión |
+> |---|---|
+> | H1 ✅ y H3 ❌ | la diversidad existe pero el reparto ciego no la cobra → **ir directo a A4** (reparto adaptativo) |
+
+Es el caso que se ha dado. La consecuencia operativa:
+
+1. **A1 (cartera con reparto ciego T/k) no se implementa como contribución**,
+   solo como línea base honesta contra la que medir A4. En el régimen de la
+   competición la simulación con datos oficiales le da −798 s, así que sigue
+   siendo un punto de comparación imprescindible, pero el reparto uniforme
+   desaprovecha la información que la propia búsqueda va generando.
+2. **A4 (reparto adaptativo del presupuesto entre configuraciones) pasa a ser
+   la contribución candidata**, con dos apoyos empíricos ya medidos: el techo
+   (VBS −2256.7 s sobre datos oficiales; −26.7 % en local) y el hecho de que
+   `src/mode.c` de Kissat ya hace exactamente esto con dos brazos y una
+   planificación ciega, así que la generalización es natural y no un injerto.
+3. La **fase 1c** decide un detalle importante pero no el rumbo: si el reparto
+   ciego gana en la banda de frontera, A1 sirve además como fallback barato.
+
+**Limitaciones que hay que arrastrar a cualquier cita de estos números**: 40
+instancias, una seed por configuración, `--jobs 4` (los tiempos llevan
+contención, la clasificación resuelve/no-resuelve no), T = 180 s frente a los
+5000 s de la competición, y un banco elegido por ser resoluble, que es
+precisamente el sesgo que impide extrapolar la magnitud del 26.7 %.
