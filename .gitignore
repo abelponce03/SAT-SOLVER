@@ -33,3 +33,6 @@ venv/
 
 # Herramientas de terceros descargadas por scripts/get_tools.sh
 tools/
+
+# Datos oficiales de competición y metadatos de GBD (regenerables)
+data/

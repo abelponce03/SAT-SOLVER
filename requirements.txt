@@ -5,3 +5,4 @@ numpy>=1.26
 scipy>=1.11        # contrastes estadísticos de referencia (ADR-0003 §3)
 pandas>=2.1        # análisis exploratorio de los CSV de resultados
 matplotlib>=3.8    # cactus plots / scatter para los informes
+tabulate>=0.9    # tablas Markdown para los informes
