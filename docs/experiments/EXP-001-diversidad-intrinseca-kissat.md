@@ -331,23 +331,49 @@ A1 honestamente exige o bien corridas locales de varias horas por instancia, o
 bien apoyarse en la simulación sobre datos oficiales. Se deja anotado como deuda
 experimental, no como conclusión negativa.
 
-### Hallazgo lateral de ingeniería: latencia de terminación
+### Hallazgo lateral: las fases *lucky* ignoran el límite de tiempo
 
-Una instancia (`b54b26f3…`, familia `baseball-lineup`) **ignoró el límite
-interno `--time=180` durante ~70 s** y tuvo que matarla la guarda externa del
-runner (255 s de reloj, 250 s de CPU). Kissat solo comprueba el límite en
-ciertos puntos del bucle, y una fase larga de inprocesado puede retrasarlo.
+Una instancia (`b54b26f3…`, familia `baseball-lineup`, **3.56 M variables y
+7.12 M cláusulas**) tuvo que ser matada por la guarda externa del runner. La
+investigación dio un resultado limpio y reproducible:
 
-Importa directamente para A1/A4: **un mecanismo de reparto de presupuesto
-necesita que el solver ceda el control en la frontera del turno**. Si la
-latencia es de decenas de segundos, cada cambio de turno la paga. Dos salidas:
-(a) añadir comprobaciones de terminación en las fases largas de inprocesado, o
-(b) repartir por **conflictos o *ticks*** en lugar de por tiempo — que es
-exactamente lo que `mode.c` ya hace internamente, y una razón más para que A4 se
-construya ahí y no envolviendo el binario.
+| ejecución | termina a |
+|---|---:|
+| `--time=30` | **348.5 s** (exceso 11.6×) |
+| `--time=60` | **356.5 s** |
+| `--time=20 -v` | **355.4 s** |
+| **`--time=20 --luckyearly=0 --luckylate=0`** | **20.0 s** ✅ |
 
-**Limitaciones que hay que arrastrar a cualquier cita de estos números**: 40
-instancias, una seed por configuración, `--jobs 4` (los tiempos llevan
-contención, la clasificación resuelve/no-resuelve no), T = 180 s frente a los
-5000 s de la competición, y un banco elegido por ser resoluble, que es
-precisamente el sesgo que impide extrapolar la magnitud del 26.7 %.
+El log con `-v` sitúa el problema con precisión. **No es el parseo** (1.59 s) ni
+el inprocesado (`[preprocess] finished after 1 rounds` en 0.4 s): es
+**`kissat_lucky`**, la rutina de *lucky phases*, que Kissat ejecuta **dos
+veces** —antes y después del preprocesado (`luckyearly` y `luckylate`, según
+`NEWS.md` de la versión 4.0.0)— y que **no consulta el límite de tiempo ni el de
+conflictos**:
+
+```
+c finished parsing after 1.59 seconds
+c lucky 322 units
+c l 174.74 ...        <- primera llamada a lucky: ~173 s
+c [preprocess] finished after 1 rounds
+c ) 175.18 ...
+c [search-1] initializing focus search after 0 conflicts
+c { 351.34 ...        <- segunda llamada a lucky: ~176 s
+```
+
+La búsqueda arranca en el segundo **351**, y ahí el límite de 20 s se detecta de
+inmediato y el solver para. Es decir: en esta instancia Kissat gasta **350 s
+antes de buscar nada**, y ningún presupuesto lo detiene.
+
+**Tres consecuencias:**
+
+1. **Es un fallo reportable a upstream**: `kissat_lucky` debería consultar el
+   terminador. Ficheros: `src/lucky.c`, invocado desde `src/search.c:184,188`.
+2. **Tiene efecto directo en el PAR-2 de competición**: 350 s de 5000 son el
+   **7 % del presupuesto** gastados sin buscar, en toda instancia grande. Se
+   mide en EXP-002.
+3. **Es un argumento fuerte a favor de A2/A4 frente a A1**: una cartera que
+   reinicia el proceso en cada turno **vuelve a pagar las fases lucky cada
+   vez** (~350 s por turno en instancias así), mientras que conmutar la
+   configuración dentro de una misma instancia del solver las paga una sola
+   vez. El coste de reiniciar no es solo perder las cláusulas aprendidas.
