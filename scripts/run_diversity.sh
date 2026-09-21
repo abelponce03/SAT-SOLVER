@@ -44,7 +44,7 @@ for entry in "${CONFIGS[@]}"; do
     python3 "$ROOT/scripts/run_experiment.py" \
         --solver "$BIN" --bench "$BENCH" --out "$csv" \
         --timeout "$TIMEOUT" --seeds 1 --jobs "$JOBS" \
-        --label "$id" --opts "$opts" | tail -2
+        --label "$id" --opts="$opts" | tail -2
 done
 
 echo ""

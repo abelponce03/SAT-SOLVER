@@ -1,0 +1,59 @@
+# P1 — *Configuration complementarity is an untapped resource in modern CDCL solvers*
+
+> Cuaderno de trabajo del artículo. No es el artículo: es la evidencia que se va
+> acumulando y el inventario de lo que falta.
+
+## Argumento en un párrafo
+
+La comunidad de SAT optimiza la media de una configuración: cada año se publican
+decenas de variantes de Kissat que ajustan una heurística y se comparan por
+instancias resueltas. Los resultados oficiales de la SAT Competition 2026
+muestran que ese esfuerzo deja sobre la mesa un recurso mayor que el que
+persigue: las 21 variantes de Kissat presentadas tienen un Virtual Best Solver
+de 321/400 instancias (PAR-2 = 2354.8 s) frente a las 238 (4611.5 s) del Kissat
+de referencia y las 276 (3647.0 s) del ganador. Más revelador todavía: las 12
+variantes que quedaron **individualmente peores** que la referencia resuelven
+juntas 277 instancias, **más que el campeón del año**. Este trabajo caracteriza
+esa complementariedad, muestra que una parte sustancial es reproducible
+**dentro de un único solver sin modificar su código** (solo variando su
+configuración), y propone un mecanismo de reparto adaptativo de presupuesto que
+la convierte en PAR-2 bajo las reglas de la Main Track secuencial.
+
+## Evidencia acumulada
+
+| # | Afirmación | Evidencia | Estado |
+|---|---|---|---|
+| E1 | El VBS de las variantes de Kissat de 2026 dobla la ganancia del campeón | `scripts/analyze_competition.py vbs`, datos oficiales | ✅ medido |
+| E2 | Doce variantes peores que la base superan juntas al campeón | ídem | ✅ medido |
+| E3 | Una cartera secuencial k=3 con T/3 da −798 s sin oráculo | `analyze_competition.py portfolio` | ✅ medido (simulación) |
+| E4 | El efecto no depende de la ruptura de simetrías | VBS excluyendo satsuma: 311 / 2583.0 s | ✅ medido |
+| E5 | La complementariedad existe también entre configuraciones del **mismo** binario | EXP-001 | ⏳ en ejecución |
+| E6 | La cartera baja además la varianza por seed (robustez) | EXP-002 | ⏳ pendiente |
+| E7 | El reparto adaptativo bate al reparto ciego | EXP-003 | ⏳ pendiente |
+| E8 | La mejora se sostiene en un banco de validación disjunto | `bench/test` | ⏳ pendiente |
+
+## Huecos y amenazas a la validez
+
+- **Sobreajuste de la selección**: la cartera voraz de E3 elige miembros mirando
+  el mismo banco en que se evalúa. Hay que rehacerlo con validación cruzada por
+  familias o con selección sobre 2025 y evaluación sobre 2026.
+- **Composición del banco**: 2026 fue rico en combinatoria simétrica. Repetir el
+  análisis sobre SC2024 y SC2025 para comprobar que el fenómeno del VBS no es de
+  un año concreto. **Es la comprobación más importante que falta.**
+- **Diversidad ≠ configuración**: si EXP-001 dice que las configuraciones del
+  Kissat de fábrica apenas se complementan, la tesis del artículo se limita a
+  "hacen falta parches distintos", que es una afirmación mucho más débil.
+- **Coste del certificado**: una cartera debe producir prueba DRAT válida del
+  intento ganador. Hay que medir el sobrecoste y demostrar que las pruebas
+  verifican (ya cubierto por `scripts/check_proof.sh` en CI).
+
+## Trabajo relacionado que hay que leer y citar
+
+- SATzilla (Xu et al.) y la literatura de *algorithm selection* — el antecedente
+  obvio; la diferencia a defender es "dentro del binario, sin modelo entrenado".
+- ppfolio / ManySAT — carteras clásicas, en su mayoría paralelas.
+- *Restart strategies and their complementarity* (línea Luby/Glucose).
+- Kissat_MAB y la familia de bandits 2021–2026 — el contraste: optimizar la
+  media frente a explotar la varianza.
+- Hyperparameter tuning automático de solvers (SMAC, ParamILS) — producen
+  configuraciones; nadie las usa **juntas**.
