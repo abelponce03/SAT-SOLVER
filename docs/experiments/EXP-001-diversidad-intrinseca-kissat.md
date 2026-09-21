@@ -238,7 +238,57 @@ familias, 13 UNSAT / 7 SAT, disjuntas de `test` y de `calib`. Con T = 180 s
 local caen alrededor y por encima del timeout: ahí unas configuraciones
 resolverán y otras no, que es el régimen donde el reparto puede pagar.
 
-_Resultados pendientes._
+#### Resultados (20 instancias × 5 configuraciones, T = 180 s)
+
+| configuración | resueltas de 20 | PAR-2 |
+|---|---:|---:|
+| **c4-focused** (`--stable=0`) | **8** | **251.783** |
+| c2-sat | 6 | 283.408 |
+| c1-default-s2 | 6 | 286.449 |
+| **c0-default-s1** (por defecto) | **4** | 311.590 |
+| c6-plain | 2 | 338.123 |
+| **VBS de las 5** | **9** | **228.748** |
+
+| hipótesis | resultado |
+|---|---|
+| H1 (VBS mejora ≥ 15 %) | ❌ **9.1 %** (+1 instancia) — el VBS está limitado por lo poco que resuelve nadie |
+| **H2** (opciones > seed) | ✅✅ **+43.1 s**: solo-seed 271.869 s · seed + opciones **228.748 s** |
+| H3 (cartera con reparto T/k) | ❌ k=2 → +18.5 s, k=3 → +46.1 s |
+
+#### Los dos hallazgos de esta fase
+
+**1. La configuración por defecto NO es la mejor en el régimen difícil.**
+`--stable=0` (solo modo *focused*, sin la alternancia `stable`/`focused` que
+Kissat hace por defecto) resuelve **8 de 20 frente a 4**, y baja el PAR-2 un
+**19.2 %**. Contraste estadístico emparejado (`par2.py`):
+
+```
+ΔPAR-2 medio (focused − defecto):  −59.806 s   (−19.2 %)
+IC95% bootstrap:                   [−120.810, +0.856]   INCLUYE el 0
+Wilcoxon emparejado:               W=7.0   p=0.0756   (n efectivo = 9)
+McNemar (resueltas):               defecto-sí/focused-no=1, al revés=5, p=0.2188
+```
+
+**Sugerente, no concluyente**: con n=20 solo se detectan efectos grandes y este
+se queda al borde. No se puede afirmar que `--stable=0` sea mejor; sí se puede
+afirmar que **la alternancia por defecto no es obviamente la mejor política con
+presupuesto ajustado**, y que merece un experimento con n mayor. Es exactamente
+la clase de resultado que el ADR-0003 existe para no sobreinterpretar.
+
+Ojo con extrapolar: con T = 5000 s el modo `stable` tiene tiempo de amortizar y
+la comparación podría invertirse. Que la política óptima **dependa del
+presupuesto** es, precisamente, el argumento de A4.
+
+**2. La diversidad por opciones se dispara donde importa.** En el banco fácil
+las opciones aportaban 5.4 s sobre la diversidad por seed; en la frontera
+aportan **43.1 s**, y en cuenta de resueltas la diferencia es 7 → 9. La
+complementariedad **crece con la dificultad**, que es donde se juega el PAR-2 de
+la competición.
+
+Aun así, la semilla sola mueve mucho: c0 y c1 se diferencian **únicamente** en
+la semilla y resuelven **4 y 6** instancias respectivamente. Es la inestabilidad
+por aleatorización del documento archivado 03, reproducida ahora sobre Kissat y
+sobre instancias reales de competición.
 
 ## 7. Conclusión
 
@@ -266,8 +316,35 @@ Es el caso que se ha dado. La consecuencia operativa:
    (VBS −2256.7 s sobre datos oficiales; −26.7 % en local) y el hecho de que
    `src/mode.c` de Kissat ya hace exactamente esto con dos brazos y una
    planificación ciega, así que la generalización es natural y no un injerto.
-3. La **fase 1c** decide un detalle importante pero no el rumbo: si el reparto
-   ciego gana en la banda de frontera, A1 sirve además como fallback barato.
+3. La **fase 1c** confirmó el rumbo y añadió dos cosas: la complementariedad
+   por opciones **crece con la dificultad** (5.4 s → 43.1 s), y la política por
+   defecto de Kissat no es la mejor con presupuesto ajustado (`--stable=0`
+   resuelve 8 de 20 frente a 4, −19.2 % de PAR-2, aunque sin significación a
+   n=20). Que la política óptima dependa del presupuesto es el argumento de A4.
+
+**Sobre H3, que falla en las tres fases**: no es un resultado sobre la idea sino
+sobre el régimen. El ratio T/mediana fue <1 en la fase 1, ~13 en la 1b (pero con
+39/40 ya resueltas, sin margen que ganar) y ~1.5 en la 1c. **Ninguna fase local
+reprodujo el régimen de la competición** (ratio 17 *con* un 40 % de instancias
+sin resolver), que es donde la simulación con datos oficiales da −798 s. Evaluar
+A1 honestamente exige o bien corridas locales de varias horas por instancia, o
+bien apoyarse en la simulación sobre datos oficiales. Se deja anotado como deuda
+experimental, no como conclusión negativa.
+
+### Hallazgo lateral de ingeniería: latencia de terminación
+
+Una instancia (`b54b26f3…`, familia `baseball-lineup`) **ignoró el límite
+interno `--time=180` durante ~70 s** y tuvo que matarla la guarda externa del
+runner (255 s de reloj, 250 s de CPU). Kissat solo comprueba el límite en
+ciertos puntos del bucle, y una fase larga de inprocesado puede retrasarlo.
+
+Importa directamente para A1/A4: **un mecanismo de reparto de presupuesto
+necesita que el solver ceda el control en la frontera del turno**. Si la
+latencia es de decenas de segundos, cada cambio de turno la paga. Dos salidas:
+(a) añadir comprobaciones de terminación en las fases largas de inprocesado, o
+(b) repartir por **conflictos o *ticks*** en lugar de por tiempo — que es
+exactamente lo que `mode.c` ya hace internamente, y una razón más para que A4 se
+construya ahí y no envolviendo el binario.
 
 **Limitaciones que hay que arrastrar a cualquier cita de estos números**: 40
 instancias, una seed por configuración, `--jobs 4` (los tiempos llevan
