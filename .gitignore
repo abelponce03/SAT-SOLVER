@@ -9,13 +9,17 @@ solver/*/build/
 # Regla (ADR-0003 §4 y CONTRIBUTING §6):
 #   - corridas sueltas en results/          -> NO se versionan (ruido)
 #   - las que respaldan un documento        -> sufijo .reference.csv, SÍ
-#   - las de un experimento documentado     -> results/<exp-id>/, SÍ (con su
-#     .meta.json, que es lo que las hace reproducibles). Son pocos KB y sin
-#     ellas el documento del experimento no se puede auditar.
-# Los patrones de abajo solo afectan a la raíz de results/, no a subdirectorios.
+#   - las de un experimento documentado     -> results/<exp-id>/, SÍ, pero solo
+#     CUANDO EL EXPERIMENTO SE CIERRA, promocionándolas a mano:
+#         git add -f results/<exp-id>/
+#     Se ignoran por defecto a propósito: mientras una tanda corre, el CSV está
+#     a medio escribir, y versionar una corrida incompleta mete en el histórico
+#     un resultado que nunca existió.
 results/*.csv
 results/*.log
 results/*.json
+results/*/*.csv
+results/*/*.json
 !results/*.reference.csv
 !results/.gitkeep
 

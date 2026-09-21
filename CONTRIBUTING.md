@@ -73,6 +73,12 @@ Si tocaste el solver, además el cribado por conflictos sobre `bench/dev`.
   (sufijo `*.reference.csv`) y los de un **experimento documentado**, que viven
   en `results/<exp-id>/` junto a su `.meta.json`. Sin esos ficheros el documento
   del experimento no se puede auditar, y pesan unos pocos KB.
+- Los de experimento están **ignorados por defecto** y se promocionan a mano al
+  cerrar el experimento: `git add -f results/<exp-id>/`. Es deliberado: mientras
+  una tanda corre, su CSV está a medio escribir, y versionar una corrida
+  incompleta mete en el histórico un resultado que nunca existió. Antes de
+  promocionar, comprueba que el número de filas es el que esperas
+  (`wc -l`: instancias × seeds + 1).
 - Las instancias descargadas no se versionan (son gigas y son reproducibles por
   hash desde GBD). Lo que sí se versiona es la **lista de hashes** del banco:
   `bench/dev.list.csv` y `bench/test.list.csv`.
