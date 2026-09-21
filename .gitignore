@@ -44,4 +44,5 @@ data/
 
 # Banco de calibración (regenerable por hash)
 bench/calib/
+bench/calib2/
 bench/boundary/
