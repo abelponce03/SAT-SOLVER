@@ -6,8 +6,13 @@ solver/*/build/
 *.a
 
 # --- Resultados de corridas ---
-# Los CSV/logs se regeneran; solo se versionan los de referencia, que llevan
-# sufijo .reference.csv (ver ADR-0003 §4).
+# Regla (ADR-0003 §4 y CONTRIBUTING §6):
+#   - corridas sueltas en results/          -> NO se versionan (ruido)
+#   - las que respaldan un documento        -> sufijo .reference.csv, SÍ
+#   - las de un experimento documentado     -> results/<exp-id>/, SÍ (con su
+#     .meta.json, que es lo que las hace reproducibles). Son pocos KB y sin
+#     ellas el documento del experimento no se puede auditar.
+# Los patrones de abajo solo afectan a la raíz de results/, no a subdirectorios.
 results/*.csv
 results/*.log
 results/*.json

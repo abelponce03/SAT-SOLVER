@@ -285,3 +285,32 @@ solver** quedan como banco de dificultad extrema para la validación final.
   `docs/archive/cadical-era/05-fase1-validacion-recompensa.md`
 - Inestabilidad por seed (62 flaky, 102× de varianza):
   `docs/archive/cadical-era/03-fase0-datos-tesis.md`
+
+---
+
+# Apéndice · Puntos de enganche en el código de Kissat 4.0.4
+
+Leído el código del fork, estas son las funciones concretas donde aterriza cada
+idea. Sirve para estimar coste y para que el diff contra upstream quede
+localizado (ADR-0002 §3).
+
+| Idea | Fichero:función | Qué hay hoy | Qué habría que hacer | LOC aprox. |
+|---|---|---|---|---:|
+| **A1** cartera secuencial | `src/application.c:807` (`kissat_solve`) | una sola llamada a `kissat_solve` | bucle sobre k configuraciones con `kissat_init/release` y límite por config; truncar la prueba DRAT del intento abortado | 150–250 |
+| **A2/A4** conmutación y reparto | `src/mode.c` (`kissat_switching_search_mode`, `kissat_switch_search_mode`) + `src/search.c:207` | **ya existe una alternancia de 2 brazos** (`stable`/`focused`) con planificación **ciega**: límites por conflictos y por *ticks*, alternando | generalizar a k brazos y sustituir la planificación ciega por una guiada por progreso | 200–400 |
+| **B3** detector estructural | `src/classify.c` (`kissat_classify`) + `src/classify.h` (`struct classification`) | **ya existe un clasificador** con dos bits (`small`, `bigbig`), llamado desde `search.c`, `probe.c`, `eliminate.c`, `reduce.c`; hoy solo lo consume `fastassign.h` | ampliar los features y hacer que condicione el preprocesado agresivo | 150–300 |
+| **B1/B2** preprocesado | `src/preprocess.c`, `src/probe.c` | vivify, sweep, congruence, factor | integrar la técnica externa como fase adicional | 300+ (o enlazar una herramienta externa) |
+| **D1** bandit de rephase | `src/rephase.c` | heurística fija | (descartada) | — |
+
+Dos hallazgos de esta lectura que cambian el encuadre de la contribución:
+
+1. **Kissat ya hace, con dos brazos y una planificación ciega, lo que A4
+   propone hacer con k brazos y una planificación adaptativa.** El `mode.c`
+   actual alterna `stable` y `focused` según límites fijos de conflictos y
+   *ticks*, sin mirar en ningún momento si la trayectoria está progresando. Eso
+   convierte a A4 en una **generalización natural de un mecanismo que el propio
+   upstream ya considera correcto**, no en un injerto ajeno — que es la
+   diferencia entre un parche que un revisor acepta y uno que rechaza.
+2. **Kissat ya tiene un clasificador de instancias** (`classify.c`), con dos
+   bits y un único consumidor. La infraestructura para B3 existe; lo que no
+   existe es el contenido.

@@ -69,8 +69,10 @@ Si tocaste el solver, además el cribado por conflictos sobre `bench/dev`.
 
 ## 6. Datos y resultados
 
-- Los CSV de corridas **no** se versionan salvo los de referencia, que llevan
-  sufijo `*.reference.csv` y van acompañados de su `.meta.json`.
+- Los CSV de corridas **no** se versionan salvo en dos casos: los de referencia
+  (sufijo `*.reference.csv`) y los de un **experimento documentado**, que viven
+  en `results/<exp-id>/` junto a su `.meta.json`. Sin esos ficheros el documento
+  del experimento no se puede auditar, y pesan unos pocos KB.
 - Las instancias descargadas no se versionan (son gigas y son reproducibles por
   hash desde GBD). Lo que sí se versiona es la **lista de hashes** del banco:
   `bench/dev.list.csv` y `bench/test.list.csv`.
