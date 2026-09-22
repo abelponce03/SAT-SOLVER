@@ -1,6 +1,6 @@
 # EXP-005 — A4: reparto adaptativo del presupuesto entre modos de búsqueda
 
-- **Estado**: diseñado (escrito **antes** de implementar, ADR-0003 §6) · paso 0 en curso
+- **Estado**: **paso 0 cerrado — la señal se valida (V1, V2 y V3 pasan)**. Diseño escrito antes de implementar (ADR-0003 §6)
 - **Fecha de diseño**: 2026-09-22
 - **Motiva**: [`catálogo`](../research/02-catalogo-de-ideas.md) línea A4 — la contribución candidata
 - **Depende de**: [EXP-004](EXP-004-lucky-terminator.md) (el solver ya cede el control), [EXP-001](EXP-001-diversidad-intrinseca-kissat.md) (la diversidad existe)
@@ -105,10 +105,72 @@ Una traza CSV por corrida, una fila por cambio de modo, activada por variable de
 entorno (`KISSAT_TRACE=<fichero>`) para que no toque el camino de competición:
 
 ```
-phase,mode,conflicts,decisions,ticks,learned,process_time
+phase,mode,d_conflicts,d_decisions,d_ticks,d_learned,glr,time
 ```
 
 Coste: una escritura cada decenas de segundos. Irrelevante.
+
+### Resultados del paso 0
+
+**Datos**: 60 instancias reales del Main Track 2026 (`bench/calib` + `bench/calib2`),
+T = 180 s, seed 1. 48 produjeron traza utilizable (12 se resolvieron sin llegar a
+cambiar de modo; 1 con menos de 4 fases, descartada). **31 SOLVED / 16 TIMEOUT**,
+con **1 660 fases** de modo en total.
+
+```
+                n   glr_med   glr_cv   pendiente    exito
+SOLVED         31     0.503    0.421       0.645    58.9%
+TIMEOUT        16     0.712    0.413       0.077    59.0%
+```
+
+| prueba | resultado | veredicto |
+|---|---|---|
+| **V1** no-degeneración | CV mediano del GLR = **0.421** (umbral 0.2) | ✅ **PASA** |
+| **V2** discriminación | Δ nivel = **−0.209** (p = 0.062) · Δ pendiente = **+0.568** (p = **0.022**) | ✅ **PASA por pendiente** |
+| **V3** bien formada | tasa de éxito EMA-relativa = **59.0 %** | ✅ **PASA** |
+
+#### Lo importante: la inversión del nivel se replica
+
+El documento archivado midió sobre **CaDiCaL** que el *nivel* absoluto de GLR no
+solo no discrimina, sino que **se invierte**: las corridas estancadas tienen GLR
+*más alto*. Aquí, sobre **Kissat**, sale lo mismo y con magnitudes casi
+idénticas:
+
+| | CaDiCaL (doc archivado 05, ventana 20) | **Kissat (este experimento)** |
+|---|---:|---:|
+| Δ nivel (SOLVED − TIMEOUT) | −0.168 | **−0.209** |
+| Δ pendiente (SOLVED − TIMEOUT) | +0.571 | **+0.568** |
+
+Dos solvers distintos, dos bancos distintos, dos instrumentaciones escritas por
+separado, y el mismo resultado hasta la segunda cifra. Eso deja de ser una
+peculiaridad de CaDiCaL y pasa a ser una propiedad de la búsqueda CDCL: **una
+instancia estancada puede estar aprendiendo muchísimo por decisión y aun así no
+cerrar**. Una recompensa del tipo «más GLR = mejor» sería **activamente
+errónea**.
+
+Queda confirmada, ahora sobre el host correcto, la decisión de diseño: la
+recompensa premia **mejora sobre el propio historial**, no nivel.
+
+#### Hallazgo nuevo: los dos brazos tienen escalas distintas
+
+```
+   focused    n= 866   mediana GLR = 0.462   CV = 0.640
+   stable     n= 794   mediana GLR = 0.810   CV = 0.326
+```
+
+El modo `stable` aprende **un 75 % más por decisión** que el `focused`, de forma
+sistemática. Eso no es una diferencia de calidad sino de régimen: `stable` usa
+reinicios largos y fases objetivo, así que cada decisión cunde más.
+
+**Consecuencia directa para el planificador**: la recompensa debe compararse
+contra el **EMA del propio brazo**, nunca contra un EMA global. Con un EMA común,
+`stable` ganaría casi siempre por construcción y el bandit dejaría morir de
+hambre al `focused` — no porque sea peor, sino porque su señal vive en otra
+escala. El diseño de §5 ya lo preveía («estado por brazo»); ahora hay evidencia
+de por qué es imprescindible y no un detalle.
+
+Nótese también que `focused` es mucho más variable (CV 0.640 frente a 0.326):
+es el brazo donde un reparto adaptativo tiene más que ganar y más que perder.
 
 ## 5. Diseño del planificador (A4.1), para implementar tras el paso 0
 
@@ -162,8 +224,11 @@ Manteniendo la estructura de `mode.c`:
 - [x] `mode.c` leído y el planificador ciego documentado
 - [x] Señales disponibles verificadas (`conflicts`, `decisions`, `search_ticks`,
       `clauses_learned` son `COUNTER` → existen en el build de competición)
-- [ ] Instrumentación de trazas
-- [ ] Recogida de trazas sobre `bench/calib` y `bench/calib2`
-- [ ] Validación V1/V2/V3
-- [ ] Implementación del planificador (solo si V2 pasa)
+- [x] Instrumentación de trazas (`src/modetrace.{c,h}`, no-op sin `KISSAT_TRACE`)
+- [x] Recogida de trazas sobre `bench/calib` y `bench/calib2` (48 trazas, 1 660 fases)
+- [x] **Validación V1/V2/V3: las tres pasan**; la inversión del nivel de GLR se
+      replica desde CaDiCaL con magnitudes casi idénticas
+- [ ] Implementación del planificador — **desbloqueada**, con dos requisitos que
+      salen de los datos: EMA **por brazo** (las escalas difieren 75 %) y
+      recompensa por **mejora**, nunca por nivel
 - [ ] A/B en `bench/dev` → validación en `bench/test`

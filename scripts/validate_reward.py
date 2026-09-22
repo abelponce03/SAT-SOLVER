@@ -26,6 +26,7 @@ Uso:
 """
 import argparse
 import csv
+import math
 import os
 import statistics as st
 from collections import defaultdict
@@ -143,6 +144,34 @@ def main():
               f"{median(a['succ'])*100:>7.1f}%")
 
     s, t = agg.get("SOLVED"), agg.get("TIMEOUT")
+
+    def mann_whitney(a, b):
+        """U de Mann-Whitney con aproximación normal (dos colas, n moderado).
+        No asume normalidad, que es lo que hace falta aquí: las pendientes
+        tienen cola pesada."""
+        a = [x for x in a if x == x]
+        b = [x for x in b if x == x]
+        na, nb = len(a), len(b)
+        if na < 3 or nb < 3:
+            return float("nan"), float("nan")
+        todos = sorted((v, i) for i, grupo in enumerate((a, b)) for v in grupo)
+        rangos, i = {}, 0
+        while i < len(todos):
+            j = i
+            while j + 1 < len(todos) and todos[j + 1][0] == todos[i][0]:
+                j += 1
+            r = (i + j) / 2.0 + 1.0
+            for k in range(i, j + 1):
+                rangos.setdefault(k, r)
+            i = j + 1
+        ra = sum(rangos[k] for k, (_, g) in enumerate(todos) if g == 0)
+        u = ra - na * (na + 1) / 2.0
+        mu = na * nb / 2.0
+        sigma = math.sqrt(na * nb * (na + nb + 1) / 12.0)
+        if not sigma:
+            return u, float("nan")
+        z = (u - mu) / sigma
+        return u, 2.0 * 0.5 * math.erfc(abs(z) / math.sqrt(2))
     print("\n" + "=" * 88)
     print("VEREDICTO\n")
 
@@ -159,6 +188,10 @@ def main():
         d_pen = median(s["slope"]) - median(t["slope"])
         print(f"\nV2 discriminación  : Δ nivel (SOLVED−TIMEOUT)     = {d_niv:+.3f}")
         print(f"                     Δ pendiente (SOLVED−TIMEOUT) = {d_pen:+.3f}")
+        _, p_niv = mann_whitney(s["med"], t["med"])
+        _, p_pen = mann_whitney(s["slope"], t["slope"])
+        print(f"                     Mann-Whitney: p(nivel) = {p_niv:.4f}, "
+              f"p(pendiente) = {p_pen:.4f}")
         ok = abs(d_niv) > 0.05 or abs(d_pen) > 0.05
         print(f"                     -> {'PASA' if ok else 'FALLA'}")
         if not ok:
