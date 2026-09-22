@@ -46,6 +46,25 @@ proyecto de competición.
    el *mismo binario* activando/desactivando la opción. Esto elimina el sesgo
    de compilación entre las ramas A y B de un experimento.
 
+   **Addendum (2026-09-22), tras verificarlo**: la configuración de entrega de
+   la competición es `./configure --competition`, que equivale a
+   `--no-options --quiet` y **compila las opciones fuera del binario**. Se
+   comprobó cuáles sobreviven:
+
+   | opción | build normal | build `--competition` |
+   |---|---|---|
+   | `-n`, `--time=`, `--conflicts=` | ✅ | ✅ |
+   | `-q`, `-s`, `--seed=`, `--<cualquier-opción>=` | ✅ | ❌ rechazada |
+
+   Consecuencias que hay que respetar:
+   - una feature validada **no llega a la competición como opción**: hay que
+     convertirla en el **valor por defecto** y volver a verificar la entrega;
+   - el harness (que usa `-q`, `-s` y `--seed`) **no puede medir el binario de
+     entrega**; se mide con el build normal y la entrega se verifica aparte;
+   - por eso la CI tiene un trabajo `entrega` que compila `--competition` y
+     comprueba que responde correctamente sobre `bench/smoke`. Sin él, un
+     cambio podría pasar todos los A/B y no funcionar en el binario entregado.
+
 ## Alternativas consideradas
 
 | Alternativa | Pros | Contras | Por qué no |

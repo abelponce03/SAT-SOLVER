@@ -22,6 +22,12 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   vendorizado), ADR-0003 (protocolo experimental).
 - CI en GitHub Actions: release + sanitizers + clang + scripts.
 
+### Corregido
+- `scripts/build.sh` pasaba a `./configure` opciones que Kissat no tiene
+  (`--symbols`, `--asan`, `--debug`), por lo que el trabajo de sanitizers de la
+  CI fallaba desde el primer día. Ahora usa las reales (`-g`,
+  `-s -fsanitize=address,undefined`, `--statistics`, `--competition`).
+
 ### Cambiado
 - **Estructura del repositorio** aplanada: desaparece `competition/`.
 

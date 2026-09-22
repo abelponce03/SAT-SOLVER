@@ -31,12 +31,17 @@ jobs:
         run: |
           # Cualquier lectura fuera de rango o desbordamiento en nuestros
           # parches aborta aquí, antes de contaminar una medición de PAR-2.
-          set -e
+          set -u
+          fail=0
           for f in bench/smoke/*.cnf; do
-            ./solver/kissat/build/kissat -q -n "$f" || code=$?
-            case "${code:-0}" in 0|10|20) ;; *) echo "FALLO en $f (código ${code})"; exit 1 ;; esac
-            unset code
+            ./solver/kissat/build/kissat -q -n "$f" >/dev/null 2>&1
+            code=$?
+            case "$code" in
+              10|20) ;;
+              *) echo "FALLO en $f (código $code)"; fail=1 ;;
+            esac
           done
+          exit $fail
 
   clang:
     name: Build con clang (portabilidad)
@@ -47,6 +52,34 @@ jobs:
         run: CC=clang ./scripts/build.sh --clean
       - name: Comprobación rápida
         run: ./scripts/smoke_test.sh --quick
+
+  entrega:
+    name: Build de competición (la configuración que se entrega)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar con --competition
+        # Es la configuración con la que los organizadores construyen el
+        # binario: '--no-options --quiet'. Compila las opciones FUERA del
+        # binario, así que hay que verificarla aparte: un cambio que solo
+        # funcione activando una opción en tiempo de ejecución NO llega a la
+        # competición (ver ADR-0002 §3).
+        run: ./scripts/build.sh --clean --competition
+      - name: Comprobar que responde correctamente
+        run: |
+          set -u
+          fail=0
+          # Este binario NO acepta -q, -s ni --seed: están compilados fuera.
+          # Solo -n, --time y --conflicts sobreviven.
+          while IFS=, read -r inst expected _note; do
+            [ "$inst" = "instance" ] && continue
+            ./solver/kissat/build/kissat -n "bench/smoke/$inst" >/dev/null 2>&1
+            case "$?" in 10) got=SAT ;; 20) got=UNSAT ;; *) got="error" ;; esac
+            if [ "$got" != "$expected" ]; then
+              echo "FALLO $inst: esperado $expected, obtenido $got"; fail=1
+            fi
+          done < bench/smoke/expected.csv
+          exit $fail
 
   scripts:
     name: Scripts de análisis

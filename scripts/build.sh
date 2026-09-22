@@ -5,9 +5,10 @@
 # Uso:
 #   ./scripts/build.sh                 # release (-O3 -DNDEBUG), el que se mide
 #   ./scripts/build.sh --clean         # borra artefactos y reconfigura
-#   ./scripts/build.sh --debug         # símbolos + asserts (NO usar para medir)
+#   ./scripts/build.sh --debug         # símbolos + asserts + logging (NO usar para medir)
 #   ./scripts/build.sh --sanitize      # ASan/UBSan (para cazar bugs de nuestros parches)
 #   ./scripts/build.sh --stats         # release + contadores de estadísticas completos
+#   ./scripts/build.sh --competition   # configuración de entrega (--no-options --quiet)
 #
 # Cualquier otro argumento se pasa tal cual a `./configure` de Kissat.
 #
@@ -23,9 +24,12 @@ CLEAN=0
 for arg in "$@"; do
     case "$arg" in
         --clean)    CLEAN=1 ;;
-        --debug)    CONFIGURE_ARGS+=("-g" "--debug") ;;
-        --sanitize) CONFIGURE_ARGS+=("--symbols" "--asan") ;;
-        --stats)    CONFIGURE_ARGS+=("--statistics") ;;
+        # Los nombres de la izquierda son NUESTROS; a la derecha van las opciones
+        # que el `configure` de Kissat acepta de verdad (ver ./configure --help).
+        --debug)       CONFIGURE_ARGS+=("-g") ;;                     # implica -c -s -l
+        --sanitize)    CONFIGURE_ARGS+=("-s" "-fsanitize=address,undefined") ;;
+        --stats)       CONFIGURE_ARGS+=("--statistics") ;;
+        --competition) CONFIGURE_ARGS+=("--competition") ;;
         *)          CONFIGURE_ARGS+=("$arg") ;;
     esac
 done
