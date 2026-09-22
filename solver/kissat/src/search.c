@@ -1,4 +1,5 @@
 #include "search.h"
+#include "modetrace.h"   /* [SOLVER] A4 paso 0 */
 #include "analyze.h"
 #include "bump.h"
 #include "classify.h"
@@ -224,6 +225,10 @@ int kissat_search (kissat *solver) {
     }
     stop_search (solver);
   }
+  /* [SOLVER] A4 paso 0: volcar la última fase y cerrar la traza. */
+  kissat_modetrace_switch (solver);
+  kissat_close_modetrace (solver);
+
   report_search_result (solver, res);
   return res;
 }

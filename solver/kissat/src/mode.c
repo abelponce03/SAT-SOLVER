@@ -5,6 +5,7 @@
 #include "report.h"
 #include "resources.h"
 #include "restart.h"
+#include "modetrace.h"   /* [SOLVER] A4 paso 0 */
 
 #include <inttypes.h>
 
@@ -17,6 +18,7 @@ static const char *mode_string (kissat *solver) {
 #endif
 
 void kissat_init_mode_limit (kissat *solver) {
+  kissat_init_modetrace (solver);   /* [SOLVER] A4 paso 0 */
   limits *limits = &solver->limits;
 
   if (GET_OPTION (stable) == 1) {
@@ -200,6 +202,9 @@ bool kissat_switching_search_mode (kissat *solver) {
 
 void kissat_switch_search_mode (kissat *solver) {
   assert (kissat_switching_search_mode (solver));
+
+  /* [SOLVER] A4 paso 0: registrar el progreso de la fase que termina. */
+  kissat_modetrace_switch (solver);
 
   INC (switched);
   solver->limits.mode.count++;
