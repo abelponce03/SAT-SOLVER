@@ -185,6 +185,8 @@ def main():
     extra_opts = args.opts.split() if args.opts else []
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
 
+    solver_sha1 = sha1_of(args.solver)
+
     if args.jobs > 1:
         print(f"[AVISO] --jobs={args.jobs}: los tiempos quedan contaminados por contención.\n"
               f"        Vale para cribar (qué resuelve cada configuración), no para el PAR-2 final.")
@@ -210,6 +212,7 @@ def main():
         "label": label, "solver": os.path.abspath(args.solver),
         "solver_version": subprocess.run([args.solver, "--version"], capture_output=True,
                                          text=True).stdout.strip(),
+        "solver_sha1": solver_sha1,
         "git_commit": git("rev-parse", "HEAD"),
         "git_dirty": bool(git("status", "--porcelain")),
         "bench": os.path.abspath(args.bench), "n_instances": len(instances),
@@ -242,6 +245,19 @@ def main():
 
         def work(task):
             inst, seed = task
+            # El binario NO puede cambiar a mitad de una tanda: si alguien
+            # recompila mientras esto corre, las instancias medidas antes y
+            # después salen de binarios distintos y el CSV mezcla dos
+            # experimentos sin que se note. Pasó una vez (EXP-004) y por eso
+            # esta comprobación existe.
+            if sha1_of(args.solver) != solver_sha1:
+                raise SystemExit(
+                    f"\nABORTADO: el binario {args.solver} cambió a mitad de la "
+                    f"tanda.\n   esperado {solver_sha1[:12]}, ahora "
+                    f"{sha1_of(args.solver)[:12]}.\n"
+                    "   Los resultados parciales mezclarían dos binarios: se "
+                    "descartan.\n   No recompiles mientras haya un experimento "
+                    "en curso.")
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
             status, code, wall, cpu, rss, stats = run_one(
                 args.solver, inst, seed, budget_kind, budget_value,
