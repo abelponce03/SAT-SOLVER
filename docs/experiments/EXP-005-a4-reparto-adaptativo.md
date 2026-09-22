@@ -189,6 +189,47 @@ Manteniendo la estructura de `mode.c`:
 - Todo detrás de la opción `modeadaptive` (0 = comportamiento de upstream,
   valor por defecto hasta que un A/B lo valide, ADR-0002 §3).
 
+## 5b. Implementación (hecha)
+
+Diff contra upstream: **~190 líneas** en `src/mode.{c,h}` y `src/options.h`.
+
+| pieza | dónde |
+|---|---|
+| Estado por brazo (`ema_glr`, `ema_success`, `seeded`) | `src/mode.h`, `struct adaptive_arm` dentro de `struct mode` |
+| Recompensa de la fase que termina | `kissat_adaptive_finish_phase()`, llamada desde `kissat_switch_search_mode` **antes** de voltear `solver->stable` |
+| Factor de presupuesto | `adaptive_factor()` / `adaptive_budget()`, aplicado a los **dos** presupuestos de `update_mode_limit` |
+| Opciones | `modeadaptive` (0), `modeadaptivedecay` (800), `modeadaptivegain` (1000) |
+
+Tres decisiones de implementación que conviene justificar:
+
+1. **Aritmética entera por milésimas, sin coma flotante.** El planificador está
+   en el camino caliente y debe ser determinista y reproducible bit a bit entre
+   compiladores; con dobles, el redondeo puede diferir y dos corridas con la
+   misma semilla dejarían de coincidir — lo que rompería todo el protocolo de
+   medición del ADR-0003.
+2. **Los campos van fuera de los `#ifndef QUIET`** de `struct mode`. El binario
+   de entrega se compila con `--competition` (= `--no-options --quiet`), así
+   que un planificador que solo existiera en builds con mensajes no llegaría a
+   la competición — es la misma trampa que documentó el ADR-0002 tras EXP-004.
+3. **El factor está acotado en `[×0.5, ×2]`** del presupuesto que upstream
+   daría, y el suelo del 0.5 **es la exploración**: un brazo con mala racha
+   conserva turno suficiente para demostrar lo contrario más tarde. Sin ese
+   suelo, una racha inicial mala podría matar a un brazo que hacía falta luego.
+
+### Verificación
+
+| comprobación | resultado |
+|---|---|
+| `modeadaptive=0` (defecto) es un **no-op** | conflictos idénticos a antes del parche: 2592 / 12203 / 1457 |
+| la opción actúa | factores observados 0.900 y 1.200; recompensas por brazo en el log |
+| determinismo con el planificador activo | misma semilla → mismos conflictos (11050, dos veces); semilla distinta → 12562 |
+| estados correctos sobre `bench/smoke` | 10/10 con `--modeadaptive=1` |
+| modelos SAT | válidos con `--modeadaptive=1` (3 instancias verificadas) |
+| **pruebas DRAT** | verificadas con drat-trim con `--modeadaptive=1` (3 instancias) |
+| build `--debug` (asertos) | sin abortos |
+| build `--sanitize` (ASan+UBSan) | 0 errores, códigos de salida correctos (20/20/10) |
+| suite completa `smoke_test.sh` | en verde |
+
 ## 6. Criterios de éxito, fijados de antemano
 
 **Paso 0 (señal)**:
@@ -228,7 +269,7 @@ Manteniendo la estructura de `mode.c`:
 - [x] Recogida de trazas sobre `bench/calib` y `bench/calib2` (48 trazas, 1 660 fases)
 - [x] **Validación V1/V2/V3: las tres pasan**; la inversión del nivel de GLR se
       replica desde CaDiCaL con magnitudes casi idénticas
-- [ ] Implementación del planificador — **desbloqueada**, con dos requisitos que
-      salen de los datos: EMA **por brazo** (las escalas difieren 75 %) y
-      recompensa por **mejora**, nunca por nivel
+- [x] **Implementación del planificador** (ver §5b), con los dos requisitos que
+      salen de los datos: EMA **por brazo** y recompensa por **mejora**
+- [ ] A/B en `bench/dev` → validación en `bench/test`
 - [ ] A/B en `bench/dev` → validación en `bench/test`

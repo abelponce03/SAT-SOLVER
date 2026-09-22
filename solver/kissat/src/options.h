@@ -81,6 +81,9 @@
   OPTION (minimize, 1, 0, 1, "learned clause minimization") \
   OPTION (minimizedepth, 1e3, 1, 1e6, "minimization depth") \
   OPTION (minimizeticks, 1, 0, 1, "count ticks in minimize and shrink") \
+  OPTION (modeadaptive, 0, 0, 1, "adapt mode budgets to progress [SOLVER A4]") \
+  OPTION (modeadaptivedecay, 800, 500, 990, "A4 EMA decay per mille") \
+  OPTION (modeadaptivegain, 1000, 0, 2000, "A4 budget gain per mille") \
   OPTION (modeinit, 1e3, 10, 1e8, "initial focused conflicts limit") \
   OPTION (modeint, 1e3, 10, 1e8, "focused conflicts interval") \
   OPTION (otfs, 1, 0, 1, "on-the-fly strengthening") \

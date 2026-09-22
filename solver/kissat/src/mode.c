@@ -17,8 +17,144 @@ static const char *mode_string (kissat *solver) {
 
 #endif
 
+/*------------------------------------------------------------------------*/
+/* [SOLVER] A4 — reparto adaptativo del presupuesto entre los dos modos.
+
+   Upstream reparte a ciegas: al entrar en 'stable' le da tantos ticks como
+   consumió el 'focused' anterior, y al entrar en 'focused' una progresión
+   creciente fijada de antemano.  Ningún término mira si el modo está
+   progresando.  Esto no cambia el MECANISMO, solo la POLÍTICA.
+
+   Señal y su justificación empírica (EXP-005 paso 0, 48 trazas y 1660 fases
+   de instancias reales del Main Track 2026):
+
+   - La recompensa es "esta fase ha superado al EMA del PROPIO brazo", no el
+     nivel absoluto del GLR.  El nivel no solo no discrimina: se INVIERTE
+     (las corridas estancadas tienen GLR más alto; Δ = -0.209, p = 0.062),
+     mientras que la tendencia sí separa (Δ pendiente = +0.568, p = 0.022).
+     Una recompensa "más GLR = mejor" sería activamente errónea.
+
+   - El EMA es POR BRAZO porque los dos viven en escalas distintas:
+     stable 0.810 de GLR mediano frente a focused 0.462, un 75 % más.  Con un
+     EMA común, 'stable' ganaría por construcción y el bandit dejaría morir de
+     hambre al 'focused', no por peor sino por estar en otra escala.
+
+   - El factor está ACOTADO entre x0.5 y x2 del presupuesto que upstream daría.
+     Es deliberado: convierte el cambio en una perturbación acotada de una
+     política que ya funciona, en lugar de una política nueva sin garantías.
+
+   Todo en aritmética entera por milésimas: determinista y portable, sin
+   depender de cómo redondee cada compilador.  */
+
+#define ADAPTIVE_SCALE 1000u
+#define ADAPTIVE_NEUTRAL 500u /* tasa de éxito que deja el presupuesto intacto */
+
+static unsigned adaptive_arm_index (kissat *solver) {
+  return solver->stable ? 1 : 0;
+}
+
+void kissat_adaptive_finish_phase (kissat *solver) {
+  mode *mode = &solver->mode;
+  statistics *statistics = &solver->statistics;
+
+  const uint64_t d_conflicts = statistics->conflicts - mode->adaptive_conflicts;
+  const uint64_t d_decisions = statistics->decisions - mode->adaptive_decisions;
+
+  mode->adaptive_conflicts = statistics->conflicts;
+  mode->adaptive_decisions = statistics->decisions;
+
+  if (!GET_OPTION (modeadaptive))
+    return;
+  if (!d_decisions)
+    return; /* fase vacía: no informa de nada */
+
+  adaptive_arm *arm = mode->arm + adaptive_arm_index (solver);
+  const uint64_t glr = (d_conflicts * ADAPTIVE_SCALE) / d_decisions;
+  const uint64_t decay = GET_OPTION (modeadaptivedecay);
+
+  if (!arm->seeded) {
+    /* La primera fase de cada brazo solo siembra su EMA: sin historial no hay
+       "mejor que antes" que medir.  */
+    arm->ema_glr = glr;
+    arm->ema_success = ADAPTIVE_NEUTRAL;
+    arm->seeded = true;
+    return;
+  }
+
+  const uint64_t reward = (glr > arm->ema_glr) ? ADAPTIVE_SCALE : 0;
+  arm->ema_glr = (decay * arm->ema_glr +
+                  (ADAPTIVE_SCALE - decay) * glr) / ADAPTIVE_SCALE;
+  arm->ema_success = (decay * arm->ema_success +
+                      (ADAPTIVE_SCALE - decay) * reward) / ADAPTIVE_SCALE;
+
+  kissat_very_verbose (solver,
+                       "adaptive %s phase glr %.3f ema %.3f -> %s "
+                       "(success rate %.1f%%)",
+                       mode_string (solver), glr / (double) ADAPTIVE_SCALE,
+                       arm->ema_glr / (double) ADAPTIVE_SCALE,
+                       reward ? "reward" : "no reward",
+                       arm->ema_success * 100.0 / ADAPTIVE_SCALE);
+}
+
+/* Factor por milésimas en [500, 2000] a aplicar al presupuesto que upstream
+   daría al brazo en el que estamos ENTRANDO.  Centrado en 1000 (sin cambio)
+   para una tasa de éxito del 50 %: por encima se premia hasta duplicar, por
+   debajo se castiga hasta la mitad, nunca más -- ese suelo es la exploración:
+   un brazo con mala racha conserva turno suficiente para demostrar lo
+   contrario más tarde.  */
+
+static uint64_t adaptive_factor (kissat *solver) {
+  if (!GET_OPTION (modeadaptive))
+    return ADAPTIVE_SCALE;
+
+  const adaptive_arm *arm = solver->mode.arm + adaptive_arm_index (solver);
+  if (!arm->seeded)
+    return ADAPTIVE_SCALE;
+
+  const uint64_t gain = GET_OPTION (modeadaptivegain);
+  const uint64_t s = arm->ema_success;
+  uint64_t factor;
+
+  if (s >= ADAPTIVE_NEUTRAL)
+    factor = ADAPTIVE_SCALE + (2 * (s - ADAPTIVE_NEUTRAL) * gain) / ADAPTIVE_SCALE;
+  else
+    factor = ADAPTIVE_SCALE - ((ADAPTIVE_NEUTRAL - s) * gain) / ADAPTIVE_SCALE;
+
+  if (factor < ADAPTIVE_SCALE / 2)
+    factor = ADAPTIVE_SCALE / 2;
+  if (factor > 2 * ADAPTIVE_SCALE)
+    factor = 2 * ADAPTIVE_SCALE;
+  return factor;
+}
+
+static uint64_t adaptive_budget (kissat *solver, uint64_t base) {
+  const uint64_t factor = adaptive_factor (solver);
+  if (factor == ADAPTIVE_SCALE)
+    return base;
+  uint64_t scaled = (base * factor) / ADAPTIVE_SCALE;
+  if (!scaled)
+    scaled = 1; /* nunca un turno vacío */
+  kissat_very_verbose (solver, "adaptive %s budget %s -> %s (factor %.3f)",
+                       mode_string (solver), FORMAT_COUNT (base),
+                       FORMAT_COUNT (scaled), factor / (double) ADAPTIVE_SCALE);
+  return scaled;
+}
+
+/*------------------------------------------------------------------------*/
+
 void kissat_init_mode_limit (kissat *solver) {
   kissat_init_modetrace (solver);   /* [SOLVER] A4 paso 0 */
+
+  /* [SOLVER] A4: estado del reparto adaptativo, explícito y no por confianza
+     en que la estructura llegue a cero.  */
+  solver->mode.adaptive_conflicts = solver->statistics.conflicts;
+  solver->mode.adaptive_decisions = solver->statistics.decisions;
+  for (unsigned i = 0; i < KISSAT_ADAPTIVE_ARMS; i++) {
+    solver->mode.arm[i].ema_glr = 0;
+    solver->mode.arm[i].ema_success = ADAPTIVE_NEUTRAL;
+    solver->mode.arm[i].seeded = false;
+  }
+
   limits *limits = &solver->limits;
 
   if (GET_OPTION (stable) == 1) {
@@ -68,6 +204,7 @@ void kissat_init_mode_limit (kissat *solver) {
                          mode_string (solver));
 }
 
+
 static void update_mode_limit (kissat *solver, uint64_t delta_ticks) {
   kissat_init_averages (solver, &AVERAGES);
 
@@ -77,6 +214,7 @@ static void update_mode_limit (kissat *solver, uint64_t delta_ticks) {
   assert (GET_OPTION (stable) == 1);
 
   if (limits->mode.count & 1) {
+    delta_ticks = adaptive_budget (solver, delta_ticks); /* [SOLVER] A4 */
     limits->mode.ticks = statistics->search_ticks + delta_ticks;
 #ifndef QUIET
     assert (solver->stable);
@@ -90,7 +228,8 @@ static void update_mode_limit (kissat *solver, uint64_t delta_ticks) {
     assert (limits->mode.ticks);
     const uint64_t interval = GET_OPTION (modeint);
     const uint64_t count = (statistics->switched + 1) / 2;
-    const uint64_t scaled = interval * kissat_nlogpown (count, 4);
+    uint64_t scaled = interval * kissat_nlogpown (count, 4);
+    scaled = adaptive_budget (solver, scaled); /* [SOLVER] A4 */
     limits->mode.conflicts = statistics->conflicts + scaled;
 #ifndef QUIET
     assert (!solver->stable);
@@ -203,8 +342,10 @@ bool kissat_switching_search_mode (kissat *solver) {
 void kissat_switch_search_mode (kissat *solver) {
   assert (kissat_switching_search_mode (solver));
 
-  /* [SOLVER] A4 paso 0: registrar el progreso de la fase que termina. */
+  /* [SOLVER] A4: cerrar la fase que termina ANTES de voltear 'solver->stable',
+     para que la recompensa vaya al brazo correcto. */
   kissat_modetrace_switch (solver);
+  kissat_adaptive_finish_phase (solver);
 
   INC (switched);
   solver->limits.mode.count++;
