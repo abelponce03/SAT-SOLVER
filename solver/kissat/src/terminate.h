@@ -61,6 +61,14 @@ static inline bool kissat_terminated (kissat *solver, int bit,
 #define forward_terminated_1 20
 #define kitten_terminated_1 21
 #define kitten_terminated_2 22
+/* [SOLVER] B3'': 'kissat_lucky' era la única rutina larga sin comprobaciones
+   de terminación. Ver docs/experiments/EXP-004-lucky-terminator.md.  */
+#define lucky_terminated_1 44
+#define lucky_terminated_2 45
+#define lucky_terminated_3 46
+#define lucky_terminated_4 47
+#define lucky_terminated_5 48
+#define lucky_terminated_6 49
 #define preprocess_terminated_1 23
 #define search_terminated_1 24
 #define substitute_terminated_1 25

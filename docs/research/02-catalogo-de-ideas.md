@@ -23,7 +23,7 @@
 | **B2** | Hiper-resolución binaria condicional (hypre) | −615 s | medio-alto | alto | Alternativa a B1 |
 | **B3** | Detector barato de estructura para condicionar B1/B2 | habilita +322 s sobre B1 | medio | **bajo** | **Diferencial** |
 | ~~**B3'**~~ | ~~Condicionar las fases *lucky* por tamaño de fórmula~~ | **+2.3 s en el banco reservado** | muy bajo | — | **CERRADA: no replicó (EXP-003)** |
-| **B3''** | Hacer que `kissat_lucky` **ceda el control** al límite de tiempo | fallo real: `--time=30` → 348 s | bajo | ninguno (es un bug) | **Viva** |
+| **B3''** | Hacer que `kissat_lucky` **ceda el control** al límite de tiempo | latencia 318 s → <1 s | bajo | ninguno (es un bug) | **HECHA (EXP-004)** |
 | **C1** | Robustez: ↓varianza por seed, flaky→estable | no medible en PAR-2 solo | bajo | **muy bajo** | Métrica, no técnica |
 | **D1** | Bandit sobre rephase/restart | **+25 a +280 s (PEOR)** | medio | muy alto | **Descartada como idea principal** |
 | **D2** | Gestión de cláusulas más allá de LBD | desconocido | medio | medio | Aparcada |
@@ -252,6 +252,12 @@ Es un fallo de upstream con consecuencias para cualquiera que mida con
 presupuesto acotado — incluidos los organizadores de la competición. La
 corrección correcta **no es saltarse las fases** (eso ya se probó y falló):
 es que **cedan el control**, comprobando el terminador dentro de sus bucles.
+
+**Implementada y verificada** en [`EXP-004`](../experiments/EXP-004-lucky-terminator.md):
+6 bits en `terminate.h` y una comprobación en cada uno de los 6 bucles de
+`lucky.c`, 68 líneas. La latencia baja de **318 s a menos de 1 s** y el
+comportamiento sin terminación es **idéntico bit a bit** (mismos conflictos en
+cuatro instancias, incluida la de 2 631 330 conflictos que hizo fracasar a B3′).
 
 Importa además para A4: un mecanismo de reparto de presupuesto necesita que el
 solver suelte el control en la frontera del turno. Con 350 s de latencia, no lo

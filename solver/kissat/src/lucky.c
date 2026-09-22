@@ -7,6 +7,7 @@
 #include "print.h"
 #include "proprobe.h"
 #include "report.h"
+#include "terminate.h"
 
 static bool no_all_negative_clauses (struct kissat *solver) {
   clause *last_irredundant = kissat_last_irredundant_clause (solver);
@@ -85,6 +86,11 @@ static int forward_false_satisfiable (struct kissat *solver) {
   unsigned conflicts = 0;
 #endif
   for (all_stack (import, import, solver->import)) {
+    /* [SOLVER] B3'': ceder el control si se agotó el presupuesto. */
+    if (TERMINATED (lucky_terminated_3)) {
+      kissat_backtrack_without_updating_phases (solver, 0);
+      return 0;
+    }
     if (!import.imported)
       continue;
     if (import.eliminated)
@@ -140,6 +146,11 @@ static int forward_true_satisfiable (struct kissat *solver) {
   unsigned conflicts = 0;
 #endif
   for (all_stack (import, import, solver->import)) {
+    /* [SOLVER] B3'': ceder el control si se agotó el presupuesto. */
+    if (TERMINATED (lucky_terminated_4)) {
+      kissat_backtrack_without_updating_phases (solver, 0);
+      return 0;
+    }
     if (!import.imported)
       continue;
     if (import.eliminated)
@@ -197,6 +208,11 @@ static int backward_false_satisfiable (struct kissat *solver) {
   import *end = END_STACK (solver->import);
   import *p = end;
   while (p != begin) {
+    /* [SOLVER] B3'': ceder el control si se agotó el presupuesto. */
+    if (TERMINATED (lucky_terminated_5)) {
+      kissat_backtrack_without_updating_phases (solver, 0);
+      return 0;
+    }
     const import import = *--p;
     if (!import.imported)
       continue;
@@ -255,6 +271,11 @@ static int backward_true_satisfiable (struct kissat *solver) {
   import *end = END_STACK (solver->import);
   import *p = end;
   while (p != begin) {
+    /* [SOLVER] B3'': ceder el control si se agotó el presupuesto. */
+    if (TERMINATED (lucky_terminated_6)) {
+      kissat_backtrack_without_updating_phases (solver, 0);
+      return 0;
+    }
     const import import = *--p;
     if (!import.imported)
       continue;
@@ -321,7 +342,16 @@ int kissat_lucky (struct kissat *solver) {
   int res = 0;
 
   if (no_all_negative_clauses (solver)) {
+    /* [SOLVER] B3'': este bucle asigna TODAS las variables; en fórmulas de
+       millones de variables tarda minutos.  Si se agota el presupuesto a
+       mitad, hay que deshacer las asignaciones parciales: la fórmula no queda
+       satisfecha y los asertos de abajo no se cumplirían.  */
+    bool terminated = false;
     for (all_variables (idx)) {
+      if (TERMINATED (lucky_terminated_1)) {
+        terminated = true;
+        break;
+      }
       if (!ACTIVE (idx))
         continue;
       const unsigned lit = LIT (idx);
@@ -334,14 +364,24 @@ int kissat_lucky (struct kissat *solver) {
           kissat_probing_propagate (solver, 0, true);
       assert (!c);
     }
-    kissat_verbose (solver, "set all variables to true");
-    assert (kissat_propagated (solver));
-    assert (!solver->unassigned);
-    res = 10;
+    if (terminated)
+      kissat_backtrack_without_updating_phases (solver, 0);
+    else {
+      kissat_verbose (solver, "set all variables to true");
+      assert (kissat_propagated (solver));
+      assert (!solver->unassigned);
+      res = 10;
+    }
   }
 
   if (!res && no_all_positive_clauses (solver)) {
+    /* [SOLVER] B3'': igual que el bucle anterior. */
+    bool terminated = false;
     for (all_variables (idx)) {
+      if (TERMINATED (lucky_terminated_2)) {
+        terminated = true;
+        break;
+      }
       if (!ACTIVE (idx))
         continue;
       const unsigned lit = LIT (idx);
@@ -355,10 +395,14 @@ int kissat_lucky (struct kissat *solver) {
           kissat_probing_propagate (solver, 0, true);
       assert (!c);
     }
-    kissat_verbose (solver, "set all variables to false");
-    assert (kissat_propagated (solver));
-    assert (!solver->unassigned);
-    res = 10;
+    if (terminated)
+      kissat_backtrack_without_updating_phases (solver, 0);
+    else {
+      kissat_verbose (solver, "set all variables to false");
+      assert (kissat_propagated (solver));
+      assert (!solver->unassigned);
+      res = 10;
+    }
   }
 
   const unsigned active_before = solver->active;
