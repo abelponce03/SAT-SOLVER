@@ -1,9 +1,18 @@
 #include "modetrace.h"
 #include "internal.h"
-#include "resources.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+/* [SOLVER] Tiempo de CPU con clock(), de C99, y NO con 'kissat_process_time':
+   esa función se compila fuera en builds '--quiet', que es justo la
+   configuración de entrega ('--competition' = '--no-options --quiet'), y el
+   módulo dejaba de enlazar.  Lo cazó el trabajo `entrega` de la CI.  */
+
+static double modetrace_cpu_seconds (void) {
+  return (double) clock () / CLOCKS_PER_SEC;
+}
 
 static FILE *modetrace_file;
 static uint64_t modetrace_phase;
@@ -49,7 +58,7 @@ void kissat_modetrace_switch (struct kissat *solver) {
            ",%.6f,%.2f\n",
            modetrace_phase++, solver->stable ? "stable" : "focused",
            d_conflicts, d_decisions, d_ticks, d_learned, glr,
-           kissat_process_time ());
+           modetrace_cpu_seconds ());
   fflush (modetrace_file);
 
   modetrace_conflicts = s->conflicts;

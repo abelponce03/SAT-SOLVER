@@ -31,6 +31,10 @@ jobs:
         run: |
           # Cualquier lectura fuera de rango o desbordamiento en nuestros
           # parches aborta aquí, antes de contaminar una medición de PAR-2.
+          # GitHub ejecuta los pasos con 'bash -e'. Los códigos 10 y 20
+          # (SAT/UNSAT) son salidas NORMALES en DIMACS, así que con errexit el
+          # paso aborta en la primera instancia en vez de llegar al 'case'.
+          set +e
           set -u
           fail=0
           for f in bench/smoke/*.cnf; do
@@ -67,6 +71,7 @@ jobs:
         run: ./scripts/build.sh --clean --competition
       - name: Comprobar que responde correctamente
         run: |
+          set +e   # ver la nota sobre 'bash -e' en el trabajo de sanitizers
           set -u
           fail=0
           # Este binario NO acepta -q, -s ni --seed: están compilados fuera.
