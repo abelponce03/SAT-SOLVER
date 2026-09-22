@@ -77,6 +77,7 @@
   OPTION (lucky, 1, 0, 1, "try some lucky assignments") \
   OPTION (luckyearly, 1, 0, 1, "lucky assignments before preprocessing") \
   OPTION (luckylate, 1, 0, 1, "lucky assignments after preprocessing") \
+  OPTION (luckyminvars, 0, 0, INT_MAX, "minimum variables to try lucky (0=always)") \
   OPTION (mineffort, 10, 0, INT_MAX, "minimum absolute effort in millions") \
   OPTION (minimize, 1, 0, 1, "learned clause minimization") \
   OPTION (minimizedepth, 1e3, 1, 1e6, "minimization depth") \

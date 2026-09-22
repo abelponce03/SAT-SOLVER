@@ -176,16 +176,42 @@ static bool searching (kissat *solver) {
   return true;
 }
 
+/* [SOLVER] B3': las fases lucky solo compensan en fórmulas grandes.
+   Prueban asignaciones triviales (todo a verdadero/falso, hacia delante y
+   hacia atrás) y resuelven de golpe fórmulas enormes y estructuralmente
+   simples; en las demás son peaje.  Medido sobre 60 instancias reales del
+   Main Track 2026: desactivarlas por debajo de 50 000 variables baja el PAR-2
+   de 128.2 s a 114.8 s (-10.5 %), mientras que desactivarlas SIEMPRE lo
+   empeora (dos instancias de 32 M y 17.5 M variables pasan de SAT a TIMEOUT).
+   Ver docs/experiments/EXP-002-fases-lucky.md.
+
+   'luckyminvars' = 0 reproduce exactamente el comportamiento de upstream y es
+   el valor por defecto mientras la regla no esté validada sobre bench/test
+   (ADR-0002 §3).  */
+
+static bool lucky_worth_trying (kissat *solver) {
+  const unsigned min_vars = GET_OPTION (luckyminvars);
+  if (!min_vars)
+    return true;
+  if (solver->vars >= min_vars)
+    return true;
+  kissat_very_verbose (solver,
+                       "skipping lucky phases "
+                       "(%u variables below 'luckyminvars' limit %u)",
+                       solver->vars, min_vars);
+  return false;
+}
+
 int kissat_search (kissat *solver) {
   REPORT (0, '*');
   int res = 0;
   if (solver->inconsistent)
     res = 20;
-  if (!res && GET_OPTION (luckyearly))
+  if (!res && GET_OPTION (luckyearly) && lucky_worth_trying (solver))
     res = kissat_lucky (solver);
   if (!res && kissat_preprocessing (solver))
     res = kissat_preprocess (solver);
-  if (!res && GET_OPTION (luckylate))
+  if (!res && GET_OPTION (luckylate) && lucky_worth_trying (solver))
     res = kissat_lucky (solver);
   if (!res)
     kissat_classify (solver);
