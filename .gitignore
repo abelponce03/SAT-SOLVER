@@ -18,8 +18,8 @@ solver/*/build/
 results/*.csv
 results/*.log
 results/*.json
-results/*/*.csv
-results/*/*.json
+results/**/*.csv
+results/**/*.json
 !results/*.reference.csv
 !results/.gitkeep
 
