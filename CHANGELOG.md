@@ -22,6 +22,12 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   vendorizado), ADR-0003 (protocolo experimental).
 - CI en GitHub Actions: release + sanitizers + clang + scripts.
 
+### Experimentos cerrados
+- **EXP-003**: la regla B3′ (condicionar las fases *lucky* al tamaño de la
+  fórmula) **no replicó** sobre el banco reservado: ΔPAR-2 = +2.254 s, IC95 %
+  [−3.79, +11.17], Wilcoxon p = 0.98. Se retiró del catálogo y **se eliminó del
+  solver**; el diff contra upstream vuelve a ser solo documentación.
+
 ### Corregido
 - `scripts/build.sh` pasaba a `./configure` opciones que Kissat no tiene
   (`--symbols`, `--asan`, `--debug`), por lo que el trabajo de sanitizers de la

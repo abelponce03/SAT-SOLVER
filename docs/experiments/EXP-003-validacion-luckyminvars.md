@@ -1,6 +1,6 @@
 # EXP-003 — Validación de `luckyminvars` sobre el banco reservado
 
-- **Estado**: diseñado (escrito **antes** de ejecutar, ADR-0003 §6) · en ejecución
+- **Estado**: **cerrado — la regla NO replica**. Diseño escrito antes de ejecutar (ADR-0003 §6)
 - **Fecha de diseño**: 2026-09-22
 - **Valida**: la regla B3′ hallada en [EXP-002](EXP-002-fases-lucky.md)
 - **Implementación**: opción `luckyminvars` en `solver/kissat/src/options.h` y
@@ -89,8 +89,109 @@ python3 scripts/par2.py results/exp003/A_default.csv results/exp003/B_luckyminva
 
 ## 7. Resultados
 
-_Pendiente de ejecución._
+### Métrica primaria — banco completo (60 instancias, T = 180 s)
 
-## 8. Conclusión
+| | resueltas | PAR-2 |
+|---|---:|---:|
+| **A** — por defecto (`luckyminvars=0`) | **16** | **277.772 s** |
+| **B** — `--luckyminvars=50000` | 15 | 280.025 s |
 
-_Pendiente._
+```
+ΔPAR-2 medio (B−A) = +2.254 s   (+0.8 %, positivo = B PEOR)
+IC95 % bootstrap    = [−3.790, +11.165]   INCLUYE el 0
+Wilcoxon emparejado = W 68.0, p = 0.9794  (n efectivo = 16)
+McNemar (resueltas) = A-sí/B-no 1, A-no/B-sí 0, p = 1.0000
+```
+
+**Aplicando el criterio congelado en §3: ΔPAR-2 ≥ 0 ⇒ la regla NO replica.**
+
+### Secundario — solo las 16 instancias que alguna rama resuelve
+
+| | PAR-2 |
+|---|---:|
+| A | 51.64 s |
+| B | 60.09 s |
+
+`Δ = +8.45 s`, IC95 % `[−14.19, +40.33]`. Tampoco aquí hay señal, y el signo
+sigue siendo desfavorable.
+
+## 8. Diagnóstico: por qué no replicó
+
+### No fue falta de cobertura de la regla
+
+La regla actuó sobre **45 de las 60** instancias (75 %): `bench/test` tiene
+mediana de 5 625 variables y p75 de 72 456, así que la mayoría cae por debajo
+del umbral. No es que la regla no se disparara.
+
+| grupo | n | PAR-2 A | PAR-2 B | Δ |
+|---|---:|---:|---:|---:|
+| tocadas (< 50 000 variables) | 45 | 273.09 | 276.14 | **+3.05** |
+| intactas (≥ 50 000) | 15 | 291.83 | 291.68 | −0.15 |
+
+El daño está, en efecto, en las instancias que la regla toca.
+
+### Sí hubo dilución, como se anticipó
+
+De las 45 tocadas, **solo 13 las resuelve alguna de las dos ramas**; las otras
+32 agotan el presupuesto en ambas y aportan `2T` idéntico. El diseño ya lo
+advirtió en §4; el efecto real se juega en 13 observaciones.
+
+### Lo que pasó en esas 13
+
+| variables | A | B | Δ | |
+|---:|---:|---:|---:|---|
+| 41 734 | 157.50 | 85.23 | **−72.27** | gana B |
+| 1 150 | 152.74 | 128.61 | −24.13 | gana B |
+| 440 | 74.04 | 49.92 | −24.12 | gana B |
+| 19 484 | 149.62 | 137.89 | −11.74 | gana B |
+| 8 400 | 0.81 | 11.28 | +10.48 | gana A |
+| 19 384 | 85.96 | 123.88 | +37.92 | gana A |
+| **306** | **141.48** | **TIMEOUT** | **+218.52** | **gana A** |
+
+Cuatro ganancias claras frente a tres pérdidas, **pero una de las pérdidas es
+catastrófica**: una instancia de **306 variables** que las fases lucky resuelven
+en 141.5 s y que, sin ellas, agota el presupuesto.
+
+### La lección mecánica
+
+Esa instancia refuta el modelo que sostenía la regla. EXP-002 concluyó que
+*"las fases lucky compensan en fórmulas enormes y son peaje en las pequeñas"*.
+Aquí una fórmula de **306 variables** —tres órdenes de magnitud por debajo del
+umbral— **solo se resuelve gracias a ellas**. El valor de las fases lucky **no
+está correlacionado con el tamaño** del modo simple que suponíamos: dependen de
+que la fórmula admita una asignación trivial o casi trivial, y eso es una
+propiedad estructural que el recuento de variables no captura.
+
+Visto así, el resultado de EXP-002 (−13.4 s) se explica como lo que era: un
+umbral ajustado sobre 60 instancias concretas, que capturó el patrón de esa
+muestra y no un mecanismo. **Es el caso de libro de por qué existe el banco
+reservado.**
+
+### Una nota sobre lo que NO se va a hacer
+
+Quitando esa única instancia catastrófica, el Δ sería −1.41 s. **No se va a
+reportar eso como resultado.** Excluir la observación que estropea la hipótesis
+después de verla es precisamente lo que el protocolo prohíbe; se anota aquí solo
+para dejar constancia de que la tentación se vio y se descartó, y de que el
+efecto —de existir— sería pequeño y de cola muy pesada.
+
+## 9. Conclusión y decisiones tomadas
+
+1. **B3′ se retira del catálogo como idea cerrada**, según el criterio escrito
+   antes de ejecutar. No se ajusta el umbral, no se cambia el banco, no se
+   reintenta con otra métrica.
+2. **La opción `luckyminvars` se elimina del solver.** El diff contra upstream
+   es el artefacto que se entrega a la competición (ADR-0002) y no debe
+   arrastrar una feature que falló su validación. Todo lo necesario para
+   reponerla en 20 líneas queda en este documento y en el historial de git
+   (commit `589c853`).
+3. **Lo que SÍ sobrevive, y es independiente de esto**: `kissat_lucky` **no
+   consulta el límite de tiempo**, y por eso un `--time=30` puede convertirse en
+   348 s (EXP-002 §1). Eso es un fallo de upstream con consecuencias reales para
+   cualquiera que mida con presupuesto acotado, y **no depende de si conviene
+   saltarse las fases lucky**. Se mantiene como línea viva: la corrección
+   correcta no es saltarlas, es **hacer que cedan el control**.
+4. **Coste de esta línea**: unas 3 horas de cómputo y ~30 líneas de código. El
+   catálogo tenía B3′ marcada como "la mejor relación evidencia/esfuerzo"; ahora
+   tiene además un dato mucho más valioso: cuánto vale realmente la evidencia
+   obtenida en el mismo banco en que se buscó la regla.

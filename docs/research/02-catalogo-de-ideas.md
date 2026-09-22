@@ -22,7 +22,8 @@
 | **B1** | Ruptura de simetrías **condicional** | −964 s incond. / **−1287 s** cond. | alto | alto (satsuma) | Solo condicional |
 | **B2** | Hiper-resolución binaria condicional (hypre) | −615 s | medio-alto | alto | Alternativa a B1 |
 | **B3** | Detector barato de estructura para condicionar B1/B2 | habilita +322 s sobre B1 | medio | **bajo** | **Diferencial** |
-| **B3'** | **Condicionar las fases *lucky* por tamaño de fórmula** | **−13.4 s medidos en local (EXP-002)** | **muy bajo** | **ninguno** | **Hacer ya** |
+| ~~**B3'**~~ | ~~Condicionar las fases *lucky* por tamaño de fórmula~~ | **+2.3 s en el banco reservado** | muy bajo | — | **CERRADA: no replicó (EXP-003)** |
+| **B3''** | Hacer que `kissat_lucky` **ceda el control** al límite de tiempo | fallo real: `--time=30` → 348 s | bajo | ninguno (es un bug) | **Viva** |
 | **C1** | Robustez: ↓varianza por seed, flaky→estable | no medible en PAR-2 solo | bajo | **muy bajo** | Métrica, no técnica |
 | **D1** | Bandit sobre rephase/restart | **+25 a +280 s (PEOR)** | medio | muy alto | **Descartada como idea principal** |
 | **D2** | Gestión de cláusulas más allá de LBD | desconocido | medio | medio | Aparcada |
@@ -208,11 +209,23 @@ valor de responderla, y son casi un tercio de lo que ganó el campeón entero.
 Es una contribución pequeña, autocontenida, medible, y **útil para cualquier
 solver**, no solo para el nuestro — buen material de artículo corto.
 
-## B3' · Condicionar las fases *lucky* — **ya medido, y positivo**
+## ~~B3' · Condicionar las fases *lucky*~~ — **CERRADA: no replicó**
 
-Mientras se ejecutaba EXP-001 apareció una instancia de la línea B3 que se podía
-cerrar de inmediato, y salió bien. Resumen (detalle en
-[`EXP-002`](../experiments/EXP-002-fases-lucky.md)):
+> **Resultado final**: validada sobre el banco reservado `bench/test` (60
+> instancias nunca usadas), la regla da **ΔPAR-2 = +2.254 s — peor, no mejor**,
+> con IC95 % `[−3.79, +11.17]` y Wilcoxon p = 0.98. Se retira del catálogo y se
+> elimina del solver. Detalle y post-mortem en
+> [`EXP-003`](../experiments/EXP-003-validacion-luckyminvars.md).
+>
+> **Por qué falló**: una instancia de **306 variables** —tres órdenes de
+> magnitud por debajo del umbral— solo se resuelve *gracias* a las fases lucky.
+> El valor de éstas no está correlacionado con el tamaño: depende de que la
+> fórmula admita una asignación trivial, y eso el recuento de variables no lo
+> captura. El −13.4 s de EXP-002 era un umbral ajustado sobre las 60 instancias
+> en las que se midió, no un mecanismo.
+
+Lo que se midió en su momento (y que sigue siendo cierto *en aquel banco*,
+detalle en [`EXP-002`](../experiments/EXP-002-fases-lucky.md)):
 
 - `kissat_lucky` **no consulta el límite de tiempo**: con `--time=30` una
   instancia de 3.56 M variables terminó a los **348.5 s** (11.6× el límite).
@@ -225,9 +238,24 @@ cerrar de inmediato, y salió bien. Resumen (detalle en
   PAR-2 (−10.5 %)** sobre 60 instancias reales, capturando el **64 %** del hueco
   del oráculo, con todo el barrido de umbrales en ese sentido en negativo.
 
-Coste de implementación: un `if` en `src/search.c` usando un dato que el solver
-ya tiene. Es la mejora con mejor relación evidencia/esfuerzo de todo el
-catálogo, y de paso un fallo que reportar a upstream.
+Coste de implementación: un `if` en `src/search.c`. Se implementó (commit
+`589c853`), se validó, y **no replicó**. La línea queda cerrada.
+
+## B3'' · Que `kissat_lucky` ceda el control — **viva, e independiente de B3'**
+
+Lo único que sobrevive de esta línea, y no depende de si conviene saltarse las
+fases lucky: **`kissat_lucky` no consulta el límite de tiempo ni el de
+conflictos**. Medido: `--time=30` termina a los **348.5 s** (11.6× el límite),
+y con las fases lucky desactivadas, a los 20.0 s exactos.
+
+Es un fallo de upstream con consecuencias para cualquiera que mida con
+presupuesto acotado — incluidos los organizadores de la competición. La
+corrección correcta **no es saltarse las fases** (eso ya se probó y falló):
+es que **cedan el control**, comprobando el terminador dentro de sus bucles.
+
+Importa además para A4: un mecanismo de reparto de presupuesto necesita que el
+solver suelte el control en la frontera del turno. Con 350 s de latencia, no lo
+hace.
 
 ---
 

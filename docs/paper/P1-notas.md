@@ -32,6 +32,7 @@ la convierte en PAR-2 bajo las reglas de la Main Track secuencial.
 | E6 | La cartera baja además la varianza por seed (robustez) | EXP-002 | ⏳ pendiente |
 | E7 | El reparto adaptativo bate al reparto ciego | EXP-003 | ⏳ pendiente |
 | E8 | La mejora se sostiene en un banco de validación disjunto | `bench/test` | ⏳ pendiente |
+| E9 | **Una regla ajustada en el banco donde se descubre no sobrevive al banco reservado** | EXP-002 (−13.4 s) vs EXP-003 (+2.3 s) sobre la misma regla | ✅ medido |
 
 ## Huecos y amenazas a la validez
 
@@ -50,6 +51,16 @@ la convierte en PAR-2 bajo las reglas de la Main Track secuencial.
 - **Coste del certificado**: una cartera debe producir prueba DRAT válida del
   intento ganador. Hay que medir el sobrecoste y demostrar que las pruebas
   verifican (ya cubierto por `scripts/check_proof.sh` en CI).
+
+## Material para la sección de método
+
+EXP-002 → EXP-003 es un caso de estudio completo y propio del riesgo de ajustar
+sobre el banco de descubrimiento: la misma regla da **−13.4 s (−10.5 %)** en las
+60 instancias donde se buscó el umbral y **+2.3 s** en las 60 reservadas, con la
+explicación mecánica de por qué (una fórmula de 306 variables que solo se
+resuelve gracias a las fases lucky, refutando la correlación con el tamaño que
+sostenía la regla). Vale como ejemplo concreto en la sección de metodología, y
+es del tipo de material que casi nadie publica.
 
 ## Trabajo relacionado que hay que leer y citar
 
