@@ -47,7 +47,7 @@ partir de las instancias de 2026 (EXP-007 §4), y se dice así en cada informe.
 | **P1** | Ruptura de simetrías (satsuma MIT) activada por defecto | En 2026 marcó la diferencia en la cabeza del ranking; EXP-007 en curso | Hecho | **EXP-007** (§6) |
 | **P2** | **Activación condicional** (B3) | Un oráculo valdría −322 s extra (research/01); evita el daño en SAT (estrato X) | Medio | EXP-009, preregistrado |
 | **P3** | Cliques en MIT (reimplementar la clique máxima) | La salida difiere en 8 de 74 instancias; 5 refutadas dentro de satsuma | 1–2 días | D-005, tras EXP-007 |
-| **P4** | **Base Kissat sc2026** en lugar de 4.0.4 | sc2026 (sin publicar, MIT) quedó 16.º en solitario. No se sabe si mejora a 4.0.4 | Rebase de ~460 líneas | **EXP-008** → D-013 |
+| **P4** | **Base Kissat sc2026** en lugar de 4.0.4 | sc2026 (sin publicar, MIT) quedó 16.º en solitario. No se sabe si mejora a 4.0.4 | Portar ~105 líneas activas (`scripts/declaracion_ia.sh`) | **EXP-008** → D-013 |
 | **P5** | Topes de satsuma (tiempo y tamaño) | Provisionales, 60 s y 512 MiB | Bajo | Se fijan con los datos de EXP-007 y EXP-009. Se **declaran** como heurística ajustada con asistencia de IA |
 | — | ~~A4.2 (más brazos)~~ | A4.1 no tuvo efecto (EXP-006) | — | **Descartada**: la fase 3 original desaparece |
 
