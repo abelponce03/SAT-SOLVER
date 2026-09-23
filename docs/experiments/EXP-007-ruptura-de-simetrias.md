@@ -50,8 +50,8 @@ versionado. Estratos, con L = 100 s:
 | estrato | definición en 2026 | población | seleccionadas |
 |---|---|---:|---:|
 | H «ayuda» | W ≤ L, K ≥ 3·W, K ≥ 10 s | 54 | 45 |
-| X «daña» | K ≤ L, W ≥ 3·K, W ≥ 10 s | 22 | 15 |
-| N «neutro» | W ≤ L y K ≤ L, fuera de H y X | 60 | 24 (muestra fija, semilla 2027) |
+| X «daña» | K ≤ L, W ≥ 3·K, W ≥ 10 s | 22 | 15 (7 tras el filtro de tamaño) |
+| N «neutro» | W ≤ L y K ≤ L, fuera de H y X | 60 | 24 (muestra fija, semilla 2027; 22 tras el filtro) |
 | R | resto | 264 | — |
 
 - **Exclusiones**, fijadas antes de ver datos propios:
@@ -65,6 +65,16 @@ versionado. Estratos, con L = 100 s:
   SAT. **Que todo X sea SAT** es coherente con el mecanismo: la ruptura de
   simetrías elimina soluciones, y puede eliminar justo las que kissat
   encontraba rápido.
+
+**Banco efectivo tras la descarga** (anotado antes de ejecutar nada; se aplica
+la regla de tamaño de arriba, sin mirar resultados propios):
+
+- Se apartan 10 instancias con más de 5 M cláusulas: 8 de X y 2 de N.
+- Quedan **74**: H 45, X 7 y N 22.
+- X queda con solo 7 instancias. Las de 2026 donde la ruptura de simetrías
+  «daña» son sobre todo instancias grandes, y aquí casi no caben. **H3 pierde
+  casi toda su potencia**: su recuento se informa, pero con 7 instancias no se
+  puede generalizar.
 
 ## 4. Métricas y contrastes
 
