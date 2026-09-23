@@ -1,0 +1,26 @@
+{
+  "label": "c2-sat",
+  "solver": "/home/user/SAT-SOLVER/solver/kissat/build/kissat",
+  "solver_version": "4.0.4",
+  "git_commit": "693c784be6c13cf9957618ea3ef3eccea43e5a6a",
+  "git_dirty": true,
+  "bench": "/home/user/SAT-SOLVER/bench/calib",
+  "n_instances": 40,
+  "seeds": [
+    1
+  ],
+  "budget_kind": "time",
+  "budget_value": 180.0,
+  "opts": "--sat",
+  "parallel_jobs": 4,
+  "host": "vm",
+  "nproc": 4,
+  "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "loadavg": [
+    1.2744140625,
+    2.83740234375,
+    3.27001953125
+  ],
+  "cc": "/usr/bin/gcc",
+  "started_at": "2026-09-21T20:04:53+00:00"
+}

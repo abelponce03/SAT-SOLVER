@@ -1,0 +1,27 @@
+{
+  "label": "A-blind",
+  "solver": "/home/user/SAT-SOLVER/solver/kissat/build/kissat",
+  "solver_version": "4.0.4",
+  "solver_sha1": "6380e4d535ddaf92fd00390089e3d5946ab8ee13",
+  "git_commit": "b5f374d1e61e31a05d580ec5a483c8dede5f49d3",
+  "git_dirty": true,
+  "bench": "/home/user/SAT-SOLVER/bench/dev",
+  "n_instances": 60,
+  "seeds": [
+    1
+  ],
+  "budget_kind": "time",
+  "budget_value": 180.0,
+  "opts": "",
+  "parallel_jobs": 1,
+  "host": "vm",
+  "nproc": 4,
+  "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "loadavg": [
+    0.037109375,
+    0.18310546875,
+    0.15234375
+  ],
+  "cc": "/usr/bin/gcc",
+  "started_at": "2026-09-22T22:10:08+00:00"
+}

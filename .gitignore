@@ -1,0 +1,52 @@
+# --- Artefactos de compilación del fork (regenerables con scripts/build.sh) ---
+solver/kissat/build/
+solver/kissat/makefile
+solver/*/build/
+*.o
+*.a
+
+# --- Resultados de corridas ---
+# Regla (ADR-0003 §4 y CONTRIBUTING §6):
+#   - corridas sueltas en results/          -> NO se versionan (ruido)
+#   - las que respaldan un documento        -> sufijo .reference.csv, SÍ
+#   - las de un experimento documentado     -> results/<exp-id>/, SÍ, pero solo
+#     CUANDO EL EXPERIMENTO SE CIERRA, promocionándolas a mano:
+#         git add -f results/<exp-id>/
+#     Se ignoran por defecto a propósito: mientras una tanda corre, el CSV está
+#     a medio escribir, y versionar una corrida incompleta mete en el histórico
+#     un resultado que nunca existió.
+results/*.csv
+results/*.log
+results/*.json
+results/**/*.csv
+results/**/*.json
+!results/*.reference.csv
+!results/.gitkeep
+
+# --- Benchmarks descargados (pesados; regenerables con scripts/) ---
+bench/downloaded/
+bench/dev/
+bench/test/
+*.cnf.xz
+!bench/smoke/*.cnf
+
+# --- Python ---
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# --- Entorno ---
+.DS_Store
+*.swp
+
+# Herramientas de terceros descargadas por scripts/get_tools.sh
+tools/
+
+# Datos oficiales de competición y metadatos de GBD (regenerables)
+data/
+
+# Banco de calibración (regenerable por hash)
+bench/calib/
+bench/calib2/
+bench/boundary/

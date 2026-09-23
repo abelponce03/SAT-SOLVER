@@ -1,0 +1,79 @@
+48 trazas · recompensa = éxito si GLR(fase) > EMA(0.8)
+
+traza                              result    fases   glr_med   glr_cv   pendiente   exito
+----------------------------------------------------------------------------------------
+09637d3bd641b4d733666a862e8918ea.  SOLVED       22     0.079    0.738       0.722   61.9%
+09e0775d2b51c49ec1ec4d214ee7c8c8.  TIMEOUT      55     0.704    0.286      -0.186   64.8%
+0be1e12a8e7282d1a4e389bb90f6dbc7.  SOLVED       30     0.840    0.416       1.602   65.5%
+0c9da400944b002f90fd385d4fdab385.  SOLVED       16     0.112    0.185       0.672   80.0%
+12cd0c3196589ac8105653cbfe613fc6.  SOLVED       15     0.190    0.369       0.933   64.3%
+15456f0d13b26f0b4b21525ef7d0d711.  SOLVED       37     0.771    0.246       0.645   77.8%
+15e666a42158e3304fc3979de28a5e44.  SOLVED       52     0.762    0.245       0.189   62.7%
+1890f49a43a94b97828528b68c32b78e.  SOLVED       59     0.849    0.130       0.093   60.3%
+1bb9fe12b4fb50e98903ee87a51d6472.  SOLVED       16     0.137    0.634       2.210   53.3%
+1f81f7e009f501014cb23a8c2d41836f.  TIMEOUT      25     0.131    0.860       0.113   54.2%
+2b8cac8e1f5cad04696004e7fbf5cf2e.  SOLVED       37     0.704    0.258       0.035   69.4%
+3c4ac805726d78a869ff8116ee3533db.  TIMEOUT      84     0.865    0.139       0.040   59.0%
+3e912cd2a499b8f956246b866e2f9f64.  TIMEOUT      62     0.974    0.217       0.167   68.9%
+3ed56242f55e3653dbceeb4a70221787.  TIMEOUT      57     0.595    0.395       0.163   60.7%
+416e33a8463911546e4cd87d282a7e1e.  SOLVED       46     0.802    0.421       0.254   57.8%
+4989239fbeb6eb40fc0b664d9ba92636.  SOLVED       16     0.464    0.509       0.424   46.7%
+4f09ef861ee74e50dc101765e1ce27fb.  SOLVED       44     0.675    0.402       0.404   62.8%
+543e67dd5abc272c37775b1b742a1d9a.  SOLVED       18     0.087    0.973       1.431   58.8%
+5553fec254b32349e0e48c7ee1e2d6c7.  SOLVED       37     0.226    0.834       0.114   52.8%
+5de866bc7ff4dfde3cd682b5aca75894.  SOLVED        5     0.655    0.483    -117.676   75.0%
+5ee05ef0bcb42cb12bd698978c05178c.  TIMEOUT      52     0.812    0.302       0.012   52.9%
+5faba478cb08194407b5ec957ab08599.  SOLVED       10     0.032    0.816      -0.355   33.3%
+667341ee8c1dea3db613db317e2b2c33.  TIMEOUT      43     0.851    0.343      -0.101   59.5%
+6add7e416c1126607afeb2666af330ac.  SOLVED       36     0.651    0.362       0.836   65.7%
+6d815089fb4095208754622b4c44a8f7.  SOLVED       17     0.444    0.496       3.342   62.5%
+6e297bdb1c3f957f6333c37804805ecb.  TIMEOUT      33     0.200    0.812      -0.108   50.0%
+6f1b15ebd0ac13c05fb052e5b0453f64.  SOLVED       18     0.103    0.505       1.523   52.9%
+74931e82fd208ed949fa44bccd80df6b.  SOLVED       18     0.082    0.392       0.922   58.8%
+75429ff7acb5acb597abe01aa745c2a6.  SOLVED       64     0.990    0.185      -0.018   46.0%
+7fa502dfce37c37c1cafd50b3fba263f.  SOLVED       24     0.395    0.721       2.776   60.9%
+8117a2ac08e1acf52f660663efe2a5ca.  SOLVED       20     0.740    0.333       1.056   57.9%
+8390dca257561c53bf4eb6e158a2285f.  TIMEOUT      35     0.773    0.446       0.631   58.8%
+87dbc3302b82c09e19c55059fb943191.  TIMEOUT      55     0.719    0.284      -0.099   68.5%
+8d0d8518a438d93428257d9a38863c3c.  SOLVED       18     0.188    0.596       2.423   58.8%
+91860f79f079fede859034c7d76a98a2.  SOLVED       32     0.503    0.656      -0.316   48.4%
+9ef9243ff051b32795890fccd6c3f6b2.  SOLVED        7     0.193    0.618      -6.273   66.7%
+ac6256657058fe65dc7ddaf773ab83bf.  SOLVED        8     0.014    0.837       0.245   57.1%
+ae48df6541d190c096b1e5ba22d1b534.  SOLVED       33     0.647    0.523      -0.553   50.0%
+b0abaa97c4663edc2048d86de3e2b226.  TIMEOUT      67     0.725    0.447       0.165   59.1%
+bd0b055b890a9ace598a0c4aba40de30.  TIMEOUT      28     0.136    0.937       1.395   48.1%
+bf8c8761003704e761ce36db6665f741.  SOLVED       18     0.622    0.419       1.094   58.8%
+c14f0c610d59a9d5e8cec328485b916f.  TIMEOUT      55     0.842    0.240      -0.106   77.8%
+cb2e8b7fada420c5046f587ea754d052.  SOLVED       35     0.823    0.220       0.750   64.7%
+dc7817dfa2817916b266c1cfacd2ee66.  TIMEOUT      53     0.576    0.466      -0.094   55.8%
+e55a49d8065d65650f24c0f3ecef30b6.  TIMEOUT      40     0.520    0.691       0.614   59.0%
+f497bda3018958d7ba2d1cd99da3982e.  SOLVED       57     0.775    0.180       0.054   58.9%
+fac2035ba83ac2d0c2d67509d3f82b94.  TIMEOUT      51     0.705    0.432       0.118   56.0%
+
+(1 trazas con menos de 4 fases, descartadas)
+
+========================================================================================
+AGREGADO POR DESENLACE (medianas)
+
+                n   glr_med   glr_cv   pendiente    exito
+SOLVED         31     0.503    0.421       0.645    58.9%
+TIMEOUT        16     0.712    0.413       0.077    59.0%
+
+========================================================================================
+VEREDICTO
+
+V1 no-degeneración : CV mediano del GLR = 0.421  -> PASA (umbral 0.2)
+     el GLR varía de fase a fase, así que hay señal que explotar.
+
+V2 discriminación  : Δ nivel (SOLVED−TIMEOUT)     = -0.209
+                     Δ pendiente (SOLVED−TIMEOUT) = +0.568
+                     Mann-Whitney: p(nivel) = 0.0624, p(pendiente) = 0.0220
+                     -> PASA
+
+V3 bien formada    : tasa de éxito mediana = 59.0%  -> PASA (debe estar entre 15% y 85%)
+
+========================================================================================
+GLR POR MODO (¿se diferencian los dos brazos?)
+
+   focused    n=  866  mediana=0.462  CV=0.640
+   stable     n=  794  mediana=0.810  CV=0.326

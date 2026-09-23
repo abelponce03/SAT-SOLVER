@@ -1,0 +1,11 @@
+instance,expected,note
+php_5_4.cnf,UNSAT,pigeonhole 5 palomas en 4 nidos
+php_6_5.cnf,UNSAT,pigeonhole 6/5
+php_7_6.cnf,UNSAT,pigeonhole 7/6
+php_8_7.cnf,UNSAT,pigeonhole 8/7
+rand3_80_r4.26_s1.cnf,SAT,random 3-SAT en el umbral
+rand3_80_r4.26_s2.cnf,SAT,random 3-SAT en el umbral
+rand3_120_r4.26_s1.cnf,UNSAT,random 3-SAT en el umbral
+rand3_120_r4.26_s2.cnf,SAT,random 3-SAT en el umbral
+rand3_160_r4.26_s1.cnf,SAT,random 3-SAT en el umbral
+rand3_160_r4.26_s2.cnf,UNSAT,random 3-SAT en el umbral

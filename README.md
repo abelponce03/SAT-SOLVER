@@ -1,45 +1,98 @@
-# SAT-SOLVER — CaDiCaL fork para la SAT Competition 2027
+# SAT-SOLVER — fork de Kissat para la SAT Competition 2027
 
 Repositorio de trabajo para preparar una entrada a la **Main Track** de la
-[SAT Competition](https://satcompetition.github.io/). La estrategia: partir de
-un **fork de CaDiCaL** (solver CDCL de referencia, MIT) y aportar una mejora
-algorítmica medible, con vista a la edición **2027**.
+[SAT Competition 2027](https://satcompetition.github.io/). La base es un
+**fork de [Kissat](https://github.com/arminbiere/kissat) 4.0.4** (MIT, Armin
+Biere), el solver secuencial sobre el que se construyen las entradas ganadoras
+recientes; encima van nuestras mejoras, cada una validada con un A/B propio.
 
-Todo el trabajo vive en [`competition/`](competition/):
+> **Por qué Kissat y no CaDiCaL** (el proyecto arrancó como fork de CaDiCaL):
+> ver [ADR-0001](docs/adr/0001-migracion-cadical-a-kissat.md). Resumen: sobre
+> 955 instancias de aplicación reales, Kissat resuelve el 56.6 % y CaDiCaL el
+> 49.2 %, y el hueco es estructural (familia `miter`), no de política de
+> búsqueda. Además la Main Sequential 2025 y 2026 las ganan variantes de Kissat.
+
+## Estructura
 
 ```
-competition/
-├── cadical/        Fork de CaDiCaL (base sobre la que hacemos los cambios)
-├── benchmarks/     Instancias de prueba (muestra + suites oficiales descargadas)
-├── scripts/        build.sh, gen_benchmarks.py, run_baseline.sh, par2.py
-├── results/        CSV de las corridas de baseline / A-B
-└── README.md       Metodología, requisitos de la Main Track y plan de trabajo
+solver/kissat/      fork de Kissat (git subtree; UPSTREAM.md fija el punto base)
+scripts/            harness: build, runner, PAR-2 + estadística, verificación
+bench/              instancias (smoke versionado; dev/test se reconstruyen por hash)
+results/            CSV de corridas (solo se versionan los *.reference.csv)
+docs/adr/           decisiones de arquitectura e investigación
+docs/research/      estudio de literatura y caracterización
+docs/experiments/   un documento por experimento A/B (hipótesis antes, resultado después)
+docs/paper/         material para artículos
+docs/archive/       etapa CaDiCaL (jul–sep 2026), conservada como histórico
 ```
-
-Empieza por [`competition/README.md`](competition/README.md).
 
 ## Arranque rápido
 
 ```bash
-cd competition
-./scripts/build.sh                          # compila el fork
-./scripts/run_baseline.sh -s cadical/build/cadical -b benchmarks/sample \
-    -o results/baseline.csv -t 60 -n vanilla
-python3 scripts/par2.py results/baseline.csv
+./scripts/build.sh                 # compila el fork -> solver/kissat/build/kissat
+./scripts/get_tools.sh             # drat-trim, para verificar respuestas UNSAT
+./scripts/smoke_test.sh            # build + tests + modelos + pruebas DRAT + determinismo
+
+# una corrida completa sobre el banco de humo
+python3 scripts/run_experiment.py --solver solver/kissat/build/kissat \
+    --bench bench/smoke --out results/smoke.csv --timeout 60 --seeds 1,2,3 \
+    --label kissat-4.0.4-vanilla
+python3 scripts/par2.py results/smoke.csv --by-family
+
+# comparación A/B con contraste estadístico
+python3 scripts/par2.py results/A.csv results/B.csv --md
 ```
+
+## Cómo se mide aquí
+
+La métrica de ranking de la competición es **PAR-2** (tiempo si resuelve,
+2×timeout si no; menor es mejor). Este repositorio añade dos exigencias sobre
+la práctica habitual, porque con 4 núcleos no se puede imitar la competición a
+lo bruto:
+
+1. **Cribado determinista**: presupuesto por conflictos (`--conflicts`) en vez
+   de por tiempo. Con seed fija el resultado no depende del ruido de la máquina,
+   así que una idea mala se descarta en minutos y sin medir relojes.
+2. **Contraste estadístico obligatorio**: Wilcoxon emparejado, IC95% por
+   bootstrap del ΔPAR-2 y McNemar sobre el cambio de resueltas, con ≥3 seeds por
+   instancia. `par2.py` avisa cuando el tamaño de muestra no permite concluir.
+
+El protocolo completo, incluida la separación dev/test para no auto-engañarse,
+está en [ADR-0003](docs/adr/0003-protocolo-experimental-y-metricas.md).
 
 ## Estado
 
-- [x] Fork de CaDiCaL vendorizado y compilando
-- [x] Harness de baseline (runner con timeout + métrica PAR-2 + comparación A/B)
-- [x] Baseline sobre subconjunto de benchmarks oficiales (SATLIB) — ver `competition/docs/baseline.md` (PAR-2 = 31.74 s, 30/34)
-- [x] Investigación de la contribución — ver `competition/docs/research/01-panorama-modificaciones-cadical.md`
-- [x] **Fase 0**: caracterizar dinámica restart/LBD — ver `competition/docs/research/02-fase0-caracterizacion.md` (hallazgo: reinicios degeneran a ~99.7% reuse en pigeonhole)
-- [x] **Fase 0 (datos reales de tesis)** — ver `competition/docs/research/03-fase0-datos-tesis.md` (gap vs Kissat es estructural/miter; el reset-bandit debe apuntar a la inestabilidad por seed: 62 instancias flaky, varianza temporal hasta 102×)
-- [x] **Conseguir las instancias `.cnf.xz`** — descargadas de GBD por hash (62 flaky + 27 control) vía `scripts/fetch_gbd.py`
-- [x] **Fase 0.5**: instrumentación de trazas (`CADICAL_TRACE`) + caracterización real — ver `competition/docs/research/04-fase05-instrumentacion-trazas.md` (hallazgo: el thrashing es family-dependent y NO predice el fallo → la señal del bandit debe ser progreso genérico, no reuso)
-- [x] **Fase 1 · validación de recompensa** — ver `competition/docs/research/05-fase1-validacion-recompensa.md` (recompensa = GLR relativo al EMA; validado: el nivel absoluto no sirve/se invierte, la mejora sí)
-- [x] **Estado del arte** de modificaciones y bandits (SAT Comp 2025/2026) — ver `competition/docs/research/06-estado-del-arte-modificaciones.md` (los bandits sobre Kissat ganan SAT; CaDiCaL gana UNSAT sin bandits; nuestro nicho ya poblado → diferenciar por recompensa + robustez)
-- [ ] **Decidir contribución** a la luz del estado del arte (matriz de decisión, opciones B+D)
-- [ ] **Fase 1 · implementación**: bandit en `rephasing()`/`restart()` con recompensa validada
-- [ ] **Fase 1 · A/B a escala** (flaky→resuelta + ↓varianza por seed), en hardware capaz
+- [x] Migración de CaDiCaL a Kissat 4.0.4 ([ADR-0001](docs/adr/0001-migracion-cadical-a-kissat.md))
+- [x] Estructura, vendorizado y convenciones ([ADR-0002](docs/adr/0002-estructura-repo-y-vendorizado.md))
+- [x] Protocolo experimental y métricas ([ADR-0003](docs/adr/0003-protocolo-experimental-y-metricas.md))
+- [x] Harness: runner, PAR-2 + estadística, verificación de modelos y pruebas DRAT
+- [x] CI: release, sanitizers, clang, scripts
+- [x] **Análisis empírico de la SAT Competition 2026** — [`docs/research/01`](docs/research/01-analisis-empirico-sc2026.md)
+- [x] **Catálogo de ideas priorizado por techo medido** — [`docs/research/02`](docs/research/02-catalogo-de-ideas.md)
+- [x] Bancos `dev`/`test` estratificados y disjuntos del banco oficial 2026
+- [ ] **EXP-001**: diversidad intrínseca de Kissat (en ejecución)
+- [ ] EXP-002: A/B de la cartera secuencial
+- [ ] EXP-003: reparto adaptativo del presupuesto
+
+### El hallazgo que orienta el proyecto
+
+Sobre las 400 instancias del Main Track 2026 (datos oficiales):
+
+| | resueltas | PAR-2 |
+|---|---:|---:|
+| Kissat de fábrica (nuestra base) | 238 | 4611.5 s |
+| Ganador de 2026 (`satsuma-iter-kissat`) | 276 | 3647.0 s |
+| **VBS de 21 variantes de Kissat** (oráculo) | **321** | **2354.8 s** |
+| Cartera secuencial k=3, sin oráculo | 274 | 3813.1 s |
+
+Las **12 variantes que quedaron individualmente peores** que el Kissat de fábrica
+resuelven **juntas 277 instancias — más que el campeón del año**. La
+complementariedad entre configuraciones es un recurso mayor que la mejor técnica
+nueva publicada, y nadie lo está cobrando. Detalle en
+[`docs/research/01`](docs/research/01-analisis-empirico-sc2026.md).
+
+## Licencia
+
+El código bajo `solver/kissat/` es de Armin Biere y se distribuye bajo licencia
+MIT (ver `solver/kissat/LICENSE`); nuestras modificaciones se publican bajo la
+misma licencia. El harness y la documentación son originales de este proyecto.
