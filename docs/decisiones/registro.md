@@ -159,3 +159,11 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     consume `reorder.h`.
 - **Validación**: EXP-010, preregistrado, compara la versión MIT frente a la
   versión con cliquer.
+- **Estado (2026-09-23)**:
+  - implementada como **mclique** (`solver/mclique/`): ramificación y poda con
+    cota por coloreado voraz sobre conjuntos de bits;
+  - `scripts/test_mclique.sh` la contrasta con fuerza bruta y con una búsqueda
+    exhaustiva de referencia;
+  - `get_tools.sh` compila `tools/satsuma-mclique`, y la tubería de simetrías
+    pasa con ella (pruebas SR verificadas);
+  - EXP-010 preregistrado; la adopción depende de su resultado.

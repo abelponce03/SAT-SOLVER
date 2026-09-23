@@ -100,12 +100,16 @@ def parse_stats(text):
     return stats
 
 
-def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_grace):
+def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_grace,
+            env=None):
     """Ejecuta una corrida y devuelve (status, exit_code, wall_s, cpu_s, rss_mb, stats).
 
     El tiempo de CPU se toma de `wait4` sobre ESTE hijo concreto (no de
     RUSAGE_CHILDREN acumulado), para que la medición siga siendo correcta
-    cuando hay varias corridas en vuelo (`--jobs > 1`)."""
+    cuando hay varias corridas en vuelo (`--jobs > 1`).
+
+    `env`: variables de entorno que se AÑADEN a las del proceso (p. ej.
+    LABESAT_SATSUMA para elegir el binario de satsuma de solver/labesat)."""
     cmd = [solver, "-n", "-s", f"--seed={seed}"]
     if budget_kind == "time":
         # Kissat solo acepta segundos enteros en --time.
@@ -123,7 +127,8 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
         # Sesión propia: si hay que matar, se mata el GRUPO.  Con un guion como
         # solver/labesat, matar solo al hijo directo dejaría kissat huérfano.
         proc = subprocess.Popen(cmd, stdout=fout, stderr=subprocess.DEVNULL,
-                                start_new_session=True)
+                                start_new_session=True,
+                                env={**os.environ, **env} if env else None)
         deadline = (t0 + hard_limit) if hard_limit else None
         delay = 0.002
         while True:

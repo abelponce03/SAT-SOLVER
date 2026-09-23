@@ -5,6 +5,24 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### En curso (2026-09-23): base de Kissat y clique máxima MIT
+- **EXP-008** preregistrado y en ejecución: Kissat 4.0.4 (LabeSAT) frente a
+  Kissat «sc2026» en calib + calib2 (decide D-013). `get_tools.sh` compila
+  `tools/kissat-sc2026` desde el paquete oficial, comprobando el sha256.
+- **mclique** (`solver/mclique/`, MIT): clique máxima por ramificación y poda
+  con cota por coloreado voraz, escrita en sala limpia (D-005, opción c).
+  Implementa la interfaz de cliquer que usa satsuma, y `get_tools.sh` compila
+  con ella `tools/satsuma-mclique` (`CLIQUES=ON`, sin cliquer). **No se usa por
+  defecto** hasta que lo valide EXP-010 (preregistrado); se prueba con
+  `LABESAT_SATSUMA=tools/satsuma-mclique`.
+- `scripts/test_mclique.sh`: pruebas frente a fuerza bruta y a una búsqueda
+  exhaustiva de referencia (3300 grafos aleatorios), casos conocidos y la
+  compilación de la interfaz tal como la usa satsuma. En CI, junto con la
+  tubería de simetrías usando satsuma-mclique.
+- `run_ab_interleaved.py`: `--solver-b` (A/B entre dos binarios),
+  `--env-a/--env-b` (entorno por rama) e `--instances` (subconjunto
+  preregistrado de un banco).
+
 ### Añadido (2026-09-22 → 2026-09-23)
 - **Ruptura de simetrías verificable** (ADR-0004):
   - `solver/labesat` ejecuta satsuma (MIT, `CLIQUES=OFF`) y después kissat;

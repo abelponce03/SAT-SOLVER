@@ -56,6 +56,14 @@ def main():
     ap.add_argument("--label-b", default="B")
     ap.add_argument("--opts-a", default="")
     ap.add_argument("--opts-b", default="")
+    ap.add_argument("--env-a", action="append", default=[], metavar="VAR=VALOR",
+                    help="variable de entorno solo para la rama A (repetible), p. ej. "
+                         "LABESAT_SATSUMA=tools/satsuma")
+    ap.add_argument("--env-b", action="append", default=[], metavar="VAR=VALOR",
+                    help="ídem para la rama B")
+    ap.add_argument("--instances", default=None, metavar="LISTA",
+                    help="fichero con un nombre de instancia por línea: solo se "
+                         "corren esas (subconjunto preregistrado de un banco)")
     ap.add_argument("--timeout", type=float, required=True)
     ap.add_argument("--seeds", default="1")
     ap.add_argument("--guard", action="append", default=[], metavar="FICHERO",
@@ -66,22 +74,43 @@ def main():
     args = ap.parse_args()
 
     seeds = [int(x) for x in args.seeds.split(",") if x.strip()]
+    solo = None
+    if args.instances:
+        with open(args.instances) as f:
+            solo = {ln.strip() for ln in f if ln.strip() and not ln.startswith("#")}
     tareas = []
     for bench in args.bench:
         for inst in find_instances(bench):
+            if solo is not None and os.path.basename(inst) not in solo:
+                continue
             for seed in seeds:
                 tareas.append((bench, inst, seed))
+    if solo is not None:
+        encontradas = {os.path.basename(t[1]) for t in tareas}
+        if encontradas != solo:
+            sys.exit(f"ABORTADO: de --instances faltan en los bancos: "
+                     f"{sorted(solo - encontradas)}")
+
+    def parse_env(pares):
+        env = {}
+        for p in pares:
+            k, sep, v = p.partition("=")
+            if not sep or not k:
+                sys.exit(f"ABORTADO: variable de entorno mal formada: {p!r}")
+            env[k] = v
+        return env
+    env_a, env_b = parse_env(args.env_a), parse_env(args.env_b)
 
     solver_b = args.solver_b or args.solver
     sha = sha1_of(args.solver)
     sha_b = sha1_of(solver_b)
     guardas = {g: sha1_of(g) for g in args.guard}
     ramas = {
-        "A": (args.label_a, args.opts_a.split() if args.opts_a else [], args.out_a),
-        "B": (args.label_b, args.opts_b.split() if args.opts_b else [], args.out_b),
+        "A": (args.label_a, args.opts_a.split() if args.opts_a else [], args.out_a, env_a),
+        "B": (args.label_b, args.opts_b.split() if args.opts_b else [], args.out_b, env_b),
     }
     ficheros, escritores = {}, {}
-    for k, (_, _, out) in ramas.items():
+    for k, (_, _, out, _) in ramas.items():
         os.makedirs(os.path.dirname(os.path.abspath(out)) or ".", exist_ok=True)
         ficheros[k] = open(out, "w", newline="")
         escritores[k] = csv.DictWriter(ficheros[k], fieldnames=CSV_FIELDS)
@@ -120,8 +149,9 @@ def main():
                                          capture_output=True, text=True).stdout.strip(),
         "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
         "seeds": seeds, "timeout": args.timeout,
-        "rama_a": {"label": args.label_a, "opts": args.opts_a},
-        "rama_b": {"label": args.label_b, "opts": args.opts_b},
+        "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a},
+        "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b},
+        "instances_filter": os.path.abspath(args.instances) if args.instances else None,
         "host": socket.gethostname(), "nproc": os.cpu_count(),
         "platform": platform.platform(), "loadavg": os.getloadavg(),
         "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -135,8 +165,10 @@ def main():
 
     print(f"== A/B intercalado: {len(tareas)} parejas (instancia × seed), "
           f"binario A {sha[:12]}" + (f", binario B {sha_b[:12]}" if solver_b != args.solver else ""))
-    print(f"   A = {args.label_a} [{args.opts_a or 'por defecto'}]")
-    print(f"   B = {args.label_b} [{args.opts_b or 'por defecto'}]\n")
+    print(f"   A = {args.label_a} [{args.opts_a or 'por defecto'}]"
+          + (f" env {env_a}" if env_a else ""))
+    print(f"   B = {args.label_b} [{args.opts_b or 'por defecto'}]"
+          + (f" env {env_b}" if env_b else "") + "\n")
 
     for n, (bench, inst, seed) in enumerate(tareas, 1):
         if sha1_of(args.solver) != sha or sha1_of(solver_b) != sha_b:
@@ -149,11 +181,11 @@ def main():
         orden = ("A", "B") if n % 2 else ("B", "A")
         resumen = {}
         for k in orden:
-            label, opts, _ = ramas[k]
+            label, opts, _, env = ramas[k]
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
             status, code, wall, cpu, rss, stats = run_one(
                 args.solver if k == "A" else solver_b, inst, seed, "time",
-                args.timeout, opts, hard_grace=30.0)
+                args.timeout, opts, hard_grace=30.0, env=env)
             escritores[k].writerow({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,

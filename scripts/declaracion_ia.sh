@@ -9,7 +9,8 @@
 #   - las líneas añadidas y eliminadas en Kissat, fichero a fichero, clasificadas
 #     como ACTIVA (entra en la configuración de competición), INACTIVA
 #     (detrás de una opción apagada por defecto) o DOC/BUILD;
-#   - las líneas del guion solver/labesat.
+#   - las líneas del guion solver/labesat;
+#   - las líneas de mclique (solver/mclique), la clique máxima MIT de satsuma.
 # Todo el código de LabeSAT lo escribe un asistente de IA bajo la dirección del
 # autor (docs/metodologia/), así que «líneas de IA» = líneas cambiadas.
 #
@@ -54,6 +55,10 @@ done < <(git diff --numstat "$BASE" HEAD -- solver/kissat)
 [ $sin = 0 ] || exit 1
 
 guion=$(wc -l < solver/labesat)
+# mclique: clique máxima MIT para satsuma (D-005).  Se cuenta aparte porque no
+# es código de Kissat; las pruebas no entran en la cifra del solver.
+mclique=$(cat solver/mclique/mclique.[ch] solver/mclique/satsuma/* | wc -l)
+mclique_test=$(wc -l < solver/mclique/test_mclique.c)
 c_add=$(( ${add[ACTIVA]:-0} + ${add[INACTIVA]:-0} ))
 pct=$(awk -v a="$c_add" -v b="$base_lines" 'BEGIN{printf "%.1f", 100*a/b}')
 
@@ -66,8 +71,12 @@ cat <<EOF
   - inactivas (opción apagada o trazas): +${add[INACTIVA]:-0} / −${del[INACTIVA]:-0}.
 - **Documentación y build dentro de Kissat**: +${add[DOC/BUILD]:-0} / −${del[DOC/BUILD]:-0}.
 - **Guion de la tubería** (\`solver/labesat\`): **$guion** líneas.
+- **mclique** (\`solver/mclique\`, clique máxima para satsuma, D-005): **$mclique**
+  líneas de C, más $mclique_test de pruebas. Solo entra en la entrega si EXP-010
+  la valida.
 - **Escritas por IA**: todas las anteriores (asistente de IA bajo la dirección del autor).
-- **satsuma y dejavu**: se usan sin modificar (0 líneas).
+- **satsuma y dejavu**: se usan sin modificar (0 líneas). mclique ocupa el
+  hueco de cliquer sin tocar satsuma.
 
 | Fichero | Clase | Añadidas | Eliminadas |
 |---|---|---:|---:|

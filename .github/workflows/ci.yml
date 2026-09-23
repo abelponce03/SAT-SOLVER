@@ -21,6 +21,10 @@ jobs:
         run: ./scripts/smoke_test.sh
       - name: Tubería de simetrías (satsuma → kissat, pruebas SR con dsr-trim)
         run: ./scripts/test_symmetry.sh
+      - name: mclique (clique máxima MIT, D-005)
+        run: ./scripts/test_mclique.sh
+      - name: Tubería de simetrías con satsuma-mclique
+        run: LABESAT_SATSUMA="$PWD/tools/satsuma-mclique" ./scripts/test_symmetry.sh
 
   sanitize:
     name: Build con sanitizers

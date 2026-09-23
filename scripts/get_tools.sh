@@ -10,6 +10,8 @@
 #     la CNF con los predicados añadidos y el prefijo de la prueba en formato SR.
 #     Se compila con CLIQUES=OFF (el valor por defecto): así no entra cliquer,
 #     que es GPLv2, y todo el binario queda bajo MIT (ADR-0004).
+#   - satsuma-mclique: el mismo satsuma con CLIQUES=ON, donde la clique máxima
+#     la pone mclique (solver/mclique, MIT, D-005) en lugar de cliquer.
 #   - dejavu (Markus Anders, MIT): detector de automorfismos que usa satsuma.
 #   - dsr-trim (Cayden Codel, Apache 2.0): verificador de pruebas SR/DSR.  Hace
 #     falta porque la prueba combinada satsuma+LabeSAT no es DRAT puro.
@@ -75,6 +77,37 @@ if [ ! -x satsuma ]; then
     echo "   tools/satsuma listo"
 else
     echo "== satsuma ya está"
+fi
+
+# satsuma con CLIQUES=ON, pero con mclique (clique máxima MIT, solver/mclique)
+# en el hueco de cliquer (GPLv2): D-005, opción c.  Binario aparte hasta que
+# EXP-010 lo valide; labesat lo usa con LABESAT_SATSUMA=tools/satsuma-mclique.
+if [ ! -x satsuma-mclique ]; then
+    echo "== satsuma ${SATSUMA_REV:0:7} con mclique (CLIQUES=ON, sin cliquer, solo MIT)"
+    if [ "$(git -C satsuma-src rev-parse HEAD 2>/dev/null)" != "$SATSUMA_REV" ]; then
+        fetch_rev satsuma-src "$SATSUMA_URL" "$SATSUMA_REV"
+        fetch_rev satsuma-src/src/dejavu "$DEJAVU_URL" "$DEJAVU_REV"
+    fi
+    rm -rf satsuma-src/src/cliquer satsuma-src/build-mclique
+    mkdir -p satsuma-src/src/cliquer
+    cp "$ROOT"/solver/mclique/mclique.[ch] "$ROOT"/solver/mclique/satsuma/* satsuma-src/src/cliquer/
+    cmake -S satsuma-src -B satsuma-src/build-mclique -DCMAKE_BUILD_TYPE=Release \
+        -DCLIQUES=ON -DFETCHCONTENT_SOURCE_DIR_DEJAVU="$PWD/satsuma-src/src/dejavu" \
+        >/dev/null
+    nice -n 10 cmake --build satsuma-src/build-mclique -j "$JOBS" >/dev/null
+    # Lo compilado en src/cliquer tiene que ser exactamente nuestro código.
+    for f in satsuma-src/src/cliquer/*; do
+        b=$(basename "$f")
+        orig="$ROOT/solver/mclique/$b"
+        [ -f "$orig" ] || orig="$ROOT/solver/mclique/satsuma/$b"
+        if ! cmp -s "$f" "$orig" || grep -qi 'general public license' "$f"; then
+            echo "   ERROR: src/cliquer/$b no es de mclique" >&2; exit 1
+        fi
+    done
+    cp satsuma-src/build-mclique/satsuma satsuma-mclique
+    echo "   tools/satsuma-mclique listo"
+else
+    echo "== satsuma-mclique ya está"
 fi
 
 if [ ! -x dsr-trim ]; then

@@ -4,6 +4,10 @@
   donde hay simetría explotable, pero ralentiza 1.42× las instancias neutras.
   Veredicto: **solo condicional**; en `labesat` es opcional (`--symmetry`) hasta
   que la activación condicional (B3) esté validada.
+- **D-005, opción c (2026-09-23)**: la clique máxima que satsuma toma de
+  cliquer se reimplementa en MIT (**mclique**, `solver/mclique/`). Se compila
+  aparte como `tools/satsuma-mclique`, y pasa a ser el satsuma por defecto solo
+  si EXP-010 lo valida.
 - **Fecha**: 2026-09-23
 - **Decide**: Abel Ponce («usa satsuma como programa externo y mantén MIT»)
 
@@ -76,7 +80,7 @@ de kissat. El núcleo del solver no se toca.
 | Alternativa | Pros | Contras | Por qué no |
 |---|---|---|---|
 | Copiar la entrada ganadora de 2026 | Ya está probada en competición | GPLv3: contagiaría todo LabeSAT | Incompatible con mantener MIT |
-| satsuma con `CLIQUES=ON` | Quizá rompe más simetrías | cliquer es GPLv2; no está en el upstream | Mismo motivo. Su coste se mide aparte (tarea #5), sin meter cliquer en el repositorio |
+| satsuma con `CLIQUES=ON` | Quizá rompe más simetrías | cliquer es GPLv2; no está en el upstream | Mismo motivo. Su coste se midió (`research/03`: 6 instancias de H) y se ataca con mclique, en MIT (D-005, EXP-010) |
 | Ruptura de simetrías *dentro* de kissat | Una sola pasada; podría usar `classify.c` | Meses de trabajo; la prueba SR habría que generarla nosotros | Coste desproporcionado antes de saber si compensa (EXP-007) |
 | BreakID | Referencia clásica | Predicados de ruptura sin prueba SR integrada | Sin prueba no se puede entregar |
 | Prefijo en texto (`--no-binary`) | Legible | satsuma solo emite SR binario | No es posible con satsuma |
