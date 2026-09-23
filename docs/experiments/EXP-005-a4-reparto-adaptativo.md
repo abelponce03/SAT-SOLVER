@@ -319,6 +319,54 @@ frontera (ni triviales ni imposibles) y varias semillas. Con 16 observaciones
 útiles y un efecto del orden del 10 %, este diseño no tenía potencia para
 detectarlo; decirlo ahora es más honesto que haberlo descubierto después.
 
+### Análisis de potencia: ¿compensa escalar el banco?
+
+Es la decisión que el criterio de §6 dejaba pendiente. Se toma con números:
+
+```
+diferencias B−A ordenadas (s): -196.3 -138.8 -43.8 -30.6 -6.3 -5.7 -2.4 -1.7
+                               -0.9 -0.7 -0.6 -0.0 0.0 5.3 5.3 283.9
+tamaño de efecto (Cohen d)   = |-8.33| / 93.6 = 0.089
+n informativas para 80 % de potencia: ~990
+  -> ~3 700 corridas por rama (tasa informativa del banco: 27 %)
+  -> ~155 h de cómputo SECUENCIAL por rama
+```
+
+**Escalar el banco para decidir A4.1 por PAR-2 no compensa**: es inviable en esta
+máquina. El PAR-2 está dominado por tres valores extremos, dos de ellos
+instancias que cambian de estado en sentidos opuestos y casi se cancelan
+(−196.3 y +283.9). Con presupuesto corto, el PAR-2 mide sobre todo *qué*
+instancias se resuelven, y ahí A4.1 empata 1–1.
+
+### Un hallazgo exploratorio — que NO es un resultado
+
+Restringiendo a las 12 instancias que **ambas** ramas resuelven, el patrón es
+nítido:
+
+| familia | A | B | factor |
+|---|---:|---:|---:|
+| graph-coloring | 162.3 s | 23.5 s | **0.14×** |
+| multiplier-circuits | 8.5 s | 2.7 s | 0.32× |
+| stable-semantics | 4.2 s | 1.8 s | 0.42× |
+| clique-formulas | 14.7 s | 8.4 s | 0.57× |
+| graph-coloring | 95.2 s | 64.6 s | 0.68× |
+| sorting-networks | 150.2 s | 106.4 s | 0.71× |
+| *(cuatro más entre 0.94× y 0.98×)* | | | |
+| school-timetabling | 63.8 s | 69.0 s | 1.08× |
+| syndrome-decoding | 60.1 s | 65.4 s | 1.09× |
+
+B más rápido en **10 de 12** (test de signo p = 0.039); log-ratio medio −0.433
+(factor geométrico **0.648×**), Cohen *d* = 0.742, y con eso bastarían ~14
+observaciones para 80 % de potencia.
+
+**Esto no se reporta como resultado, y conviene dejar escrito por qué.** Se
+encontró *después* de que la métrica preregistrada (PAR-2) no concluyera.
+Mirar los datos, no encontrar el efecto en la métrica fijada, y buscarlo en otra
+hasta que aparece es exactamente el camino que llevó a B3′ a un −13.4 % que
+luego no replicó. La diferencia aquí es que se sabe, y se actúa en
+consecuencia: la observación se convierte en **hipótesis preregistrada de
+EXP-006**, que se prueba con **datos que no han visto este A/B**.
+
 ## 8. Amenazas a la validez, anotadas de antemano
 
 - **El banco local no reproduce el régimen de competición** (EXP-001: ratio
