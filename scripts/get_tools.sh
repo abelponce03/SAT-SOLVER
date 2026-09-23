@@ -30,6 +30,11 @@ DSRTRIM_REV=c3119d8570b881d0179a8ae46f1974a32d41d9fc
 # Hay 12 commits de correcciones entre ambos: una prueba que solo pase con el
 # nuevo descalificaría en la competición.  Se verifica con los dos.
 DSRTRIM_SC_REV=8f857dd6cb34ccff8eb94e2f4ed6cf012d6c8f35
+# Kissat «sc2026»: versión posterior a 4.0.4, sin release publicada, que Biere
+# presentó a la SAT Competition 2026 (paquete oficial de solvers, MIT).  Solo
+# para EXP-008 (D-013): no se distribuye mientras no se decida cambiar de base.
+KISSAT_SC_URL=https://satcompetition.github.io/2026/downloads/solvers/biere.tar.xz
+KISSAT_SC_SHA256=69fbdae7a9a0a96955ea953976257712388834fca7000a844d3d736b61d8b3f3
 
 mkdir -p "$ROOT/tools"
 cd "$ROOT/tools"
@@ -80,6 +85,23 @@ if [ ! -x dsr-trim ]; then
     echo "   tools/dsr-trim listo"
 else
     echo "== dsr-trim ya está"
+fi
+
+if [ ! -x kissat-sc2026 ]; then
+    echo "== kissat sc2026 (paquete de la SAT Competition 2026, sha256 ${KISSAT_SC_SHA256:0:12})"
+    rm -rf kissat-sc2026-src biere.tar.xz biere
+    curl -sSfL -o biere.tar.xz "$KISSAT_SC_URL"
+    echo "$KISSAT_SC_SHA256  biere.tar.xz" | sha256sum -c --quiet
+    mkdir -p biere && tar -xJf biere.tar.xz -C biere
+    mv biere/biere/kissat/src kissat-sc2026-src && rm -rf biere biere.tar.xz
+    # El paquete trae un build/ ya compilado y un enlace src/makefile: se
+    # eliminan para compilar desde cero, igual que en la competición.
+    rm -rf kissat-sc2026-src/build kissat-sc2026-src/src/makefile
+    (cd kissat-sc2026-src && ./configure >/dev/null && nice -n 10 make -C build -j "$JOBS" >/dev/null)
+    cp kissat-sc2026-src/build/kissat kissat-sc2026
+    echo "   tools/kissat-sc2026 listo ($(./kissat-sc2026 --version))"
+else
+    echo "== kissat-sc2026 ya está"
 fi
 
 if [ ! -x dsr-trim-sc2026 ]; then

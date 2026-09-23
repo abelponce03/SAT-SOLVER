@@ -10,6 +10,7 @@ salvo Kissat, que está vendorizado.
 | **satsuma** | Ruptura de simetrías, programa externo, **sin modificar** | `c6ad1b5`, compilado con `CLIQUES=OFF` | MIT | Markus Anders | `tools/satsuma-src/LICENSE` |
 | **dejavu** | Detección de automorfismos, usado por satsuma | `4c275e9` | MIT | Markus Anders | `tools/satsuma-src/src/dejavu/LICENSE` |
 | **dsr-trim** | Verificador de pruebas SR/DSR. Solo pruebas y CI, **no se distribuye** | `c3119d8` y `8f857dd` (SC2026) | Apache 2.0 | Cayden R. Codel | `tools/dsr-trim-src/LICENSE` |
+| **Kissat sc2026** | Candidata a nueva base; **solo experimentos** (EXP-008), no se distribuye | Paquete oficial de la SAT Competition 2026, sha256 `69fbdae7…` | MIT | Armin Biere, Mathias Fleury, Florian Pollitt | `tools/kissat-sc2026-src/LICENSE` |
 | **drat-trim** | Verificador de pruebas DRAT. Solo pruebas y CI, **no se distribuye** | HEAD en la descarga | MIT | Marijn Heule, Nathan Wetzler (UT Austin) | `tools/drat-trim-src/LICENSE` |
 
 ## Lo que **no** se usa

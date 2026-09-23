@@ -46,7 +46,9 @@ from run_experiment import (CSV_FIELDS, family_of, find_instances,  # noqa: E402
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--solver", required=True)
+    ap.add_argument("--solver", required=True, help="binario de la rama A (y de la B si no se da --solver-b)")
+    ap.add_argument("--solver-b", default=None,
+                    help="binario distinto para la rama B (A/B entre dos binarios, p. ej. EXP-008)")
     ap.add_argument("--bench", required=True, nargs="+", help="uno o varios bancos")
     ap.add_argument("--out-a", required=True)
     ap.add_argument("--out-b", required=True)
@@ -70,7 +72,9 @@ def main():
             for seed in seeds:
                 tareas.append((bench, inst, seed))
 
+    solver_b = args.solver_b or args.solver
     sha = sha1_of(args.solver)
+    sha_b = sha1_of(solver_b)
     guardas = {g: sha1_of(g) for g in args.guard}
     ramas = {
         "A": (args.label_a, args.opts_a.split() if args.opts_a else [], args.out_a),
@@ -105,6 +109,9 @@ def main():
     meta = {
         "diseno": "A/B intercalado (run_ab_interleaved.py)",
         "solver": os.path.abspath(args.solver), "solver_sha1": sha,
+        "solver_b": os.path.abspath(solver_b), "solver_b_sha1": sha_b,
+        "solver_b_version": subprocess.run([solver_b, "--version"], capture_output=True,
+                                           text=True).stdout.strip(),
         "solver_id": solver_id, "git_commit": head,
         "solver_id_coincide_con_head": solver_id == head,
         "guardas_sha1": {os.path.abspath(g): h for g, h in guardas.items()},
@@ -127,14 +134,13 @@ def main():
             json.dump(meta, f, indent=2, ensure_ascii=False)
 
     print(f"== A/B intercalado: {len(tareas)} parejas (instancia × seed), "
-          f"binario {sha[:12]}")
+          f"binario A {sha[:12]}" + (f", binario B {sha_b[:12]}" if solver_b != args.solver else ""))
     print(f"   A = {args.label_a} [{args.opts_a or 'por defecto'}]")
     print(f"   B = {args.label_b} [{args.opts_b or 'por defecto'}]\n")
 
     for n, (bench, inst, seed) in enumerate(tareas, 1):
-        if sha1_of(args.solver) != sha:
-            sys.exit(f"\nABORTADO: el binario cambió a mitad de la tanda "
-                     f"({sha[:12]} -> {sha1_of(args.solver)[:12]}). "
+        if sha1_of(args.solver) != sha or sha1_of(solver_b) != sha_b:
+            sys.exit("\nABORTADO: un binario de las ramas cambió a mitad de la tanda. "
                      "Los parciales mezclarían dos binarios: se descartan.")
         for g, h in guardas.items():
             if sha1_of(g) != h:
@@ -146,7 +152,8 @@ def main():
             label, opts, _ = ramas[k]
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
             status, code, wall, cpu, rss, stats = run_one(
-                args.solver, inst, seed, "time", args.timeout, opts, hard_grace=30.0)
+                args.solver if k == "A" else solver_b, inst, seed, "time",
+                args.timeout, opts, hard_grace=30.0)
             escritores[k].writerow({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,

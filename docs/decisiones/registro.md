@@ -19,7 +19,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-002 | ¿Subcategoría IA o categoría regular? | ⏸️ correo aplazado hasta definir las mejoras (límite recomendado: 1-feb-2027) | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
 | D-003 | ¿Se admite la composición satsuma + kissat? | ⏸️ mismo correo que D-002 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
-| D-005 | ¿MIT o cliques (GPL)? | 🟡 **coste medido**: 6 instancias de H (≈ −29 s). Recomendada la opción c (clique máxima en MIT) | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 |
+| D-005 | ¿MIT o cliques (GPL)? | ✅ **opción c** (2026-09-23): reimplementar la clique máxima en MIT | Director | [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 · EXP-010 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
 | D-007 | Nombre del solver | ✅ LabeSAT (2026-09-22) | Director | CHANGELOG |
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |
@@ -144,3 +144,18 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   - V3 y V4 solo si algún experimento las respalda.
 - **Coste**: cada variante lleva su propia declaración de IA y consume cómputo
   en la validación final (H8).
+
+## D-005 — Resolución
+
+- **Decisión del director (2026-09-23): opción c**. La búsqueda de clique
+  máxima que satsuma toma de cliquer (GPLv2) se reimplementa en MIT.
+- **Motivo**: sin cliques, 6 instancias del estrato H pasan de resolverse en
+  menos de 2 s a timeout (research/03, segunda parte). La opción c es la única
+  que recupera ese efecto sin salir de la directriz «mantén MIT».
+- **Reglas de la reimplementación**:
+  - **sala limpia**: se implementa a partir de los algoritmos publicados
+    (Östergård 2002; Tomita y Seki 2003) y **sin leer el código de cliquer**;
+  - de satsuma (MIT) solo se usa su interfaz: la única llamada y los tipos que
+    consume `reorder.h`.
+- **Validación**: EXP-010, preregistrado, compara la versión MIT frente a la
+  versión con cliquer.
