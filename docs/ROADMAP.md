@@ -9,6 +9,18 @@
 > envío del solver secuencial el 10 de mayo, descripción del sistema el 17 de
 > mayo. Hay que confirmarlas en cuanto salga la convocatoria.
 
+> **Seguimiento en GitHub.** Este plan es el mapa. El estado vivo está en los
+> issues:
+>
+> - épica de la fase 2: #12;
+> - épica de documentación: #16;
+> - infraestructura: #17;
+> - las **decisiones abiertas**, en la Reunión 1 (#4), con un sub-issue por
+>   decisión (etiqueta `decisión`).
+>
+> El plan se mueve cuando se resuelve una decisión (ADR-0005 §2), y aquí se
+> apunta el cambio.
+
 ---
 
 ## 1. Tres reglas que cambian el plan
