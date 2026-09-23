@@ -30,7 +30,11 @@ Ojo: las opciones del solver empiezan por "--", así que van con "=" pegado
 """
 import argparse
 import csv
+import json
 import os
+import platform
+import socket
+import subprocess
 import sys
 from datetime import datetime, timezone
 
@@ -72,6 +76,43 @@ def main():
         ficheros[k] = open(out, "w", newline="")
         escritores[k] = csv.DictWriter(ficheros[k], fieldnames=CSV_FIELDS)
         escritores[k].writeheader()
+
+    # Metadatos de procedencia, como run_experiment.py: el ADR-0003 dice que un
+    # resultado sin ellos "no se usa para nada".
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def git(*a):
+        try:
+            return subprocess.run(["git", "-C", repo, *a], capture_output=True,
+                                  text=True, check=True).stdout.strip()
+        except Exception:
+            return "?"
+
+    solver_id = subprocess.run([args.solver, "--id"], capture_output=True,
+                               text=True).stdout.strip()
+    head = git("rev-parse", "HEAD")
+    meta = {
+        "diseno": "A/B intercalado (run_ab_interleaved.py)",
+        "solver": os.path.abspath(args.solver), "solver_sha1": sha,
+        "solver_id": solver_id, "git_commit": head,
+        "solver_id_coincide_con_head": solver_id == head,
+        "git_dirty": bool(git("status", "--porcelain")),
+        "solver_version": subprocess.run([args.solver, "--version"],
+                                         capture_output=True, text=True).stdout.strip(),
+        "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
+        "seeds": seeds, "timeout": args.timeout,
+        "rama_a": {"label": args.label_a, "opts": args.opts_a},
+        "rama_b": {"label": args.label_b, "opts": args.opts_b},
+        "host": socket.gethostname(), "nproc": os.cpu_count(),
+        "platform": platform.platform(), "loadavg": os.getloadavg(),
+        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    if solver_id != head:
+        print(f"[AVISO] el binario dice --id {solver_id[:12]} y HEAD es "
+              f"{head[:12]}: se compiló desde otro commit.")
+    for out in (args.out_a, args.out_b):
+        with open(os.path.splitext(out)[0] + ".meta.json", "w") as f:
+            json.dump(meta, f, indent=2, ensure_ascii=False)
 
     print(f"== A/B intercalado: {len(tareas)} parejas (instancia × seed), "
           f"binario {sha[:12]}")
