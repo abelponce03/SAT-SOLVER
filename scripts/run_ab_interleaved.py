@@ -56,6 +56,11 @@ def main():
     ap.add_argument("--opts-b", default="")
     ap.add_argument("--timeout", type=float, required=True)
     ap.add_argument("--seeds", default="1")
+    ap.add_argument("--guard", action="append", default=[], metavar="FICHERO",
+                    help="fichero adicional cuyo SHA-1 no puede cambiar durante la "
+                         "tanda (repetible).  Imprescindible cuando --solver es un "
+                         "guion como solver/labesat: hay que vigilar también kissat "
+                         "y satsuma")
     args = ap.parse_args()
 
     seeds = [int(x) for x in args.seeds.split(",") if x.strip()]
@@ -66,6 +71,7 @@ def main():
                 tareas.append((bench, inst, seed))
 
     sha = sha1_of(args.solver)
+    guardas = {g: sha1_of(g) for g in args.guard}
     ramas = {
         "A": (args.label_a, args.opts_a.split() if args.opts_a else [], args.out_a),
         "B": (args.label_b, args.opts_b.split() if args.opts_b else [], args.out_b),
@@ -96,6 +102,7 @@ def main():
         "solver": os.path.abspath(args.solver), "solver_sha1": sha,
         "solver_id": solver_id, "git_commit": head,
         "solver_id_coincide_con_head": solver_id == head,
+        "guardas_sha1": {os.path.abspath(g): h for g, h in guardas.items()},
         "git_dirty": bool(git("status", "--porcelain")),
         "solver_version": subprocess.run([args.solver, "--version"],
                                          capture_output=True, text=True).stdout.strip(),
@@ -124,6 +131,9 @@ def main():
             sys.exit(f"\nABORTADO: el binario cambió a mitad de la tanda "
                      f"({sha[:12]} -> {sha1_of(args.solver)[:12]}). "
                      "Los parciales mezclarían dos binarios: se descartan.")
+        for g, h in guardas.items():
+            if sha1_of(g) != h:
+                sys.exit(f"\nABORTADO: {g} cambió a mitad de la tanda.")
         # alternar el orden dentro de la pareja cancela el sesgo de posición
         orden = ("A", "B") if n % 2 else ("B", "A")
         resumen = {}
