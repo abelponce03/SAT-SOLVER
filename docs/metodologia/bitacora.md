@@ -116,6 +116,16 @@ al cerrar cada sesión.
     compilándolos.
   - Las acciones de GitHub desde la sesión llevan la insignia «via Claude»
     (D-012).
+- **EXP-007 cerrado**:
+  - H1 se confirma con mucha fuerza (H: 8 → 37 de 45); H2 no se cumple (1.42×
+    en N); seguridad sin fallos;
+  - veredicto preregistrado: **solo condicional**, así que la ruptura pasa a
+    ser opcional en `labesat`;
+  - el script de análisis se commiteó antes de que terminara la tanda;
+  - lectura exploratoria, etiquetada como tal: el coste en N viene de la
+    búsqueda de kissat sobre la fórmula modificada.
+- **Cliques medidos**: mantener MIT cuesta 6 instancias. D-005 pasa a tener
+  datos.
 - **Resuelto en la sesión**: D-001, opción b.
   - Se reescribió la rama del PR #3 con `git filter-branch`: árbol idéntico y
     fechas conservadas.

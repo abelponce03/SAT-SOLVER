@@ -21,6 +21,7 @@ una búsqueda automática de parámetros.
 
 | Parámetro / heurística | Valor | Cómo se fijó | Activo en competición |
 |---|---|---|---|
+| Ruptura de simetrías activada por defecto | **No** (`LABESAT_SYMMETRY=0`) | Criterio preregistrado de EXP-007 §6 (diseño asistido por IA) | Pendiente de B3 |
 | `LABESAT_SYMM_TIMEOUT` (tope de satsuma) | 60 s (provisional) | Elección inicial; se revisa con EXP-007 y EXP-009 | Sí |
 | `LABESAT_SYMM_MAXBYTES` (tope de tamaño) | 512 MiB (provisional) | Ídem | Sí |
 | B3″: las fases *lucky* ceden al terminador | — | Corrección de comportamiento, no ajuste. Neutral en EXP-004 | Sí |

@@ -1,0 +1,39 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/user/SAT-SOLVER/solver/labesat",
+  "solver_sha1": "c148d26319fade319a3c69eae5e76c3321e3225b",
+  "solver_id": "23649fc4bc96b0aac825c7eb5bc4061045ad66bf",
+  "git_commit": "23649fc4bc96b0aac825c7eb5bc4061045ad66bf",
+  "solver_id_coincide_con_head": true,
+  "guardas_sha1": {
+    "/home/user/SAT-SOLVER/solver/kissat/build/kissat": "442e5634231176a1efd1adecbb193ff570954c00",
+    "/home/user/SAT-SOLVER/tools/satsuma": "e9db9a385fadc47e0647fa06faf07108ca1aea0e"
+  },
+  "git_dirty": false,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/user/SAT-SOLVER/bench/symm2026"
+  ],
+  "n_parejas": 74,
+  "seeds": [
+    1
+  ],
+  "timeout": 180.0,
+  "rama_a": {
+    "label": "A-sin-simetrias",
+    "opts": "--no-symmetry"
+  },
+  "rama_b": {
+    "label": "B-labesat",
+    "opts": ""
+  },
+  "host": "vm",
+  "nproc": 4,
+  "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "loadavg": [
+    0.71533203125,
+    0.86767578125,
+    0.94921875
+  ],
+  "started_at": "2026-09-23T09:50:44+00:00"
+}

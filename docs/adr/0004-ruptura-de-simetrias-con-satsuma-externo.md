@@ -1,7 +1,9 @@
 # ADR-0004 — Ruptura de simetrías: satsuma como programa externo, todo bajo MIT
 
-- **Estado**: aceptado (integración). **Todavía no se sabe si mejora el PAR-2**:
-  eso lo mide EXP-007.
+- **Estado**: aceptado (integración). **EXP-007 (2026-09-23)**: mejora mucho
+  donde hay simetría explotable, pero ralentiza 1.42× las instancias neutras.
+  Veredicto: **solo condicional**; en `labesat` es opcional (`--symmetry`) hasta
+  que la activación condicional (B3) esté validada.
 - **Fecha**: 2026-09-23
 - **Decide**: Abel Ponce («usa satsuma como programa externo y mantén MIT»)
 
@@ -50,7 +52,7 @@ de kissat. El núcleo del solver no se toca.
    - No se admiten ficheros comprimidos: un flujo comprimido no se puede
      continuar concatenando.
 3. **`solver/labesat`** es el guion de entrada:
-   `labesat [--no-symmetry] <cnf> [<proof>]`.
+   `labesat [--symmetry | --no-symmetry] <cnf> [<proof>]` (desde EXP-007, la ruptura va **desactivada por defecto**).
    1. Lanza `satsuma fix … --bsr --add-reduced-as-unit` con un tope de tiempo y
       de tamaño.
    2. Lanza `kissat --append-proof` sobre la CNF simplificada.

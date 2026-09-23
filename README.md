@@ -51,7 +51,7 @@ docs/archive/       etapa CaDiCaL (jul–sep 2026), conservada como histórico
 ./scripts/test_symmetry.sh         # tubería satsuma → kissat con pruebas SR (ADR-0004)
 
 # LabeSAT completo: ruptura de simetrías + CDCL, con prueba verificable
-./solver/labesat bench/symm/php_12_11.cnf /tmp/proof
+./solver/labesat --symmetry bench/symm/php_12_11.cnf /tmp/proof
 ./tools/dsr-trim bench/symm/php_12_11.cnf /tmp/proof     # s VERIFIED UNSAT
 
 # una corrida completa sobre el banco de humo

@@ -19,7 +19,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-002 | ¿Subcategoría IA o categoría regular? | ⏸️ correo aplazado hasta definir las mejoras (límite recomendado: 1-feb-2027) | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
 | D-003 | ¿Se admite la composición satsuma + kissat? | ⏸️ mismo correo que D-002 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
-| D-005 | ¿MIT o cliques (GPL)? | ⏸️ esperando a EXP-007 | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 |
+| D-005 | ¿MIT o cliques (GPL)? | 🟡 **coste medido**: 6 instancias de H (≈ −29 s). Recomendada la opción c (clique máxima en MIT) | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
 | D-007 | Nombre del solver | ✅ LabeSAT (2026-09-22) | Director | CHANGELOG |
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |

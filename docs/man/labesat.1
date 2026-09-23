@@ -4,7 +4,7 @@
 labesat \- solver SAT (Kissat 4.0.4 + ruptura de simetrías verificable)
 .SH SINOPSIS
 .B labesat
-.RB [ \-\-no\-symmetry ]
+.RB [ \-\-symmetry " | " \-\-no\-symmetry ]
 .RI [ opciones\-de\-kissat ]
 .I cnf
 .RI [ prueba ]
@@ -13,11 +13,13 @@ labesat \- solver SAT (Kissat 4.0.4 + ruptura de simetrías verificable)
 decide si la fórmula en CNF
 .I cnf
 (DIMACS, opcionalmente comprimida con xz, gzip, bzip2 o lzma) es satisfacible.
-Primero ejecuta
+Con
+.B \-\-symmetry
+ejecuta primero
 .B satsuma
 (ruptura de simetrías) y después
 .B kissat
-sobre la fórmula simplificada. Si se indica
+sobre la fórmula simplificada; sin ella, solo kissat. Si se indica
 .IR prueba ,
 escribe en ese fichero una prueba de insatisfacibilidad en formato SR
 (prefijo de satsuma más pasos DRAT de kissat), verificable con
@@ -26,8 +28,14 @@ Si satsuma falla, se pasa de tiempo o la entrada es demasiado grande,
 resuelve la fórmula original solo con kissat, y la prueba es DRAT.
 .SH OPCIONES
 .TP
+.B \-\-symmetry
+Ejecuta satsuma antes de kissat. Desactivado por defecto hasta validar la
+activación condicional (EXP-007: gana mucho con simetría explotable, pero
+ralentiza 1.42x las instancias sin ella).
+.TP
 .B \-\-no\-symmetry
-No ejecuta satsuma.
+No ejecuta satsuma aunque
+.B LABESAT_SYMMETRY=1.
 .TP
 .BI \-\-time= N
 Límite de tiempo \fItotal\fP en segundos. El tiempo de satsuma se descuenta
@@ -82,10 +90,13 @@ Tamaño máximo de la CNF para aplicar satsuma (536870912).
 .TP
 .B LABESAT_KISSAT_ARGS
 Argumentos extra para kissat.
+.TP
+.B LABESAT_SYMMETRY
+1 activa la ruptura de simetrías (por defecto 0).
 .SH EJEMPLOS
 .nf
 labesat formula.cnf
-labesat \-\-time=5000 formula.cnf.xz prueba.out
+labesat \-\-symmetry \-\-time=5000 formula.cnf.xz prueba.out
 dsr\-trim formula.cnf prueba.out
 .fi
 .SH VÉASE TAMBIÉN

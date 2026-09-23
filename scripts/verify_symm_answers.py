@@ -64,7 +64,7 @@ def main():
             if st == "SAT":
                 out = os.path.join(tmp, "out")
                 with open(out, "w") as f:
-                    code = subprocess.run([LABESAT, f"--seed={seed}", f"--time={args.timeout}",
+                    code = subprocess.run([LABESAT, "--symmetry", f"--seed={seed}", f"--time={args.timeout}",
                                            inst], stdout=f).returncode
                 if code != 10:
                     ver = f"NO-REPRODUCE({code})"
@@ -75,7 +75,7 @@ def main():
                     ver = "OK" if ok else "FALLO"
             elif st == "UNSAT" and t <= args.max_solve:
                 proof = os.path.join(tmp, "proof")
-                code = subprocess.run([LABESAT, f"--seed={seed}", f"--time={args.timeout}",
+                code = subprocess.run([LABESAT, "--symmetry", f"--seed={seed}", f"--time={args.timeout}",
                                        "-q", inst, proof],
                                       stdout=subprocess.DEVNULL).returncode
                 if code != 20:

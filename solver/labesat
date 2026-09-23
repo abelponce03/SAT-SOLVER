@@ -2,7 +2,13 @@
 #
 # labesat — tubería de LabeSAT: ruptura de simetrías (satsuma) + CDCL (kissat).
 #
-#   labesat [--no-symmetry] [<opciones de kissat>] <cnf> [<proof>]
+#   labesat [--symmetry | --no-symmetry] [<opciones de kissat>] <cnf> [<proof>]
+#
+# POR DEFECTO, SIN ruptura de simetrías (EXP-007 §6, veredicto «solo
+# condicional»).  La ruptura gana mucho donde hay simetría explotable (estrato
+# H: 37/45 frente a 8/45), pero en instancias neutras ralentiza 1.42x.  Se
+# activa con --symmetry o LABESAT_SYMMETRY=1 hasta que la activación
+# condicional (B3, EXP-009) decida sola cuándo aplicarla.
 #
 # 1. satsuma ('fix') busca simetrías, añade predicados de ruptura y simplifica.
 #    Escribe la CNF resultante y el PREFIJO de la prueba (formato SR binario).
@@ -37,10 +43,11 @@ SYMM_TIMEOUT="${LABESAT_SYMM_TIMEOUT:-60}"
 SYMM_MAXBYTES="${LABESAT_SYMM_MAXBYTES:-536870912}"
 read -r -a KARGS <<< "${LABESAT_KISSAT_ARGS:-}"
 
-symmetry=1
+symmetry="${LABESAT_SYMMETRY:-0}"
 TIME=""
 while [ $# -gt 0 ] && [ "${1#-}" != "$1" ] && [ "$1" != "-" ]; do
     case "$1" in
+        --symmetry)    symmetry=1 ;;
         --no-symmetry) symmetry=0 ;;
         --time=*)      TIME="${1#--time=}" ;;
         *)             KARGS+=("$1") ;;
@@ -50,7 +57,7 @@ done
 # 'labesat --id', '--version'…: consultas sin CNF, las contesta kissat
 if [ $# -eq 0 ] && [ ${#KARGS[@]} -gt 0 ]; then exec "$KISSAT" "${KARGS[@]}"; fi
 if [ $# -lt 1 ] || [ $# -gt 2 ]; then
-    echo "uso: labesat [--no-symmetry] [<opciones de kissat>] <cnf> [<proof>]" >&2; exit 1
+    echo "uso: labesat [--symmetry | --no-symmetry] [<opciones de kissat>] <cnf> [<proof>]" >&2; exit 1
 fi
 CNF="$1"; PROOF="${2:-}"
 [ -r "$CNF" ] || { echo "labesat: no se puede leer '$CNF'" >&2; exit 1; }
@@ -69,7 +76,7 @@ run_plain() {
     else exec "$KISSAT" "${KARGS[@]}" "$CNF"; fi
 }
 
-[ "$symmetry" = 1 ] || run_plain "desactivadas (--no-symmetry)"
+[ "$symmetry" = 1 ] || run_plain "desactivadas (por defecto; activar con --symmetry)"
 [ -n "$SATSUMA" ] || run_plain "satsuma no disponible"
 command -v timeout >/dev/null || run_plain "falta 'timeout'"
 

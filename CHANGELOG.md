@@ -53,9 +53,18 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   de git y CI las regenera. Corrige la estimación anterior («~460 líneas»):
   son **+390 líneas de C** (1,0 %), **+105 activas**.
 
-### En curso
-- **EXP-007** (preregistrado): A/B de la ruptura de simetrías sobre 74
-  instancias estratificadas de 2026.
+### Experimento cerrado: EXP-007 (2026-09-23)
+- **Ruptura de simetrías con satsuma MIT, sobre 74 instancias de 2026**:
+  - resueltas: 35 → **64**; PAR-2 209.3 → **69.0 s**;
+  - estrato H: 8 → 37 de 45 (p = 8·10⁻¹⁰);
+  - pero en N ralentiza **1.42×**, y el criterio exigía ≤ 1.10.
+  - Seguridad: 19/19 modelos y 42/42 pruebas verificadas, 0 fallos.
+  - Veredicto: **solo condicional**.
+- **Cambiado**: `solver/labesat` **ya no aplica la ruptura de simetrías por
+  defecto**. Se activa con `--symmetry` o `LABESAT_SYMMETRY=1` hasta que B3
+  (EXP-009) esté validado. Manual, página man y tests actualizados.
+- research/03, segunda parte: sin cliques, satsuma deja sin resolver 6
+  instancias de H que con cliques caen en < 2 s.
 
 ### Nombre
 - El solver pasa a llamarse **LabeSAT**. El banner imprime el nombre, una línea

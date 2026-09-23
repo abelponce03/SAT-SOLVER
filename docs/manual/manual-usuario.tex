@@ -115,7 +115,7 @@ las de la aplicación (\texttt{-n}, \texttt{--time}, \texttt{--append-proof},
 
 \subsection{Línea de órdenes}
 \begin{lstlisting}
-solver/labesat [--no-symmetry] [opciones de kissat] <cnf> [<prueba>]
+solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>]
 \end{lstlisting}
 
 \begin{description}
@@ -123,7 +123,13 @@ solver/labesat [--no-symmetry] [opciones de kissat] <cnf> [<prueba>]
         (\texttt{.xz}, \texttt{.gz}, \texttt{.bz2}, \texttt{.lzma}).
   \item[\texttt{<prueba>}] Fichero donde se escribe la prueba si la fórmula es
         insatisfacible. Opcional.
-  \item[\texttt{--no-symmetry}] Desactiva satsuma y resuelve solo con kissat.
+  \item[\texttt{--symmetry}] Activa la ruptura de simetrías (satsuma). Hoy está
+        \textbf{desactivada por defecto}: el experimento EXP-007 mostró que gana
+        mucho en instancias con simetría explotable (37 de 45 resueltas frente a
+        8), pero ralentiza 1{,}42$\times$ las que no la tienen. Se activará sola
+        cuando la activación condicional (B3) esté validada. También se puede
+        activar con \texttt{LABESAT\_SYMMETRY=1}.
+  \item[\texttt{--no-symmetry}] Desactiva satsuma aunque \texttt{LABESAT\_SYMMETRY=1}.
   \item[\texttt{--time=N}] Límite de \textbf{tiempo total} en segundos. El
         tiempo que consume satsuma se descuenta del de kissat.
   \item[otras opciones] Cualquier opción que empiece por \texttt{-} se pasa a
@@ -136,11 +142,11 @@ solver/labesat [--no-symmetry] [opciones de kissat] <cnf> [<prueba>]
 # Resolver una fórmula y ver el modelo, si lo hay
 solver/labesat formula.cnf
 
-# Resolver con límite de 5000 s y escribir la prueba
-solver/labesat --time=5000 formula.cnf.xz prueba.out
+# Resolver con ruptura de simetrías, límite de 5000 s, y escribir la prueba
+solver/labesat --symmetry --time=5000 formula.cnf.xz prueba.out
 
-# Solo kissat, sin ruptura de simetrías
-solver/labesat --no-symmetry formula.cnf
+# Solo kissat (comportamiento por defecto)
+solver/labesat formula.cnf
 \end{lstlisting}
 
 \subsection{Salida y códigos de salida}
@@ -176,6 +182,7 @@ Variable & Efecto & Por defecto \\
 \texttt{LABESAT\_SYMM\_TIMEOUT} & Segundos máximos para satsuma & 60 \\
 \texttt{LABESAT\_SYMM\_MAXBYTES} & Tamaño máximo de la CNF para aplicar satsuma & 512\,MiB \\
 \texttt{LABESAT\_KISSAT\_ARGS} & Argumentos extra para kissat & (vacío) \\
+\texttt{LABESAT\_SYMMETRY} & 1 activa la ruptura de simetrías & 0 \\
 \bottomrule
 \end{tabularx}
 \end{center}
@@ -201,7 +208,7 @@ solver/labesat formula.cnf prueba.out
 tools/dsr-trim formula.cnf prueba.out           # debe imprimir: s VERIFIED UNSAT
 tools/dsr-trim-sc2026 formula.cnf prueba.out    # versión exacta de la SAT Competition 2026
 \end{lstlisting}
-Si se usó \texttt{--no-symmetry}, o si satsuma no llegó a actuar, la prueba es
+Si no se usó \texttt{--symmetry}, o si satsuma no llegó a actuar, la prueba es
 DRAT pura y también la acepta \texttt{tools/drat-trim}.
 
 %======================================================================
@@ -215,7 +222,7 @@ python3 scripts/select_symm_bench.py --download
 python3 scripts/run_ab_interleaved.py --solver solver/labesat \
     --guard solver/kissat/build/kissat --guard tools/satsuma \
     --bench bench/symm2026 --out-a A.csv --out-b B.csv \
-    --opts-a="--no-symmetry" --timeout 180 --seeds 1
+    --opts-a="--no-symmetry" --opts-b="--symmetry" --timeout 180 --seeds 1
 python3 scripts/par2.py A.csv B.csv
 \end{lstlisting}
 

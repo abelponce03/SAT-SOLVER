@@ -42,7 +42,7 @@ TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 while IFS=, read -r inst expected _; do
     [ "$inst" = instance ] && continue
     cnf="$ROOT/bench/symm/$inst"
-    "$W" "$cnf" "$TMP/proof" > "$TMP/out"; code=$?
+    "$W" --symmetry "$cnf" "$TMP/proof" > "$TMP/out"; code=$?
     case "$expected:$code" in
         UNSAT:20)
             if verified "$DSR" "$cnf" "$TMP/proof" && verified "$DSR_SC" "$cnf" "$TMP/proof"; then
@@ -70,7 +70,7 @@ fi
 
 # Ruta de respaldo: satsuma no disponible → kissat sobre la CNF original.
 cnf="$ROOT/bench/symm/php9x9_rand160u.cnf"
-LABESAT_SATSUMA=/bin/false "$W" "$cnf" "$TMP/fb" > "$TMP/out"; code=$?
+LABESAT_SATSUMA=/bin/false "$W" --symmetry "$cnf" "$TMP/fb" > "$TMP/out"; code=$?
 if [ $code = 20 ] && grep -q "sin simetrías" "$TMP/out" &&
    out=$("$DRAT" "$cnf" "$TMP/fb" 2>/dev/null) && grep -q "s VERIFIED" <<< "$out"; then
     echo "OK    respaldo: satsuma falla → prueba DRAT pura verificada"

@@ -1,7 +1,7 @@
 # EXP-007 — ¿Mejora la ruptura de simetrías (satsuma MIT) el PAR-2 de LabeSAT? (preregistrado)
 
-- **Estado**: **preregistrado**. Escrito **antes** de ejecutar ninguna corrida
-  del A/B (ADR-0003 §6).
+- **Estado**: **cerrado**. Veredicto: **solo condicional**. H1 se confirma con
+  mucha fuerza; H2 no se cumple. Se preregistró antes de ejecutar (ADR-0003 §6).
 - **Fecha**: 2026-09-23
 - **Origen**: ADR-0004 y `docs/research/01` (el ganador de 2026 arregla 51
   instancias y rompe 13).
@@ -149,6 +149,8 @@ python3 scripts/run_ab_interleaved.py --solver solver/labesat \
     --out-a results/exp007/A.csv --out-b results/exp007/B.csv \
     --label-a A-sin-simetrias --label-b B-labesat \
     --opts-a="--no-symmetry" --timeout 180 --seeds 1
+# Desde el cierre de EXP-007 la ruptura está DESACTIVADA por defecto en
+# solver/labesat: para reproducir la rama B hay que añadir --opts-b="--symmetry".
 ```
 
 **Análisis** (script fijado antes de que terminara la tanda):
@@ -187,4 +189,78 @@ python3 scripts/verify_symm_answers.py results/exp007/B.csv \
 
 ## 10. Resultados
 
-_Pendiente de ejecución (después de EXP-006)._
+Ejecutado el 2026-09-23.
+
+- **Procedencia**:
+  - `--id` = HEAD `23649fc`, que tras la reescritura D-001 es `7776609` (ver
+    `docs/decisiones/D-001-correspondencia-sha.md`);
+  - SHA-1 de kissat y satsuma vigilados con `--guard`;
+  - 74 parejas intercaladas, todas completas y sin estados ERROR;
+  - datos en `results/exp007/`.
+- **Análisis**: el preregistrado, `scripts/analyze_exp007.py`, que se commiteó
+  antes de que terminara la tanda.
+
+### Visión global (T = 180 s)
+
+| | A: sin simetrías | B: labesat con satsuma |
+|---|---:|---:|
+| Resueltas (de 74) | 35 (20 SAT, 15 UNSAT) | **64** (19 SAT, 45 UNSAT) |
+| PAR-2 | 209.3 s | **69.0 s** |
+
+- ΔPAR-2 = −140.3 s, IC95 % [−183.4, −97.2]; Wilcoxon p ≈ 0.
+- McNemar: 31 instancias solo las resuelve B y 2 solo A.
+
+### Hipótesis preregistradas
+
+| | Resultado | Criterio | Veredicto |
+|---|---|---|---|
+| **H1** (estrato H, 45) | B resuelve **37**, A **8**. ΔPAR-2 = **−233.8 s**, IC95 % [−283.6, −179.0]. Wilcoxon **p = 8·10⁻¹⁰** (n = 38); McNemar 30 frente a 1, p = 3·10⁻⁸ | p < 0.05 a favor de B | ✅ **confirmada** |
+| **H2** (estrato N, 22) | Factor geométrico **1.416×**, IC95 % [1.158, 1.753], n = 20 | IC superior ≤ 1.10 | ❌ **no se cumple** |
+| **H3** (estrato X, 7) | Daño en **1 de 7**: `fca71c20`, SAT en 86 s con A y timeout con B | Descriptiva | Daño puntual |
+| Estimación post-estratificada (136 instancias de 2026 medibles) | ΔPAR-2 ≈ **−90.2 s**, IC95 % [−118.9, −61.0] | No es el contraste | — |
+
+### Seguridad (vinculante)
+
+`scripts/verify_symm_answers.py` (`results/exp007/seguridad.csv`):
+
+- **19 de 19** modelos SAT satisfacen la CNF **original**;
+- **42 de 42** pruebas UNSAT reejecutadas se verifican con dsr-trim contra la
+  CNF original;
+- 3 UNSAT de más de 60 s quedan sin verificar, como fijaba el preregistro;
+- **0 fallos** y **0 respuestas que no se reproduzcan**.
+
+### Veredicto según §6
+
+**H1 se confirma, pero H2 no se cumple: solo condicional.**
+
+- La ruptura de simetrías **no se activa por defecto** hasta que exista un
+  criterio B3 que evite el coste en las instancias neutras.
+- Desde este cierre, `solver/labesat` la aplica solo con `--symmetry` (o
+  `LABESAT_SYMMETRY=1`).
+- La estimación global (−90 s) indica que activarla siempre ya compensaría
+  en la parte medible, pero el criterio preregistrado exige no pagar un 42 %
+  en las instancias neutras. B3 (EXP-009) pasa a ser la prioridad técnica.
+
+### Análisis exploratorio, NO preregistrado: de dónde sale el 1.42× en N
+
+Se contrasta con el tiempo de satsuma en solitario
+(`results/satsuma-builds/builds.csv`):
+
+- **Tiempo de satsuma**: mediana de 0.44 s y media de 3.84 s (máximo 36.7 s en
+  `91860f79`). Explica solo una parte.
+- **Sin el tiempo de satsuma, el factor sigue en ~1.27×.** Kissat **trabaja más
+  sobre la fórmula modificada**: por ejemplo, `91860f79` pasa de 107 M a 313 M
+  propagaciones y `c557ad9c` de 28 M a 95 M.
+- **En las 5 instancias de N en las que satsuma no cambia la fórmula**, las
+  propagaciones son **idénticas**. El coste ahí es solo el de satsuma y la
+  descompresión.
+- **Implicación para B3**: no basta con detectar si hay simetrías. El criterio
+  tiene que predecir si romperlas **ayuda** a la búsqueda. Candidatos: el tipo
+  y tamaño de los grupos, la fracción de variables afectadas, o SAT/UNSAT
+  esperado (el daño se concentra en SAT).
+
+### Cliques (research/03, segunda parte)
+
+Sobre las 8 instancias cuya salida difiere, satsuma con cliques resuelve **6
+de H en menos de 2 s** que la versión MIT deja en timeout. Mantener MIT cuesta
+~−29 s de PAR-2 medio en este banco. Queda en manos de D-005.
