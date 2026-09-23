@@ -266,3 +266,30 @@ al cerrar cada sesión.
     que ya existe.
   - Con los datos propios se pueden descartar ideas antes de implementarlas:
     el reparto temporal se descartó con una simulación de 20 líneas.
+
+## 2026-09-23 (noche, 2) — Razonamiento XOR de CryptoMiniSat (research/06)
+
+- **Se pidió**: investigar si el mecanismo de CryptoMiniSat (recuperar XOR y
+  aplicar Gauss-Jordan) serviría a LabeSAT; si resulta contraproducente, se
+  descarta.
+- **Se hizo**:
+  - literatura: CMS, BIRD, pruebas con TBUDDY y FRAT, DRAT para XOR, cotas
+    inferiores de Tseitin;
+  - revisión de lo que Kissat ya hace (XOR en el cierre por congruencia, sin
+    Gauss);
+  - **medición propia**: un detector de XOR en C sobre 161 instancias, y
+    Gauss en GF(2) sobre las puras;
+  - cruce con los resultados oficiales de 2026 para estimar el beneficio;
+  - lectura de los paquetes de los solvers de 2026 que resolvieron las XOR,
+    solo para saber qué técnica usan.
+- **Decisiones**: se descarta el Gauss completo; se aparca X1 (refutación en
+  la raíz con prueba), condicionado a que dsr-trim acepte esas pruebas; X2 se
+  descarta.
+- **Salió mal**:
+  - La hipótesis inicial («quien resolvió xor-shifting usa Gauss») era falsa:
+    fue ruptura de simetrías más decisiones sobre el soporte independiente.
+    Lo corrigió mirar el paquete antes de escribir.
+  - El escaneo es lento con `nice`: 194 instancias en ~40 min.
+- **Aprendido**: medir la estructura de las instancias reales antes de
+  estimar el beneficio. Que haya XOR no basta: en la mayoría son puertas de
+  circuito, no sistemas lineales.

@@ -5,6 +5,22 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Investigación (2026-09-23): razonamiento XOR (research/06)
+- ¿Incorporar el Gauss-Jordan de CryptoMiniSat? Estructura XOR medida con
+  `scripts/xor_detect.c` en 161 instancias de 2026:
+  - el 80 % no tiene ninguna XOR;
+  - el 2,5 % son sistemas lineales casi puros, que `scripts/gauss_xor.py`
+    decide en 0,01–0,04 s (Kissat tardó 113–1613 s).
+- **Veredicto**:
+  - Gauss en toda la búsqueda, al estilo CMS: **descartado por
+    contraproducente**; coste alto, pruebas difíciles y beneficio en pocas
+    familias.
+  - **X1**, refutar en la raíz los sistemas lineales inconsistentes con
+    prueba: **aparcado con prioridad** para la fase 2 de ADR-0007. Sobre
+    2026, +4 resueltas y unos −112 s de PAR-2. Antes hay que comprobar que
+    dsr-trim acepta esas pruebas.
+  - X2, fases desde la solución lineal: descartado por efecto pequeño (−6 s).
+
 ### Investigación (2026-09-23)
 - **research/05**: revisión de enfoques probabilísticos para SAT (~75
   trabajos; Consensus, Scholar Gateway y web).
