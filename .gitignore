@@ -53,3 +53,13 @@ bench/calib2/
 bench/boundary/
 bench/symm2026/
 bench/symm2026-grandes/
+
+# --- LaTeX (los PDF los compila CI; ADR-0006) ---
+docs/**/*.aux
+docs/**/*.log
+docs/**/*.out
+docs/**/*.toc
+docs/**/*.fls
+docs/**/*.fdb_latexmk
+docs/**/*.synctex.gz
+docs/**/*.pdf

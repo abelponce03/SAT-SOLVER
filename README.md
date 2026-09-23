@@ -112,7 +112,22 @@ complementariedad entre configuraciones es un recurso mayor que la mejor técnic
 nueva publicada, y nadie lo está cobrando. Detalle en
 [`docs/research/01`](docs/research/01-analisis-empirico-sc2026.md).
 
+## Documentación
+
+Índice completo en [`docs/README.md`](docs/README.md):
+
+- manual de usuario (LaTeX → PDF);
+- página `labesat(1)`;
+- ADR y registro de decisiones;
+- experimentos y metodología del desarrollo asistido por IA.
+
+Los PDF se descargan como artefactos del trabajo `documentacion` de CI.
+
 ## Licencia
+
+LabeSAT se publica bajo licencia **MIT** (`LICENSE`). Los componentes de
+terceros y sus licencias están en `THIRD_PARTY_NOTICES.md`; cómo citarlo, en
+`CITATION.cff`.
 
 El código bajo `solver/kissat/` es de Armin Biere y se distribuye bajo licencia
 MIT (ver `solver/kissat/LICENSE`). Las modificaciones de LabeSAT se publican

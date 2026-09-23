@@ -29,9 +29,10 @@ Track**, con PAR-2 como métrica, y artículos sobre el proceso. Idioma de traba
 - La transparencia sobre el uso de IA va en la **documentación de metodología**
   (`docs/metodologia/`), en las declaraciones que exige la competición y en los
   artículos. No va en la autoría de git.
-- Antes de hacer push, comprueba:
-  `git log origin/main..HEAD --format='%an <%ae>%n%b' | grep -iE 'claude|anthropic'`
-  → la salida tiene que estar vacía.
+- Antes de hacer push, `scripts/check_authorship.sh` tiene que terminar en
+  verde. Comprueba el autor y el committer de los commits nuevos, además de los
+  trailers `Co-Authored-By`, «Generated with…» y enlaces de sesión. CI lo
+  ejecuta en cada PR.
 
 ## 2. Documentación continua (no se deja para el final)
 
