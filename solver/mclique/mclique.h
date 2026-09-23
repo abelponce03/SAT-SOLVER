@@ -17,16 +17,26 @@
  *
  * Semántica de clique_unweighted_find_single(g, min, max, maximal, opts):
  *   - min = 0 y max = 0: devuelve UNA clique de tamaño máximo (que siempre es
- *     maximal).  Es la única llamada de satsuma.
+ *     maximal), salvo que se agote el presupuesto (ver abajo).  Es la única
+ *     llamada de satsuma.
  *   - min > 0 y max = 0: la clique máxima si tiene al menos 'min' vértices;
  *     si no, NULL.
  *   - max > 0: no se admite; devuelve NULL.
  *   - Grafo vacío (0 vértices): NULL.
  * Los campos de clique_options se aceptan y se ignoran: el orden de búsqueda
- * es siempre el propio (grado no creciente), y no hay salida ni límite de
- * tiempo, igual que en la llamada de satsuma («no limit»).
+ * es siempre el propio (grado no creciente), y no hay salida.
  *
- * El resultado es determinista: mismo grafo, misma clique.
+ * Presupuesto (desde la versión 2, tras EXP-010): la búsqueda exacta tiene un
+ * presupuesto de trabajo determinista (mclique_set_work_limit).  Si se agota,
+ * se devuelve la mayor clique encontrada hasta entonces, ampliada hasta ser
+ * maximal, que puede no ser máxima.  Motivo: en grafos densos y muy regulares
+ * encontrar la clique máxima es rápido y DEMOSTRAR que lo es puede ser
+ * exponencial (EXP-010: 896 vértices, densidad 0,76, sin terminar en 5 min).
+ * Para satsuma es seguro: usa la clique solo para ordenar las columnas antes
+ * de romper la simetría, y cualquier orden da predicados y pruebas correctos
+ * (sin cliques, satsuma ni siquiera reordena).
+ *
+ * El resultado es determinista: mismo grafo y mismo presupuesto, misma clique.
  */
 #ifndef MCLIQUE_H
 #define MCLIQUE_H
@@ -72,6 +82,11 @@ struct clique_options {
 };
 
 extern clique_options *cliquer_default_options;
+
+/* Presupuesto de trabajo por búsqueda (unidades: |P| · palabras de 64 bits por
+ * nodo).  Un valor <= 0 restaura el valor por defecto. */
+#define MCLIQUE_DEFAULT_WORK_LIMIT 500000000LL
+void mclique_set_work_limit (long long limit);
 
 graph_t *graph_new (int n);
 void graph_free (graph_t *g);

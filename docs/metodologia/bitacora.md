@@ -171,6 +171,16 @@ al cerrar cada sesión.
   - `./scripts/build.sh` sin `--clean` dejó un binario con el `--id` del commit
     anterior. Se recompiló desde cero antes de lanzar. Moraleja: la
     procedencia se comprueba justo antes de lanzar, no se supone.
+- **EXP-010, parte 1**: mclique coincide con cliquer en 72 de 74, pero tiene
+  un tope nuevo en una instancia. El criterio preregistrado lo descarta tal
+  cual, y así se anota.
+  - El diagnóstico se hizo con una build de traza aparte, sin tocar el binario
+    del experimento. Encontrar la clique (90) es inmediato; demostrar que es
+    máxima no termina ni con mclique ni con un prototipo de Östergård.
+  - La corrección (un presupuesto de trabajo) se preregistró como EXP-011
+    **antes** de mirar la traza de todas las instancias. El valor se fijó por
+    tiempo, no por resultados, y esa amenaza quedó escrita.
 - **Aprendido**: una reimplementación compatible se valida en dos capas:
   corrección del algoritmo (contra fuerza bruta) y equivalencia del efecto en
-  el sistema completo (CNF de salida y resultados de kissat).
+  el sistema completo (CNF de salida y resultados de kissat). Y una garantía
+  que el original da «gratis» (terminar pronto) también hay que medirla.

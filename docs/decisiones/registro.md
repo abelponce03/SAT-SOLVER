@@ -167,3 +167,6 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   - `get_tools.sh` compila `tools/satsuma-mclique`, y la tubería de simetrías
     pasa con ella (pruebas SR verificadas);
   - EXP-010 preregistrado; la adopción depende de su resultado.
+  - EXP-010, parte 1: misma CNF que cliquer en 72 de 74, pero un tope nuevo de
+    60 s en `9ba8145e`, así que v1 no se adopta. mclique v2 añade un
+    presupuesto de trabajo determinista; se valida en EXP-011.

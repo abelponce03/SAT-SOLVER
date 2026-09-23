@@ -19,6 +19,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Con -DMCLIQUE_TRACE, cada búsqueda imprime en stderr su tamaño, los nodos
+ * del árbol y el tiempo.  Solo para diagnóstico; no se compila por defecto. */
+#ifdef MCLIQUE_TRACE
+#include <time.h>
+static long mclique_nodes;
+#define TRACE_NODE() (mclique_nodes++)
+#else
+#define TRACE_NODE() ((void) 0)
+#endif
+
 static clique_options mclique_default_options = {NULL, NULL, NULL,
                                                  NULL, NULL, NULL};
 clique_options *cliquer_default_options = &mclique_default_options;
@@ -112,7 +122,20 @@ typedef struct {
   int *cur, ncur;  /* clique en construcción */
   int *best, nbest;
   uint64_t *scratch_u, *scratch_q; /* auxiliares del coloreado */
+  long long work, limit; /* trabajo gastado y presupuesto */
+  int aborted;
 } search;
+
+/* Presupuesto de trabajo de una búsqueda.  Cada nodo cuesta |P| · palabras,
+ * que es el orden del coloreado voraz: así el presupuesto sigue al tiempo real
+ * y el resultado no depende de la máquina (es determinista).  Con el valor por
+ * defecto, en el grafo más difícil visto en bench/symm2026 (896 vértices,
+ * densidad 0,76) la búsqueda se corta a los ~0,7 s. */
+static long long work_limit = MCLIQUE_DEFAULT_WORK_LIMIT;
+
+void mclique_set_work_limit (long long limit) {
+  work_limit = limit > 0 ? limit : MCLIQUE_DEFAULT_WORK_LIMIT;
+}
 
 static inline int popcount_bits (const uint64_t *b, int words) {
   int k = 0;
@@ -164,8 +187,14 @@ static int color (search *s, const uint64_t *P, int kmin, int *order,
 }
 
 static void expand (search *s, uint64_t *P) {
+  TRACE_NODE ();
   const int words = s->words;
   const int size = popcount_bits (P, words);
+  s->work += (long long) size * words;
+  if (s->work > s->limit) {
+    s->aborted = 1;
+    return;
+  }
   int *order = xcalloc (size, sizeof *order);
   int *col = xcalloc (size, sizeof *col);
   uint64_t *NP = xcalloc (words, sizeof *NP);
@@ -184,8 +213,13 @@ static void expand (search *s, uint64_t *P) {
     int any = 0;
     for (int w = 0; w < words; w++)
       any |= (NP[w] = P[w] & a[w]) != 0;
-    if (any)
+    if (any) {
       expand (s, NP);
+      if (s->aborted) {
+        s->ncur--;
+        break;
+      }
+    }
     else if (s->ncur > s->nbest) {
       memcpy (s->best, s->cur, s->ncur * sizeof *s->best);
       s->nbest = s->ncur;
@@ -217,6 +251,32 @@ set_t clique_unweighted_find_single (graph_t *g, int min_size, int max_size,
   if (!g || g->n == 0 || max_size > 0)
     return NULL;
   const int n = g->n, words = g->words;
+#ifdef MCLIQUE_TRACE
+  struct timespec t0, t1;
+  clock_gettime (CLOCK_MONOTONIC, &t0);
+  mclique_nodes = 0;
+  {
+    long e = 0;
+    for (int v = 0; v < n; v++)
+      e += popcount_bits (row (g, v), words);
+    fprintf (stderr, "mclique: entra n=%d aristas=%ld\n", n, e / 2);
+    const char *dump = getenv ("MCLIQUE_DUMP"); /* grafo en formato DIMACS */
+    if (dump) {
+      static int calls;
+      char path[4096];
+      snprintf (path, sizeof path, "%s.%d.col", dump, calls++);
+      FILE *f = fopen (path, "w");
+      if (f) {
+        fprintf (f, "p edge %d %ld\n", n, e / 2);
+        for (int i = 0; i < n; i++)
+          for (int j = i + 1; j < n; j++)
+            if ((row (g, i)[j >> 6] >> (j & 63)) & 1)
+              fprintf (f, "e %d %d\n", i + 1, j + 1);
+        fclose (f);
+      }
+    }
+  }
+#endif
 
   /* 1. Renumerar por grado no creciente (empates: índice menor primero). */
   by_degree *d = xcalloc (n, sizeof *d);
@@ -250,6 +310,9 @@ set_t clique_unweighted_find_single (graph_t *g, int min_size, int max_size,
   s.ncur = s.nbest = 0;
   s.scratch_u = xcalloc (words, sizeof *s.scratch_u);
   s.scratch_q = xcalloc (words, sizeof *s.scratch_q);
+  s.work = 0;
+  s.limit = work_limit;
+  s.aborted = 0;
 
   /* 2. Cota inferior: clique voraz en el orden nuevo. */
   for (int v = 0; v < n; v++) {
@@ -268,6 +331,29 @@ set_t clique_unweighted_find_single (graph_t *g, int min_size, int max_size,
   expand (&s, P);
   free (P);
 
+  /* 4. Si se agotó el presupuesto, la mejor clique puede no ser maximal: se
+   * amplía de forma voraz (sin efecto si la búsqueda terminó, porque entonces
+   * es máxima). */
+  for (int v = 0; v < n; v++) {
+    const uint64_t *a = s.adj + (size_t) v * words;
+    int ok = 1;
+    for (int k = 0; k < s.nbest && ok; k++)
+      ok = s.best[k] != v && (int) ((a[s.best[k] >> 6] >> (s.best[k] & 63)) & 1);
+    if (ok)
+      s.best[s.nbest++] = v;
+  }
+
+#ifdef MCLIQUE_TRACE
+  clock_gettime (CLOCK_MONOTONIC, &t1);
+  long edges = 0;
+  for (int v = 0; v < n; v++)
+    edges += popcount_bits (row (g, v), words);
+  fprintf (stderr,
+           "mclique: n=%d aristas=%ld clique=%d nodos=%ld trabajo=%lld%s %.3f s\n",
+           n, edges / 2, s.nbest, mclique_nodes, s.work,
+           s.aborted ? " (presupuesto agotado)" : "",
+           (double) (t1.tv_sec - t0.tv_sec) + 1e-9 * (t1.tv_nsec - t0.tv_nsec));
+#endif
   set_t result = NULL;
   if (s.nbest >= min_size) {
     result = set_new (n);

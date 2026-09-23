@@ -216,7 +216,35 @@ int main (void) {
            "max_size > 0 no se admite -> NULL");
     graph_free (g);
   }
-  /* 5. Determinismo. */
+  /* 5. Presupuesto agotado: la clique devuelta sigue siendo válida y maximal. */
+  for (int t = 0; t < 50; t++) {
+    graph_t *g = random_graph (150 + (int) (rng () % 100), 0.9);
+    mclique_set_work_limit (1 + (long long) (rng () % 5000));
+    set_t c = clique_unweighted_find_single (g, 0, 0, TRUE, NULL);
+    int k = checked_size (g, c);
+    CHECK (k > 0, "presupuesto agotado: no es una clique válida");
+    int maximal = 1;
+    for (int v = 0; v < g->n && maximal; v++) {
+      int all = 1, in = 0, x = -1;
+      while ((x = set_return_next (c, x)) >= 0 && all) {
+        in |= x == v;
+        all = x == v || mclique_graph_is_edge (g, v, x);
+      }
+      maximal = in || !all;
+    }
+    CHECK (maximal, "presupuesto agotado: la clique no es maximal");
+    set_free (c);
+    graph_free (g);
+  }
+  mclique_set_work_limit (0);
+  {
+    /* Con el presupuesto por defecto, un grafo aleatorio mediano termina
+     * exacto: coincide con la referencia. */
+    graph_t *g = random_graph (60, 0.7);
+    CHECK (find (g) == simple_max (g), "presupuesto por defecto: no exacto");
+    graph_free (g);
+  }
+  /* 6. Determinismo. */
   {
     graph_t *g = random_graph (120, 0.5);
     set_t a = clique_unweighted_find_single (g, 0, 0, TRUE, NULL);

@@ -1,6 +1,6 @@
 # EXP-010 — ¿Recupera mclique (clique máxima MIT) lo que aportaba cliquer? (preregistrado)
 
-- **Estado**: **preregistrado**. Se escribe **antes** de ejecutar satsuma con
+- **Estado**: **parte 1 hecha; parte 2 pendiente**. Preregistrado: se escribió **antes** de ejecutar satsuma con
   mclique sobre el banco (ADR-0003 §6). Las únicas ejecuciones previas son las
   pruebas de corrección: `scripts/test_mclique.sh` y `scripts/test_symmetry.sh`
   sobre `bench/symm` (4 instancias de juguete, que no forman parte del banco).
@@ -131,8 +131,49 @@ antes de que termine la parte 1; `--write-list` escribe la lista de la parte 2.
 
 ## 6. Incidencias de ejecución
 
-_Ninguna por ahora._
+- **Parte 1**: se ejecutó junto a EXP-008, como estaba previsto.
+- **Binario de la parte 2**: tras la parte 1 se compiló mclique v2 (EXP-011).
+  El binario de este experimento se conserva como
+  `tools/satsuma-mclique-v1` (SHA-1 `e13f27f713848f39c7ab1745fc44025feee3a6c9`,
+  el mismo de la parte 1). La parte 2 usa esa ruta en lugar de
+  `tools/satsuma-mclique`. Es un cambio de ruta, no de binario; la guarda de
+  SHA-1 lo vigila.
 
 ## 7. Resultados
 
-_Pendiente._
+### Parte 1 (2026-09-23)
+
+`python3 scripts/analyze_exp010.py`, sobre `results/exp010/satsuma.csv`:
+
+| estrato | n | mclique = cliques | mclique = mit | mit = cliques |
+|---|---:|---:|---:|---:|
+| H | 45 | 43 | 38 | 38 |
+| N | 22 | 22 | 21 | 21 |
+| X | 7 | 7 | 7 | 7 |
+| **total** | **74** | **72** | **66** | **66** |
+
+| instancia | estrato | cláusulas | mit | mclique | cliques |
+|---|---|---:|---:|---:|---:|
+| 043c9100… | H | 748 640 | 410 537 | **1** (refutada) | **1** (refutada) |
+| 0f1070ba… | H | 116 738 | 93 893 | **1** (refutada) | **1** (refutada) |
+| 1a3bef9e… | H | 198 762 | 303 996 | **1** (refutada) | **1** (refutada) |
+| 65bf849f… | H | 208 955 | 191 315 | **1** (refutada) | 38 808 |
+| 6ddda968… | H | 562 074 | 392 022 | **1** (refutada) | **1** (refutada) |
+| 9ba8145e… | H | 4 611 150 | 3 489 290 | **tope de 60 s** | 3 489 290 |
+| e5787bb4… | H | 252 490 | 264 756 | **1** (refutada) | **1** (refutada) |
+| f52a3496… | N | 1 432 755 | 1 833 214 | 1 833 214 | 1 833 214 |
+
+- mclique produce **la misma CNF que cliquer en 72 de 74** instancias.
+- Refuta dentro de satsuma las 5 que refuta cliquer, y además `65bf849f`, que
+  cliquer no refuta. Las 6 de R6 quedan refutadas por satsuma.
+- **Tope nuevo en `9ba8145e`**: satsuma con mclique llega a los 60 s. Con el
+  criterio de §4 (ningún tope nuevo), **mclique v1 no se adopta**, sea cual
+  sea el resultado de la parte 2.
+- Tiempos (H4, con EXP-008 en paralelo): media 3,97 s (mit), 4,04 s (mclique,
+  incluido el tope) y 3,48 s (cliques); medianas 0,44 / 0,42 / 0,41 s.
+- La causa del tope y el cambio que la corrige (mclique v2, con presupuesto de
+  trabajo) se describen en EXP-011, preregistrado antes de ejecutar v2.
+
+### Parte 2
+
+_Pendiente (después de EXP-008)._

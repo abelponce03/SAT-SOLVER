@@ -15,6 +15,14 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   con ella `tools/satsuma-mclique` (`CLIQUES=ON`, sin cliquer). **No se usa por
   defecto** hasta que lo valide EXP-010 (preregistrado); se prueba con
   `LABESAT_SATSUMA=tools/satsuma-mclique`.
+- **EXP-010, parte 1**: mclique da la misma CNF que cliquer en 72 de 74
+  instancias y refuta dentro de satsuma las 6 de R6, pero llega al tope de
+  60 s en `9ba8145e` (grafo de 896 vértices y densidad 0,76, donde demostrar la
+  optimalidad es exponencial). Con el criterio preregistrado, v1 no se adopta.
+- **mclique v2**: presupuesto de trabajo determinista (5·10⁸ unidades, ~0,7 s
+  en ese grafo); si se agota, devuelve la mejor clique encontrada, ampliada
+  hasta ser maximal. Es seguro porque satsuma solo usa la clique para ordenar
+  columnas. Validación preregistrada en **EXP-011**.
 - `scripts/test_mclique.sh`: pruebas frente a fuerza bruta y a una búsqueda
   exhaustiva de referencia (3300 grafos aleatorios), casos conocidos y la
   compilación de la interfaz tal como la usa satsuma. En CI, junto con la
