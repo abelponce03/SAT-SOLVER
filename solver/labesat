@@ -46,7 +46,7 @@ say() { echo "c [labesat] $*"; }
 # kissat pasa las señales (SIGTERM del entorno de competición) a 's UNKNOWN';
 # exec reemplaza este proceso para que las reciba directamente.
 run_plain() {
-    [ -n "$PROOF" ] && rm -f "$PROOF"
+    [ -n "$PROOF" ] && : > "$PROOF"   # truncar, nunca rm: puede ser /dev/null
     [ -n "${TMP:-}" ] && rm -rf "$TMP"   # exec no ejecuta el trap EXIT
     say "sin simetrías: $1"
     if [ -n "$PROOF" ]; then exec "$KISSAT" "${KARGS[@]}" "$CNF" "$PROOF"
@@ -75,7 +75,7 @@ size=$(stat -c %s "$INPUT" 2>/dev/null || echo 0)
 SB="$TMP/sb.cnf"
 sargs=(fix "$INPUT" --silent --full-skip-limit 100000000 --add-reduced-as-unit
        --bsr --out-file "$SB")
-[ -n "$PROOF" ] && { rm -f "$PROOF"; sargs+=(--proof-file "$PROOF"); }
+[ -n "$PROOF" ] && { : > "$PROOF"; sargs+=(--proof-file "$PROOF"); }
 
 t0=$(date +%s.%N)
 timeout -s KILL "$SYMM_TIMEOUT" "$SATSUMA" "${sargs[@]}" </dev/null >/dev/null 2>&1
