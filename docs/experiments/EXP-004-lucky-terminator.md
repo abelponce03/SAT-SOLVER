@@ -1,6 +1,6 @@
 # EXP-004 — B3″: que `kissat_lucky` ceda el control al límite de presupuesto
 
-- **Estado**: implementado y verificado · A/B de no-regresión en ejecución
+- **Estado**: **cerrado** — corrección verificada; comportamiento neutro confirmado
 - **Fecha**: 2026-09-22
 - **Origen**: hallazgo lateral de [EXP-001](EXP-001-diversidad-intrinseca-kissat.md), superviviente del cierre de [EXP-003](EXP-003-validacion-luckyminvars.md)
 - **Naturaleza**: **corrección de un fallo**, no una mejora heurística. Se documenta aparte precisamente por eso.
@@ -127,7 +127,65 @@ heurística; la única diferencia de resultado posible es que una corrida que
 antes se pasaba del límite y moría por la guarda externa ahora pare limpiamente
 dentro del presupuesto — en ambos casos cuenta como no resuelta.
 
-_Resultados pendientes._
+> **Nota de procedencia.** La primera ejecución de este A/B quedó **contaminada**:
+> recompilé el solver a mitad de la tanda para otras pruebas, de modo que parte
+> de las instancias se midió con un binario y parte con otro. Se descartó entera
+> y se rehízo. A raíz de eso el runner registra el SHA-1 del binario y **aborta
+> si cambia** durante una tanda (commit `a9eaacd`).
+
+#### Resultado
+
+| banco | cambios de estado | ΔPAR-2 | IC95 % |
+|---|---|---:|---|
+| `calib2` (20) | **uno solo**: `b54b26f3…` pasa de `HARDKILL` a `TIMEOUT` | −0.812 s | [−1.749, −0.027] |
+| `calib` (40) | **ninguno** | −0.959 s | [−1.372, −0.592] |
+
+El único cambio de estado es **exactamente el que el parche pretende**: la
+instancia de 3.56 M variables que antes se pasaba del límite y la mataba la
+guarda externa ahora para limpiamente dentro del presupuesto. En ambos casos
+cuenta como no resuelta, así que no mueve el PAR-2 por sí misma.
+
+#### Un "efecto significativo" que es imposible
+
+En `calib`, el contraste sale con **Wilcoxon p ≈ 0.0000** y un IC que excluye el
+0: una mejora del 2.6 %, aparentemente robusta. **Es mecánicamente imposible**:
+el parche no altera la búsqueda si no se agota el presupuesto (§3.2). La prueba
+decisiva es el recuento de conflictos:
+
+```
+resueltas por ambas ramas:            39
+  con recuento de conflictos IDÉNTICO: 39   -> la misma trayectoria de búsqueda
+  con recuento distinto:                0
+
+tiempo B/A mediano (trayectoria idéntica, >1 s): 0.960
+```
+
+**Misma búsqueda, 4 % menos de tiempo.** No es el algoritmo: es **la máquina**.
+La rama A se midió el 2026-09-21 a las 19:51 y la B el 2026-09-23 a las 03:30,
+31 horas después, con otra carga, otro estado térmico y un binario compilado a
+partir de otra versión del árbol (con A4 y las trazas dentro, aunque apagadas).
+
+El Wilcoxon hace bien su trabajo: detecta un desplazamiento **sistemático**.
+Solo que lo que se desplazó fue la sesión de medida, no el solver. Es un
+confusor de libro, y el tipo de resultado que, sin el recuento de conflictos
+al lado, se habría publicado como una mejora.
+
+#### Lo que se lleva el proyecto
+
+1. **EXP-004 queda cerrado**: el parche es **neutro** en comportamiento (39/39
+   trayectorias idénticas) y hace exactamente lo que dice en el único caso donde
+   debe actuar.
+2. **Suelo de ruido medido**: la deriva entre sesiones en esta máquina es del
+   orden del **4 %**. Cualquier diferencia de tiempo menor que eso entre dos
+   tandas de sesiones distintas **no es interpretable**.
+3. **Regla nueva para el ADR-0003**: antes de interpretar una diferencia de
+   tiempos entre tandas de sesiones distintas, comprobar si las trayectorias
+   son idénticas. Si lo son, la diferencia es de la máquina.
+4. **Revisión retroactiva**: EXP-003 y EXP-005 ejecutaron **las dos ramas en la
+   misma sesión y con el mismo binario**, así que no están afectados. EXP-002
+   comparó contra corridas de otra sesión; sus conclusiones sobreviven porque
+   sus efectos (−17 %, +93 %, cambios de SAT a TIMEOUT) están muy por encima del
+   4 %, y en cualquier caso EXP-003 lo superó.
 
 ## 4. Qué NO es esto
 
