@@ -1,10 +1,26 @@
-# SAT-SOLVER — fork de Kissat para la SAT Competition 2027
+# LabeSAT
 
-Repositorio de trabajo para preparar una entrada a la **Main Track** de la
-[SAT Competition 2027](https://satcompetition.github.io/). La base es un
-**fork de [Kissat](https://github.com/arminbiere/kissat) 4.0.4** (MIT, Armin
-Biere), el solver secuencial sobre el que se construyen las entradas ganadoras
-recientes; encima van nuestras mejoras, cada una validada con un A/B propio.
+**LabeSAT** es un solver SAT para la **Main Track** de la
+[SAT Competition 2027](https://satcompetition.github.io/). Es un **fork de
+[Kissat](https://github.com/arminbiere/kissat) 4.0.4** (MIT, Armin Biere), el
+solver secuencial sobre el que se construyen las entradas ganadoras recientes;
+encima van nuestras mejoras, y ninguna entra por defecto sin un A/B que la
+respalde.
+
+```
+$ ./solver/kissat/build/kissat --banner
+LabeSAT SAT Solver
+
+Copyright (c) 2026 Abel Ponce (LabeSAT modifications)
+Based on Kissat 4.0.4 by Armin Biere (MIT license):
+Copyright (c) 2021-2024 Armin Biere University of Freiburg
+Copyright (c) 2019-2021 Armin Biere Johannes Kepler University Linz
+```
+
+> El binario conserva el nombre `kissat` y el directorio `solver/kissat/` por
+> una razón práctica: es un `git subtree` del upstream, y renombrar ficheros
+> convertiría cada sincronización con Kissat en un conflicto. La identidad del
+> solver está en el banner, que es lo que la competición registra.
 
 > **Por qué Kissat y no CaDiCaL** (el proyecto arrancó como fork de CaDiCaL):
 > ver [ADR-0001](docs/adr/0001-migracion-cadical-a-kissat.md). Resumen: sobre
@@ -94,5 +110,7 @@ nueva publicada, y nadie lo está cobrando. Detalle en
 ## Licencia
 
 El código bajo `solver/kissat/` es de Armin Biere y se distribuye bajo licencia
-MIT (ver `solver/kissat/LICENSE`); nuestras modificaciones se publican bajo la
-misma licencia. El harness y la documentación son originales de este proyecto.
+MIT (ver `solver/kissat/LICENSE`). Las modificaciones de LabeSAT se publican
+bajo la misma licencia, y el banner del binario conserva el aviso de copyright
+de Kissat, como exige la MIT. El harness y la documentación son originales de
+este proyecto.

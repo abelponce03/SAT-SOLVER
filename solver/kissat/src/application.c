@@ -16,7 +16,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#define SOLVER_NAME "Kissat SAT Solver"
+/* [SOLVER] Nombre de la entrada a la SAT Competition 2027.  El banner sigue
+   imprimiendo el copyright de Kissat: la licencia MIT exige conservarlo. */
+#define SOLVER_NAME "LabeSAT SAT Solver"
 
 typedef struct application application;
 

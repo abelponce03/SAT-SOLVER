@@ -5,6 +5,14 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Nombre
+- El solver pasa a llamarse **LabeSAT**. El banner imprime el nombre, una línea
+  de copyright para las modificaciones y **conserva las dos líneas de copyright
+  de Armin Biere**, como exige la licencia MIT de Kissat.
+- `--id` imprime ahora el commit exacto del que sale el binario (antes
+  `unknown`: el script de Kissat buscaba `.git` solo en el directorio actual y
+  el padre, y vendorizado con `git subtree` está tres niveles más arriba).
+
 ### Añadido
 - **Análisis empírico** de los resultados oficiales SC2026 (`docs/research/01`) y
   **catálogo de ideas** priorizado por techo medido (`docs/research/02`).
