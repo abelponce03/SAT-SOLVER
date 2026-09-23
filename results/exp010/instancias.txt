@@ -1,0 +1,9 @@
+# EXP-010 parte 2: SHA-1(mclique) != SHA-1(mit) (regla de §3)
+043c91001968a1fbd1ef419540fcb396.cnf.xz
+0f1070ba60b55aa62d3a98798a14700e.cnf.xz
+1a3bef9e03bab1ed4e9e34506d72a451.cnf.xz
+65bf849f3e86ab275e339934f4d140a0.cnf.xz
+6ddda96839bb24cd7389d5556d3ab16d.cnf.xz
+9ba8145e0d02318dea5507fc3ba03472.cnf.xz
+e5787bb4c8c29aa39b14a5e11387999d.cnf.xz
+f52a349677a5b5b5315b5954b3181fe3.cnf.xz
