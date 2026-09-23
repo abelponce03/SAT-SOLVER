@@ -95,7 +95,26 @@ python3 scripts/analyze_speedup.py results/exp008/A.csv results/exp008/B.csv
 
 ## 8. Incidencias de ejecución
 
-_Ninguna por ahora._
+- **Lanzamiento** (2026-09-23 16:31 UTC): el binario A se recompiló desde cero
+  para que su `--id` coincida con el commit del preregistro (`c5f2e4c`).
+  SHA-1: A `bed5fd461957…`, B `80f6fe728488…`.
+- **Carga concurrente**, la prevista en §6: la parte 1 de EXP-010 (solo
+  satsuma, un núcleo, `nice`) y compilaciones cortas de mclique.
+- **Corte por reinicio del contenedor** (hacia las 17:46 UTC): la sesión quedó
+  inactiva, el contenedor se suspendió y, al volver, todos los procesos habían
+  muerto.
+  - Quedaron **60 de 120 parejas completas**. De la pareja 61
+    (`ac625665…`, semilla 1) solo existía la fila A; se descarta.
+  - **Reanudación** con `run_ab_interleaved.py --resume`: conserva las parejas
+    completas, comprueba que los dos binarios tienen el mismo SHA-1 que en el
+    `meta.json` original y anota la reanudación en él (`reanudaciones`).
+  - **Por qué es válido**: en el diseño intercalado cada pareja A/B se mide con
+    segundos de diferencia y comparte las condiciones de la máquina, así que la
+    deriva entre sesiones (ADR-0003 §4b) afecta por igual a las dos ramas de
+    cada pareja. Las dos semillas de cada instancia pendiente se miden en la
+    misma sesión.
+  - HEAD ya no es `c5f2e4c` (hay commits de documentación y de mclique
+    posteriores), pero **el binario es el mismo**, y la guarda lo vigila.
 
 ## 9. Resultados
 

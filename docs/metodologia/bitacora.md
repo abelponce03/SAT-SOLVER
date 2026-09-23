@@ -180,6 +180,20 @@ al cerrar cada sesión.
   - La corrección (un presupuesto de trabajo) se preregistró como EXP-011
     **antes** de mirar la traza de todas las instancias. El valor se fijó por
     tiempo, no por resultados, y esa amenaza quedó escrita.
+- **Corte de EXP-008** (hacia las 17:46 UTC): al quedar la sesión inactiva,
+  el contenedor se suspendió y se reinició. Murieron todos los procesos en
+  segundo plano, incluidos los lanzados con `nohup`. Quedaron 60 de 120
+  parejas.
+  - Se añadió `--resume` al arnés y se relanzó.
+  - La secuencia pendiente (EXP-008, EXP-011 parte 1 y las partes 2) pasó a
+    un único guion idempotente, ejecutado como tarea del propio entorno.
+  - Otro fallo propio: los guiones que esperaban con `pgrep -f patrón` se
+    encontraban a sí mismos (el patrón aparecía en su propia línea de
+    órdenes), así que la cadena no habría arrancado nunca.
+- **Aprendido (entorno)**: un experimento de horas necesita la sesión activa,
+  y cada paso debe poder reanudarse. Para esperar a un proceso: su PID o una
+  secuencia en un solo guion, nunca `pgrep -f` con un patrón que aparezca en
+  la línea de órdenes del propio vigilante.
 - **Aprendido**: una reimplementación compatible se valida en dos capas:
   corrección del algoritmo (contra fuerza bruta) y equivalencia del efecto en
   el sistema completo (CNF de salida y resultados de kissat). Y una garantía
