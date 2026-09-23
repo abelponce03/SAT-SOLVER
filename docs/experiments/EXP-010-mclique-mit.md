@@ -99,6 +99,9 @@ LABESAT_SATSUMA=$PWD/tools/satsuma-mclique python3 scripts/verify_symm_answers.p
     results/exp010/B.csv --bench bench/symm2026 --out results/exp010/seguridad.csv
 ```
 
+El análisis de las dos partes lo hace `scripts/analyze_exp010.py`, commiteado
+antes de que termine la parte 1; `--write-list` escribe la lista de la parte 2.
+
 ## 4. Criterio de decisión, fijado ahora
 
 | resultado | decisión |

@@ -138,3 +138,39 @@ al cerrar cada sesión.
   - hay que verificar con la herramienta **exacta** de la competición;
   - las convenciones del entorno (identidad git) se documentan y se ajustan a
     las del proyecto de forma explícita.
+
+## 2026-09-23 (continuación) — EXP-008 y clique máxima MIT
+
+- **Se pidió**: «procede con la opción c y empieza EXP-008». D-005 se resuelve
+  con la opción c: reimplementar en MIT la clique máxima que satsuma toma de
+  cliquer.
+- **Se hizo**:
+  - EXP-008 lanzado según su preregistro, con el binario recompilado desde
+    cero para que `--id` coincida con HEAD;
+  - **mclique** (`solver/mclique/`): clique máxima por ramificación y poda,
+    escrita en sala limpia con la interfaz que usa satsuma;
+  - `tools/satsuma-mclique` en `get_tools.sh`, pruebas en CI, y EXP-010
+    preregistrado **antes** de ejecutar satsuma-mclique sobre el banco;
+  - arnés A/B con entorno por rama e `--instances`.
+- **Decisiones**:
+  - **Sala limpia**: de cliquer no se leyó ningún fichero, ni siquiera sus
+    cabeceras. La interfaz sale de las llamadas de `src/reorder.h` (satsuma,
+    MIT). Cuando hay varias cliques máximas, mclique puede elegir otra que
+    cliquer; por eso la adopción la decide un experimento y no solo las
+    pruebas de corrección.
+  - mclique va en un binario aparte y **no cambia nada por defecto** hasta
+    EXP-010 (CLAUDE.md §5).
+  - Para no tocar el CMake de satsuma, las cabeceras y unidades de
+    compatibilidad ocupan los nombres de fichero que espera
+    (`src/cliquer/{cliquer,graph,reorder}.c`), y `get_tools.sh` comprueba que
+    lo que compila ahí es byte a byte nuestro.
+  - La parte 1 de EXP-010 (solo satsuma, métrica SHA-1 determinista) se
+    ejecuta junto a EXP-008; la parte 2 (tiempos de kissat) espera a que
+    EXP-008 acabe.
+- **Salió mal**:
+  - `./scripts/build.sh` sin `--clean` dejó un binario con el `--id` del commit
+    anterior. Se recompiló desde cero antes de lanzar. Moraleja: la
+    procedencia se comprueba justo antes de lanzar, no se supone.
+- **Aprendido**: una reimplementación compatible se valida en dos capas:
+  corrección del algoritmo (contra fuerza bruta) y equivalencia del efecto en
+  el sistema completo (CNF de salida y resultados de kissat).
