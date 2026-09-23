@@ -1,6 +1,10 @@
 % Macros compartidas por todos los documentos LaTeX del proyecto (ADR-0006).
-\newcommand{\labesat}{\textsc{LabeSAT}}
-\newcommand{\kissat}{\textsc{Kissat}}
-\newcommand{\satsuma}{\textsc{satsuma}}
+\newcommand{\labesat}{LabeSAT}
+\newcommand{\kissat}{Kissat}
+\newcommand{\satsuma}{satsuma}
 % Versión del documento: la fija CI con -usepretex, o se queda en «borrador».
 \providecommand{\versiondoc}{borrador}
+% En la fuente monoespaciada «--» NO debe convertirse en guion corto: las
+% opciones de línea de órdenes (--time, --append-proof) tienen que salir tal
+% cual.  Requiere microtype, que cargan todos los documentos antes de este fichero.
+\DisableLigatures[-]{encoding = *, family = tt*}

@@ -125,7 +125,7 @@ jobs:
           done
       - name: Validar la página man
         run: |
-          out=$(groff -man -Tutf8 -ww docs/man/labesat.1 2>&1 >/dev/null)
+          out=$(groff -k -man -Tutf8 -ww docs/man/labesat.1 2>&1 >/dev/null)
           if [ -n "$out" ]; then echo "$out"; exit 1; fi
       - uses: actions/upload-artifact@v4
         with:

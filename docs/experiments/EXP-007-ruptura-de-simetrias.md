@@ -172,6 +172,10 @@ python3 scripts/run_ab_interleaved.py --solver solver/labesat \
   - El diseño intercalado reparte ese ruido entre las dos ramas. Se anota por
     transparencia; no es motivo para descartar datos.
   - Un reinicio del contenedor no afectó a la tanda: el proceso siguió vivo.
+- **2026-09-23, parejas ~40–45.**
+  - Se instalaron TeX Live y poppler con `apt`, a prioridad mínima de CPU y de
+    E/S (`nice -n 19`, `ionice -c3`), y se compilaron dos documentos LaTeX.
+  - Se anota por transparencia, igual que la carga anterior.
 
 ## 10. Resultados
 

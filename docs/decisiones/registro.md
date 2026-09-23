@@ -15,17 +15,18 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 
 | ID | Decisión | Estado | Quién decide | Dónde |
 |---|---|---|---|---|
-| D-001 | Commits ya publicados con autoría de Claude | 🟡 | Director | §D-001 |
-| D-002 | ¿Subcategoría IA o categoría regular? | 🟡 | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) |
-| D-003 | ¿Se admite la composición satsuma + kissat? | 🟡 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) |
-| D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) |
-| D-005 | ¿MIT o cliques (GPL)? | ⏸️ esperando a EXP-007 | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) |
+| D-001 | Commits ya publicados con autoría de Claude | 🟡 | Director | §D-001 · issue #5 |
+| D-002 | ¿Subcategoría IA o categoría regular? | 🟡 | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
+| D-003 | ¿Se admite la composición satsuma + kissat? | 🟡 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
+| D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
+| D-005 | ¿MIT o cliques (GPL)? | ⏸️ esperando a EXP-007 | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
 | D-007 | Nombre del solver | ✅ LabeSAT (2026-09-22) | Director | CHANGELOG |
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |
 | D-009 | Autoría: solo el desarrollador en git | ✅ (2026-09-23) | Director | [ADR-0005](../adr/0005-gobernanza-autoria-y-decisiones.md) |
 | D-010 | Documentación continua y multiformato, con LaTeX para los PDF | ✅ (2026-09-23) | Director | [ADR-0006](../adr/0006-documentacion-multiformato.md) |
-| D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 |
+| D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 · issue #10 |
+| D-012 | Insignia «via Claude» en las acciones de GitHub hechas desde la sesión | 🟡 | Director | §D-012 · issue #11 |
 
 ---
 
@@ -70,3 +71,21 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   cubren lo esencial. Aportaría plantillas para ADR y documentación.
 - **Coste**: ninguno. Es una decisión de configuración de la cuenta del
   director.
+
+## D-012 — Insignia «via Claude» en las acciones de GitHub
+
+- **Surge**: el 2026-09-23, al crear los primeros issues.
+- **Contexto**:
+  - Los issues y PR creados desde la sesión figuran con autor `abelponce03`.
+  - GitHub añade la insignia «via Claude»: la integración usa la GitHub App
+    oficial de Claude (`performed_via_github_app`). No se puede quitar desde la
+    sesión.
+  - Los commits sí cumplen del todo la ADR-0005.
+- **Opciones**:
+  - **a.** Aceptarla como metadato técnico. No es coautoría y es coherente con
+    la transparencia de `docs/metodologia/`.
+  - **b.** Que el director haga todas las acciones de autoría en GitHub.
+  - **c.** Mixto: la sesión gestiona issues y CI, y el director abre y fusiona
+    los PR.
+- **Recomendación**: a o c.
+- **Agenda**: Reunión 1 (issue #4).

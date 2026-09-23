@@ -27,6 +27,11 @@
   backgroundcolor=\color{black!3},
   showstringspaces=false,
   breaklines=true,
+  % listings no entiende UTF-8 multibyte: las tildes de los comentarios se
+  % mapean a mano (si no, pdflatex aborta dentro de los bloques de código).
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {→}{{$\rightarrow$}}1,
 }
 
 \title{\labesat{} --- Manual de usuario}

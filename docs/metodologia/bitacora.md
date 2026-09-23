@@ -90,8 +90,11 @@ al cerrar cada sesión.
   - PR #3;
   - gobernanza: CLAUDE.md, ADR-0005, ADR-0006, registro de decisiones y esta
     bitácora.
-- **Decisiones**: D-001 a D-005 y D-011 abiertas, agendadas en GitHub. D-006,
-  D-008, D-009 y D-010 resueltas.
+- **Decisiones**:
+  - D-001 a D-005, D-011 y D-012 abiertas, agendadas en la Reunión 1
+    (issue #4, con un sub-issue por decisión);
+  - D-006, D-008, D-009 y D-010 resueltas;
+  - el trabajo se organizó en épicas: fase 2 (#12) y documentación (#16).
 - **Salió mal**:
   - Primer lanzamiento de EXP-007: el guion tomaba el directorio
     `solver/kissat` por el binario, porque `-x` es cierto para directorios.
@@ -105,6 +108,14 @@ al cerrar cada sesión.
   - Un reinicio del contenedor mató a los vigilantes en segundo plano; el
     experimento siguió vivo. Desde entonces se programa una revisión de
     respaldo con `send_later`.
+  - El primer CI de documentación falló: `listings` no admite UTF-8
+    multibyte. Se corrigió compilando en local antes de volver a hacer push.
+  - La **revisión visual** de los PDF encontró un error que el compilador no
+    marca: `--time` salía como «-time», por la ligadura de guiones en la fuente
+    monoespaciada. Moraleja: los entregables se revisan mirándolos, no solo
+    compilándolos.
+  - Las acciones de GitHub desde la sesión llevan la insignia «via Claude»
+    (D-012).
 - **Aprendido**:
   - los tests deben ejercitar la ruta por defecto, sin variables de entorno de
     ayuda;
