@@ -23,6 +23,8 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   en ese grafo); si se agota, devuelve la mejor clique encontrada, ampliada
   hasta ser maximal. Es seguro porque satsuma solo usa la clique para ordenar
   columnas. Validación preregistrada en **EXP-011**.
+- `verify_symm_answers.py` verifica cada prueba UNSAT con **los dos** dsr-trim
+  (el actual y el de SC2026), como ya hacía `test_symmetry.sh`.
 - `scripts/test_mclique.sh`: pruebas frente a fuerza bruta y a una búsqueda
   exhaustiva de referencia (3300 grafos aleatorios), casos conocidos y la
   compilación de la interfaz tal como la usa satsuma. En CI, junto con la

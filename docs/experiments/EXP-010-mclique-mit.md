@@ -138,6 +138,13 @@ antes de que termine la parte 1; `--write-list` escribe la lista de la parte 2.
   el mismo de la parte 1). La parte 2 usa esa ruta en lugar de
   `tools/satsuma-mclique`. Es un cambio de ruta, no de binario; la guarda de
   SHA-1 lo vigila.
+- **Verificador corregido antes de la parte 2**: `verify_symm_answers.py` solo
+  usaba el dsr-trim actual, pero H3 exige los dos (el actual y el de SC2026).
+  Se corrigió antes de ejecutar la parte 2: ahora una prueba cuenta como OK
+  solo si la aceptan los dos. EXP-007 se verificó con el verificador antiguo;
+  sus 42 pruebas se habían comprobado además con los dos en `test_symmetry.sh`
+  solo para el banco de juguete, así que conviene reverificarlas (tarea
+  anotada, no afecta a este experimento).
 
 ## 7. Resultados
 

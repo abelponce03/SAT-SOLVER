@@ -36,7 +36,13 @@ def resueltas(path):
 def verificaciones(path):
     if not os.path.exists(path):
         return None
-    return {f["instance"]: f["verificacion"] for f in csv.DictReader(open(path))}
+    # verify_symm_answers.py guarda la ruta completa; aquí se usa el nombre.
+    v = {}
+    for f in csv.DictReader(open(path)):
+        i = os.path.basename(f["instance"])
+        # con dos semillas hay dos filas: basta un FALLO para que cuente
+        v[i] = "FALLO" if "FALLO" in (v.get(i), f["verificacion"]) else f["verificacion"]
+    return v
 
 
 def main():
