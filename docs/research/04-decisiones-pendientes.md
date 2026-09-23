@@ -74,6 +74,9 @@ En los datos oficiales, **12 de 33 solvers** llevan la etiqueta
 
 - **Base**: Kissat 4.0.4, con **38 944 líneas** en `src/*.c,h`.
 - **Cambios en kissat**: +458 / −13 líneas en 14 ficheros.
+  - *(Cifras exactas desde el 2026-09-23 con `scripts/declaracion_ia.sh`:
+    +390 líneas de C, de ellas **+105 activas** y +285 inactivas (A4.1 y
+    trazas). Las +458 de arriba incluían documentación y build.)*
   - 277 de esas líneas son A4.1 (`mode.c/h`, `modetrace.c/h`), que va
     **desactivado** por defecto.
   - Lo activo: el terminador de `lucky.c`, `--append-proof`, la identidad del

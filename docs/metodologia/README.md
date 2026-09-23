@@ -84,4 +84,4 @@ Observaciones, con evidencia en la bitácora:
 | Efectos *post hoc* que no replicaron en preregistro | 2 (B3′, A4.1) |
 | Incidencias que invalidaron datos, detectadas por controles | 2 (EXP-004 contaminado; EXP-007, primer lanzamiento) |
 | ADR | 6 |
-| Líneas añadidas a Kissat 4.0.4 (38 944) | ~460 (277 de A4.1, desactivado) + guion de 125 |
+| Líneas de C añadidas a Kissat 4.0.4 (38 944) | +390 (1,0 %): +105 activas y +285 inactivas (A4.1). Más un guion de 125. Fuente: `scripts/declaracion_ia.sh` |

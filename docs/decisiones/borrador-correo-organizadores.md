@@ -18,8 +18,7 @@
 Las cifras marcadas con `⟨…⟩` se recalculan desde git en el momento del envío:
 
 ```bash
-git diff --numstat 730056d HEAD -- solver/kissat/src   # líneas cambiadas en kissat
-wc -l solver/labesat                                   # guion de la tubería
+scripts/declaracion_ia.sh      # todas las cifras, calculadas desde git
 ```
 
 - ⟨líneas añadidas a Kissat⟩, ⟨de ellas, desactivadas⟩, ⟨líneas del guion⟩.
@@ -40,7 +39,7 @@ I am preparing a Main Track entry, LabeSAT, for SAT Competition 2027. I understa
 
 1. AI classification
 
-LabeSAT is based on Kissat 4.0.4 (about 38,900 lines of C). Our changes add about ⟨460⟩ lines to Kissat. Of these, ⟨277⟩ implement a feature that is disabled in the submitted configuration. We also add a ⟨125⟩-line driver script.
+LabeSAT is based on Kissat 4.0.4 (about 38,900 lines of C). Our changes add ⟨390⟩ lines of C to Kissat (⟨1.0⟩%). Only ⟨105⟩ of them are active in the submitted configuration; the other ⟨285⟩ implement a feature that is disabled. We also add a ⟨125⟩-line driver script.
 
 These lines were written by an AI coding assistant (Claude Code) under my direction. The experimental methodology was also AI-assisted: every performance claim comes from a pre-registered A/B experiment. No heuristic parameter was tuned by automated (AI) search.
 

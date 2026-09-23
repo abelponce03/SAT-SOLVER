@@ -117,10 +117,29 @@ La mayor palanca de PAR-2 medida en todo el proyecto.
       extra. Criterio de activación, preferiblemente con features baratos
       (tamaño, tiempo de satsuma, nº de generadores) o los de `classify.c`.
 
-### Fase 3 — A4.2: más brazos · enero 2027 (solo si A4.1 se sostiene)
+### Fases 3–7 — Plan Main Track con declaración honesta (desde 2026-09-23)
 
-- [ ] Ampliar el reparto adaptativo de 2 a k configuraciones, con la diversidad
-      que midió EXP-001 (VBS 26.7 % mejor que la mejor configuración).
+El director fijó el caso: **Main Track con declaración honesta del uso de IA**.
+El plan detallado está en
+[`plan/plan-main-track-2027.md`](plan/plan-main-track-2027.md): objetivos,
+palancas, variantes, hitos H1–H11, presupuesto de cómputo y riesgos. Resumen:
+
+- ~~A4.2 (más brazos)~~ **descartada**: A4.1 no tuvo efecto (EXP-006).
+- Palancas por orden:
+  1. ruptura de simetrías (EXP-007);
+  2. activación condicional B3 (EXP-009);
+  3. cliques en MIT (D-005);
+  4. base Kissat sc2026 frente a 4.0.4 (EXP-008, D-013);
+  5. topes de satsuma (se declaran).
+- Variantes: hasta 4 (D-014). Propuesta: V1 LabeSAT y V2 sin simetrías como
+  cobertura.
+- **H5: mejoras definidas ≤ 25 de enero de 2027. H6: correo a los
+  organizadores ≤ 1 de febrero de 2027.**
+- Declaración de IA con cifras calculadas desde git
+  (`scripts/declaracion_ia.sh`, en CI).
+
+Las secciones de fase de abajo se conservan como referencia; el calendario
+vigente es el del plan.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 
@@ -185,5 +204,8 @@ a los organizadores, en [`docs/research/04`](research/04-decisiones-pendientes.m
 3. Composición satsuma + kissat → riesgo bajo (hay precedentes en 2025 y 2026);
    confirmarlo en el mismo correo.
 4. Familia de los 20 benchmarks → recomendación: **covering arrays**.
+6. **Base de Kissat (D-013)**: 4.0.4 (la del ganador de 2026) o sc2026 (sin
+   publicar, MIT). Se decide con EXP-008.
+7. **Variantes a presentar (D-014)**: propuesta V1 + V2, ampliable.
 5. MIT frente a cliques → esperar a EXP-007. Si hay coste, reimplementar la
    clique máxima en MIT.

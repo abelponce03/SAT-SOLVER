@@ -67,10 +67,12 @@ $p=0.69$). It is therefore \emph{disabled} in the submitted configuration.
   \item \textbf{Code base}: \kissat{} 4.0.4 (upstream commit
         \texttt{8af8e56}); \satsuma{} commit \texttt{c6ad1b5} (unmodified);
         dejavu commit \texttt{4c275e9} (unmodified).
-  \item \textbf{Amount of change}: about 460 lines added to \kissat{}'s
-        38\,944 lines of C (1.2\,\%); 277 of these belong to the disabled
-        adaptive scheduler. A 125-line driver script was also added.
-        \pendiente{recount at submission}
+  \item \textbf{Amount of change}: 390 lines added and 10 removed in
+        \kissat{}'s 38\,944 lines of C (1.0\,\%). Only 105 added lines are
+        active in the submitted configuration; 285 belong to the disabled
+        adaptive scheduler and its tracing. A 125-line driver script was also
+        added. Figures produced by \texttt{scripts/declaracion\_ia.sh}.
+        \pendiente{regenerate at submission}
   \item \textbf{Changes due to AI}: all of the added lines were written by
         an AI coding assistant (Claude Code) under the author's direction.
         The experimental methodology was also AI-assisted.

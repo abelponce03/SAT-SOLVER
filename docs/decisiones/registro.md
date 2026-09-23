@@ -27,6 +27,9 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-010 | Documentación continua y multiformato, con LaTeX para los PDF | ✅ (2026-09-23) | Director | [ADR-0006](../adr/0006-documentacion-multiformato.md) |
 | D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 · issue #10 |
 | D-012 | Insignia «via Claude» en las acciones de GitHub hechas desde la sesión | 🟡 | Director | §D-012 · issue #11 |
+| D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 |
+| D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 |
+| D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 
 ---
 
@@ -114,3 +117,30 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 - **Nota técnica**: el conector de Gmail de la sesión no tenía permiso de
   redacción, así que el borrador no pudo dejarse en Gmail. Si se quiere, se
   reconecta con ese permiso en https://claude.ai/customize/connectors.
+
+## D-013 — Base de Kissat: 4.0.4 o sc2026
+
+- **Hechos**:
+  - Kissat 4.0.4 es la última versión publicada y el master de GitHub
+    (`8af8e56`), y también la base del ganador de 2026 (satsuma + 4.0.4).
+  - Biere compitió en 2026 con **«sc2026»**, una versión posterior sin publicar,
+    con licencia MIT, disponible en los paquetes de la competición. Cambia 64
+    ficheros (~1229 líneas de diff). Entre otras cosas: elimina `fastel` y los
+    niveles de glue, y cambia de modo focused/stable **guiado por conflictos**.
+  - Sola, quedó 16.ª (PAR-2 4612).
+  - Hoy no se sabe si sc2026 es mejor que 4.0.4.
+- **Cómo se decide**: con EXP-008, un A/B preregistrado de las dos bases,
+  intercalado, en calib y calib2.
+- **Coste de cambiar**: portar ~105 líneas activas (más el resto si procede) y
+  repetir la validación de las pruebas.
+
+## D-014 — Variantes a presentar
+
+- **Regla**: hasta 4 solvers secuenciales por participante.
+- **Propuesta**:
+  - **V1** = la mejor combinación validada;
+  - **V2** = sin ruptura de simetrías, como cobertura frente a un conjunto de
+    2027 con menos simetría o más SAT grandes;
+  - V3 y V4 solo si algún experimento las respalda.
+- **Coste**: cada variante lleva su propia declaración de IA y consume cómputo
+  en la validación final (H8).

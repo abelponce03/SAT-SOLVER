@@ -43,6 +43,16 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 - **research/03**: satsuma sin cliques produce una salida distinta en 8 de 74
   instancias; con cliques es idéntico al ganador de 2026.
 
+### Plan (2026-09-23)
+- **Plan Main Track 2027 con declaración honesta de IA**
+  (`docs/plan/plan-main-track-2027.md`):
+  - objetivos O1–O3 frente al ranking de 2026;
+  - palancas P1–P5 y variantes V1–V4;
+  - hitos H1–H11, presupuesto de cómputo y riesgos.
+- `scripts/declaracion_ia.sh`: las cifras de la declaración obligatoria salen
+  de git y CI las regenera. Corrige la estimación anterior («~460 líneas»):
+  son **+390 líneas de C** (1,0 %), **+105 activas**.
+
 ### En curso
 - **EXP-007** (preregistrado): A/B de la ruptura de simetrías sobre 74
   instancias estratificadas de 2026.

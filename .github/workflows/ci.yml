@@ -111,6 +111,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # declaracion_ia.sh compara contra la base del fork
+      - name: Cifras de la declaración de IA (plan Main Track §5)
+        # Falla si un fichero modificado de Kissat está sin clasificar como
+        # activo o inactivo: la cifra declarada nunca puede quedar desfasada.
+        run: ./scripts/declaracion_ia.sh | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Instalar TeX Live y groff
         run: |
           sudo apt-get update -qq
