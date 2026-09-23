@@ -22,9 +22,17 @@ DRAT="$ROOT/tools/drat-trim"
 for t in "$LABESAT_KISSAT" "$ROOT/tools/satsuma" "$DSR" "$DRAT"; do
     [ -x "$t" ] || { echo "falta $t (¿scripts/get_tools.sh?)"; exit 2; }
 done
-TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 fail=0
 bad() { echo "FALLO $*"; fail=1; }
+
+# Sin LABESAT_KISSAT, el guion debe encontrar kissat por sí solo: así es como
+# lo invocan los experimentos (EXP-007 se lanzó una vez con esto roto).
+if [ -z "${1:-}" ]; then
+    if (unset LABESAT_KISSAT; "$W" --version >/dev/null 2>&1); then
+        echo "OK    labesat encuentra kissat sin LABESAT_KISSAT"
+    else bad "labesat no encuentra kissat sin LABESAT_KISSAT"; fi
+fi
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 while IFS=, read -r inst expected _; do
     [ "$inst" = instance ] && continue

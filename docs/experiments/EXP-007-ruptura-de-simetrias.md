@@ -151,6 +151,21 @@ python3 scripts/run_ab_interleaved.py --solver solver/labesat \
     --opts-a="--no-symmetry" --timeout 180 --seeds 1
 ```
 
-## 9. Resultados
+## 9. Incidencias de ejecución
+
+- **2026-09-23, primer lanzamiento, abortado.**
+  - Las 11 primeras parejas salieron `ERROR` en **las dos ramas**, en 0,0–0,4 s.
+    Sin `LABESAT_KISSAT`, `solver/labesat` tomaba el **directorio**
+    `solver/kissat` por el binario, porque `-x` es cierto para directorios.
+  - No llegó a resolverse nada, así que no hay datos que puedan sesgar el
+    relanzamiento; los parciales se descartan.
+  - Correcciones:
+    - `first_exe` exige un fichero regular;
+    - `test_symmetry.sh` comprueba también la búsqueda por defecto (el test
+      fijaba siempre `LABESAT_KISSAT`, y por eso el fallo no se vio);
+    - `run_ab_interleaved.py` aborta si el solver no contesta `--id`.
+  - El diseño no cambia.
+
+## 10. Resultados
 
 _Pendiente de ejecución (después de EXP-006)._

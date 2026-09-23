@@ -29,7 +29,8 @@ set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 
-first_exe() { for f in "$@"; do [ -x "$f" ] && { echo "$f"; return; }; done; }
+# -f además de -x: un directorio también es "ejecutable" (solver/kissat lo es)
+first_exe() { for f in "$@"; do [ -f "$f" ] && [ -x "$f" ] && { echo "$f"; return; }; done; }
 KISSAT="${LABESAT_KISSAT:-$(first_exe "$HERE/kissat" "$HERE/kissat/build/kissat")}"
 SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma")}"
 SYMM_TIMEOUT="${LABESAT_SYMM_TIMEOUT:-60}"

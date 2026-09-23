@@ -97,6 +97,11 @@ def main():
     solver_id = subprocess.run([args.solver, "--id"], capture_output=True,
                                text=True).stdout.strip()
     head = git("rev-parse", "HEAD")
+    if not solver_id:
+        # Un solver que no contesta --id no va a resolver nada: todas las corridas
+        # saldrían ERROR.  Mejor abortar antes de escribir resultados.
+        sys.exit(f"ABORTADO: '{args.solver} --id' no devuelve nada; el solver no "
+                 "arranca (¿binario o ruta mal configurados?)")
     meta = {
         "diseno": "A/B intercalado (run_ab_interleaved.py)",
         "solver": os.path.abspath(args.solver), "solver_sha1": sha,
