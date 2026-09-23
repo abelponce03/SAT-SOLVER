@@ -62,6 +62,33 @@ resuelve gracias a las fases lucky, refutando la correlación con el tamaño que
 sostenía la regla). Vale como ejemplo concreto en la sección de metodología, y
 es del tipo de material que casi nadie publica.
 
+## Segundo caso de estudio metodológico: A4.1 (EXP-005 → EXP-006)
+
+Es el mismo patrón que B3′ y, contado entero, es mejor material que un
+resultado positivo.
+
+1. **EXP-005**: la métrica preregistrada (PAR-2) no concluye.
+2. Al descomponer, aparece un patrón llamativo: el planificador adaptativo es
+   más rápido en 10 de 12 instancias resueltas por ambas ramas (factor 0.648×,
+   p = 0.039, Cohen *d* = 0.74).
+3. En lugar de publicarlo, se **preregistra** como hipótesis (EXP-006), con datos
+   que ningún A/B de A4 había visto y con potencia holgada (n = 40 frente a
+   ~14 necesarias).
+4. **Resultado**: 0.983×, IC [0.819, 1.151], p = 0.69. Las propagaciones, que
+   son deterministas e inmunes a la deriva, tampoco se mueven (0.999×).
+
+Qué muestra:
+
+- **Un p = 0.039 obtenido *a posteriori* con n = 12 no vale nada.** Es el
+  jardín que se bifurca, medido: el efecto cae del 35 % a menos del 2 %.
+- **El control con el esfuerzo determinista es clave**: distingue «no hay
+  efecto» de «el efecto está oculto por la deriva de la máquina».
+- **En la literatura de SAT sería un +35 % publicable.** Aquí es un nulo
+  documentado.
+
+Para el artículo: la tabla con los dos pasos, uno junto al otro, y el coste en
+horas de máquina de hacerlo bien (EXP-006: unas 2,5 h en 4 núcleos).
+
 ## Trabajo relacionado que hay que leer y citar
 
 - SATzilla (Xu et al.) y la literatura de *algorithm selection* — el antecedente
