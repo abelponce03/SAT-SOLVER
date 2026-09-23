@@ -24,6 +24,9 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   - modelos correctos contra la CNF original;
   - entrada `.xz`;
   - respaldo con prueba DRAT pura.
+- **EXP-012** preregistrado: equivalencia del binario integrado con la
+  tubería en las 74 instancias de 2026 (CNF intermedia, trayectoria con
+  presupuesto de conflictos y seguridad), con `scripts/compare_integrada.py`.
 - `build.sh --dir=NOMBRE`: compila en otro directorio sin tocar
   `build/kissat`, útil mientras un experimento lo vigila.
 

@@ -43,7 +43,7 @@ workflow.
 | [`research/02`](research/02-catalogo-de-ideas.md) | Catálogo de ideas y su estado |
 | [`research/03`](research/03-coste-de-mantener-mit.md) | Coste de mantener MIT (satsuma sin cliques) |
 | [`research/04`](research/04-decisiones-pendientes.md) | Investigación de las decisiones pendientes del autor |
-| [`experiments/`](experiments/) | EXP-001 a EXP-008, EXP-010 y EXP-011: hipótesis antes de medir, resultados después |
+| [`experiments/`](experiments/) | EXP-001 a EXP-008 y EXP-010 a EXP-012: hipótesis antes de medir, resultados después |
 
 ## Metodología (desarrollo asistido por IA)
 
