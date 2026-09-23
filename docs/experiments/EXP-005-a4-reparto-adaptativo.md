@@ -1,6 +1,6 @@
 # EXP-005 — A4: reparto adaptativo del presupuesto entre modos de búsqueda
 
-- **Estado**: **paso 0 cerrado — la señal se valida (V1, V2 y V3 pasan)**. Diseño escrito antes de implementar (ADR-0003 §6)
+- **Estado**: paso 0 cerrado (V1/V2/V3 pasan) · implementado · **A/B en `bench/dev`: dirección favorable, sin significación** — NO pasa a `bench/test`. Diseño escrito antes de implementar (ADR-0003 §6)
 - **Fecha de diseño**: 2026-09-22
 - **Motiva**: [`catálogo`](../research/02-catalogo-de-ideas.md) línea A4 — la contribución candidata
 - **Depende de**: [EXP-004](EXP-004-lucky-terminator.md) (el solver ya cede el control), [EXP-001](EXP-001-diversidad-intrinseca-kissat.md) (la diversidad existe)
@@ -247,7 +247,79 @@ Tres decisiones de implementación que conviene justificar:
 | ΔPAR-2 < 0 sin significación | se documenta; se decide si escalar el banco compensa |
 | ΔPAR-2 ≥ 0 | A4.1 se cierra como B3′: se documenta y se retira |
 
-## 7. Amenazas a la validez, anotadas de antemano
+## 7. Resultado del A/B en `bench/dev`
+
+60 instancias, T = 180 s, una semilla, **ejecución secuencial** (`--jobs 1`),
+**un único binario** congelado en `6380e4d5` para las dos ramas.
+
+| | resueltas | PAR-2 |
+|---|---:|---:|
+| **A** — planificador ciego (upstream) | 15 | 282.670 s |
+| **B** — `--modeadaptive=1` | 15 | **280.448 s** |
+
+```
+ΔPAR-2 medio (B−A) = −2.222 s   (−0.8 %, negativo = B mejor)
+IC95 % bootstrap    = [−14.099, +11.043]   INCLUYE el 0
+Wilcoxon emparejado = W 30.0, p = 0.0938  (n efectivo = 15)
+McNemar (resueltas) = 1 a favor de cada lado, p = 1.0000
+```
+
+**Veredicto según el criterio congelado en §6**: «ΔPAR-2 < 0 pero el IC incluye
+el 0 → se documenta; se decide si escalar el banco compensa». Es el caso
+intermedio. **No se pasa a `bench/test`**: el banco reservado se gasta una sola
+vez por idea, y quemarlo con una hipótesis que su propio banco de desarrollo no
+confirma sería tirarlo.
+
+### El planificador sí está haciendo algo
+
+No es un no-op disfrazado: **cambia la trayectoria en 55 de las 60 instancias**
+(recuentos de conflictos distintos). El problema no es que no actúe.
+
+### Dónde se pierde el efecto: la dilución, otra vez
+
+**44 de las 60 instancias agotan el presupuesto en las dos ramas.** Aportan `2T`
+idéntico a A y a B, así que el ΔPAR-2 real se juega en **16 observaciones**. Era
+previsible —está escrito en §4 y volvió a pasar en EXP-003— y es el motivo de
+que un efecto de este tamaño no pueda alcanzar significación con este banco.
+
+Restringiendo a las 16 que alguna rama resuelve:
+
+| | PAR-2 |
+|---|---:|
+| A | 70.01 s |
+| B | **61.68 s** |
+
+`Δ = −8.33 s (−11.9 %)`, IC95 % `[−51.04, +40.18]`. **La dirección se mantiene y
+el tamaño crece**, pero el intervalo es enorme con n=16: sugerente, no
+concluyente. No se va a reportar el −11.9 % como si fuera un resultado.
+
+### Qué hizo instancia a instancia
+
+| familia | A | B | Δ |
+|---|---:|---:|---:|
+| graph-coloring | 162.3 s | **23.5 s** | −138.8 |
+| graph-coloring | TIMEOUT | **UNSAT** | gana una |
+| sorting-networks | 150.2 s | 106.4 s | −43.8 |
+| graph-coloring | 95.2 s | 64.6 s | −30.6 |
+| syndrome-decoding | 60.1 s | 65.4 s | +5.3 |
+| school-timetabling | 63.8 s | 69.0 s | +5.3 |
+| school-timetabling | UNSAT | **TIMEOUT** | pierde una |
+
+El perfil es el mismo que vimos en EXP-001: **cola pesada**. Las ganancias son
+grandes y concentradas (una instancia de 162 s a 23 s), las pérdidas pequeñas y
+repartidas (dos de +5.3 s), y hay un intercambio de una instancia en cada
+sentido. Eso es coherente con un mecanismo que a veces acierta mucho y rara vez
+estropea, que es exactamente lo que la cota `[×0.5, ×2]` pretendía garantizar.
+
+### Qué haría falta para decidirlo
+
+No más ajuste de hiperparámetros sobre estos datos —eso es el error de B3′—
+sino **más observaciones informativas**: un banco con más instancias en la
+frontera (ni triviales ni imposibles) y varias semillas. Con 16 observaciones
+útiles y un efecto del orden del 10 %, este diseño no tenía potencia para
+detectarlo; decirlo ahora es más honesto que haberlo descubierto después.
+
+## 8. Amenazas a la validez, anotadas de antemano
 
 - **El banco local no reproduce el régimen de competición** (EXP-001: ratio
   T/mediana). Un reparto adaptativo tiene más margen cuanto más largo es el
@@ -271,5 +343,8 @@ Tres decisiones de implementación que conviene justificar:
       replica desde CaDiCaL con magnitudes casi idénticas
 - [x] **Implementación del planificador** (ver §5b), con los dos requisitos que
       salen de los datos: EMA **por brazo** y recompensa por **mejora**
-- [ ] A/B en `bench/dev` → validación en `bench/test`
+- [x] **A/B en `bench/dev`** (ver §7): ΔPAR-2 = −2.222 s, IC95 % incluye el 0
+- [ ] ~~Validación en `bench/test`~~ — **no se ejecuta**: el criterio escrito de
+      antemano no se cumple, y gastar el banco reservado en una hipótesis no
+      confirmada lo quemaría para siempre
 - [ ] A/B en `bench/dev` → validación en `bench/test`
