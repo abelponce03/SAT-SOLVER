@@ -120,7 +120,7 @@ python3 scripts/analyze_speedup.py results/exp006/A.csv results/exp006/B.csv
 Ejecutado el 2026-09-23. La tanda terminó sin incidencias.
 
 - **Procedencia**:
-  - binario `d424a01f1b42`, `--id` = HEAD `12f871b`, árbol limpio;
+  - binario `d424a01f1b42`, `--id` = HEAD `12f871b` (hoy `fbc759e`, tras la reescritura D-001; ver `docs/decisiones/D-001-correspondencia-sha.md`), árbol limpio;
   - 120 parejas intercaladas;
   - datos en `results/exp006/`.
 - **Análisis**: el preregistrado, `analyze_speedup.py`, sin cambios.

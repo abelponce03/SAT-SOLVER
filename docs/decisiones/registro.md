@@ -15,7 +15,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 
 | ID | Decisión | Estado | Quién decide | Dónde |
 |---|---|---|---|---|
-| D-001 | Commits ya publicados con autoría de Claude | 🟡 | Director | §D-001 · issue #5 |
+| D-001 | Commits ya publicados con autoría de Claude | ✅ opción b (2026-09-23) | Director | §D-001 · issue #5 · [correspondencia de SHA](D-001-correspondencia-sha.md) |
 | D-002 | ¿Subcategoría IA o categoría regular? | 🟡 | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
 | D-003 | ¿Se admite la composición satsuma + kissat? | 🟡 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
@@ -58,8 +58,15 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     dejarlo documentado.
   - La opción c solo si el director la pide expresamente, sabiendo lo que
     implica.
-- **Mientras tanto**: no se reescribe nada. Es una operación destructiva y
-  necesita confirmación (CLAUDE.md §3).
+- **Resolución (2026-09-23, director): opción b.**
+  - Se reescribieron los 25 commits de la rama del PR #3 (21 con autoría de
+    Claude). Autor y committer pasan a ser el desarrollador y se quitaron los
+    trailers de atribución.
+  - Árbol, fechas y mensajes se conservan; los detalles están en
+    [`D-001-correspondencia-sha.md`](D-001-correspondencia-sha.md).
+  - Force-push **solo** a la rama del PR, no a `main`.
+  - Los 25 commits antiguos de `main` (épocas de los PR #1 y #2) quedan como
+    están, documentados en la ADR-0005.
 
 ## D-011 — Plugin «engineering» del catálogo de claude.ai
 

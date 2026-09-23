@@ -144,7 +144,7 @@ En los datos oficiales, **12 de 33 solvers** llevan la etiqueta
   **12 commits de correcciones** después del commit de la competición. Una
   prueba válida para el nuevo y no para el viejo descalificaría. Ahora CI
   verifica **con los dos**, y las pruebas actuales pasan con ambos
-  (`c61a184`).
+  (`6f50259`; antes `c61a184`, ver D-001).
 - **Pendiente**: para 2027 hay que volver a comprobar la lista de verificadores
   y su commit. Hay además un plazo propio para *enviar* verificadores (en 2026,
   el 20 de marzo).

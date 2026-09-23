@@ -116,6 +116,12 @@ al cerrar cada sesión.
     compilándolos.
   - Las acciones de GitHub desde la sesión llevan la insignia «via Claude»
     (D-012).
+- **Resuelto en la sesión**: D-001, opción b.
+  - Se reescribió la rama del PR #3 con `git filter-branch`: árbol idéntico y
+    fechas conservadas.
+  - Se guardó una tabla de correspondencia de SHA para no perder la procedencia
+    de EXP-006 y EXP-007.
+  - Force-push solo a la rama.
 - **Aprendido**:
   - los tests deben ejercitar la ruta por defecto, sin variables de entorno de
     ayuda;
