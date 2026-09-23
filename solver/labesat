@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+#
+# labesat — tubería de LabeSAT: ruptura de simetrías (satsuma) + CDCL (kissat).
+#
+#   labesat [--no-symmetry] <cnf> [<proof>]
+#
+# 1. satsuma ('fix') busca simetrías, añade predicados de ruptura y simplifica.
+#    Escribe la CNF resultante y el PREFIJO de la prueba (formato SR binario).
+# 2. kissat resuelve la CNF simplificada y CONTINÚA la prueba en el mismo
+#    fichero ('--append-proof').  La prueba completa se verifica contra la CNF
+#    ORIGINAL con dsr-trim (formato SR, superconjunto de DRAT).
+#
+# Si satsuma falla, se pasa de tiempo o la entrada es demasiado grande, se
+# resuelve la CNF original directamente (prueba DRAT pura, desde cero).
+# Ver ADR-0004.  El código de salida es el de kissat (10 SAT, 20 UNSAT).
+#
+# Parámetros (variables de entorno; los valores por defecto se fijan en EXP-007):
+#   LABESAT_KISSAT            binario de kissat   (defecto: junto a este script)
+#   LABESAT_SATSUMA           binario de satsuma  (defecto: junto a este script)
+#   LABESAT_SYMM_TIMEOUT      segundos máximos para satsuma            (60)
+#   LABESAT_SYMM_MAXBYTES     tamaño máximo de CNF sin comprimir       (536870912)
+#   LABESAT_KISSAT_ARGS       argumentos extra para kissat             ("")
+set -u
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/.." && pwd)"
+
+first_exe() { for f in "$@"; do [ -x "$f" ] && { echo "$f"; return; }; done; }
+KISSAT="${LABESAT_KISSAT:-$(first_exe "$HERE/kissat" "$HERE/kissat/build/kissat")}"
+SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma")}"
+SYMM_TIMEOUT="${LABESAT_SYMM_TIMEOUT:-60}"
+SYMM_MAXBYTES="${LABESAT_SYMM_MAXBYTES:-536870912}"
+read -r -a KARGS <<< "${LABESAT_KISSAT_ARGS:-}"
+
+symmetry=1
+if [ "${1:-}" = "--no-symmetry" ]; then symmetry=0; shift; fi
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "uso: labesat [--no-symmetry] <cnf> [<proof>]" >&2; exit 1
+fi
+CNF="$1"; PROOF="${2:-}"
+[ -r "$CNF" ] || { echo "labesat: no se puede leer '$CNF'" >&2; exit 1; }
+[ -n "$KISSAT" ] || { echo "labesat: no encuentro kissat" >&2; exit 1; }
+
+say() { echo "c [labesat] $*"; }
+
+# kissat pasa las señales (SIGTERM del entorno de competición) a 's UNKNOWN';
+# exec reemplaza este proceso para que las reciba directamente.
+run_plain() {
+    [ -n "$PROOF" ] && rm -f "$PROOF"
+    [ -n "${TMP:-}" ] && rm -rf "$TMP"   # exec no ejecuta el trap EXIT
+    say "sin simetrías: $1"
+    if [ -n "$PROOF" ]; then exec "$KISSAT" "${KARGS[@]}" "$CNF" "$PROOF"
+    else exec "$KISSAT" "${KARGS[@]}" "$CNF"; fi
+}
+
+[ "$symmetry" = 1 ] || run_plain "desactivadas (--no-symmetry)"
+[ -n "$SATSUMA" ] || run_plain "satsuma no disponible"
+command -v timeout >/dev/null || run_plain "falta 'timeout'"
+
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/labesat.XXXXXX")" || run_plain "sin directorio temporal"
+trap 'rm -rf "$TMP"' EXIT
+trap 'exit 143' TERM INT
+
+# satsuma sólo lee DIMACS sin comprimir
+INPUT="$CNF"
+case "$CNF" in
+    *.xz)   xz -dc "$CNF" > "$TMP/in.cnf" 2>/dev/null || run_plain "no se pudo descomprimir"; INPUT="$TMP/in.cnf" ;;
+    *.gz)   gzip -dc "$CNF" > "$TMP/in.cnf" 2>/dev/null || run_plain "no se pudo descomprimir"; INPUT="$TMP/in.cnf" ;;
+    *.bz2)  bzip2 -dc "$CNF" > "$TMP/in.cnf" 2>/dev/null || run_plain "no se pudo descomprimir"; INPUT="$TMP/in.cnf" ;;
+    *.lzma) xz --format=lzma -dc "$CNF" > "$TMP/in.cnf" 2>/dev/null || run_plain "no se pudo descomprimir"; INPUT="$TMP/in.cnf" ;;
+esac
+size=$(stat -c %s "$INPUT" 2>/dev/null || echo 0)
+[ "$size" -le "$SYMM_MAXBYTES" ] || run_plain "CNF de $size bytes > $SYMM_MAXBYTES"
+
+SB="$TMP/sb.cnf"
+sargs=(fix "$INPUT" --silent --full-skip-limit 100000000 --add-reduced-as-unit
+       --bsr --out-file "$SB")
+[ -n "$PROOF" ] && { rm -f "$PROOF"; sargs+=(--proof-file "$PROOF"); }
+
+t0=$(date +%s.%N)
+timeout -s KILL "$SYMM_TIMEOUT" "$SATSUMA" "${sargs[@]}" </dev/null >/dev/null 2>&1
+st=$?
+t1=$(date +%s.%N)
+secs=$(awk -v a="$t0" -v b="$t1" 'BEGIN { printf "%.2f", b - a }')
+if [ $st -ne 0 ] || [ ! -s "$SB" ]; then
+    run_plain "satsuma terminó con código $st en ${secs}s"
+fi
+say "satsuma: $(grep -m1 '^p' "$INPUT") -> $(grep -m1 '^p' "$SB") en ${secs}s"
+[ "$INPUT" != "$CNF" ] && rm -f "$INPUT"
+
+# No se usa exec: hay que borrar la CNF temporal al salir.  El trap reenvía
+# SIGTERM a kissat, que así imprime su 's UNKNOWN' y sus estadísticas.
+trap 'kill -TERM "$pid" 2>/dev/null; wait "$pid"; exit $?' TERM INT
+if [ -n "$PROOF" ]; then
+    "$KISSAT" "${KARGS[@]}" --append-proof "$SB" "$PROOF" &
+else
+    "$KISSAT" "${KARGS[@]}" "$SB" &
+fi
+pid=$!
+wait "$pid"
+exit $?

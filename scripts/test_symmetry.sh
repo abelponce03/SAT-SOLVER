@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# test_symmetry.sh — comprueba de punta a punta la tubería satsuma → kissat
+# (solver/labesat) sobre bench/symm:
+#
+#   - la respuesta coincide con bench/symm/expected.csv;
+#   - UNSAT: la prueba combinada (prefijo SR de satsuma + DRAT de kissat) la
+#     verifica dsr-trim contra la CNF ORIGINAL;
+#   - SAT: el modelo satisface la CNF ORIGINAL (no la simplificada);
+#   - control negativo: sin '--append-proof' kissat sobrescribe el prefijo y
+#     dsr-trim debe RECHAZAR la prueba (si no, el test no prueba nada);
+#   - ruta de respaldo: si satsuma falla, la prueba es DRAT puro (drat-trim).
+#
+# Uso: scripts/test_symmetry.sh [ruta/al/kissat]
+# Requiere scripts/get_tools.sh (satsuma, dsr-trim, drat-trim en tools/).
+set -uo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export LABESAT_KISSAT="${1:-$ROOT/solver/kissat/build/kissat}"
+W="$ROOT/solver/labesat"
+DSR="$ROOT/tools/dsr-trim"
+DRAT="$ROOT/tools/drat-trim"
+for t in "$LABESAT_KISSAT" "$ROOT/tools/satsuma" "$DSR" "$DRAT"; do
+    [ -x "$t" ] || { echo "falta $t (¿scripts/get_tools.sh?)"; exit 2; }
+done
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+fail=0
+bad() { echo "FALLO $*"; fail=1; }
+
+while IFS=, read -r inst expected _; do
+    [ "$inst" = instance ] && continue
+    cnf="$ROOT/bench/symm/$inst"
+    "$W" "$cnf" "$TMP/proof" > "$TMP/out"; code=$?
+    case "$expected:$code" in
+        UNSAT:20)
+            if "$DSR" "$cnf" "$TMP/proof" 2>&1 | grep -q "^s VERIFIED"; then
+                echo "OK    $inst: UNSAT, prueba SR verificada por dsr-trim"
+            else bad "$inst: dsr-trim no verificó la prueba combinada"; fi ;;
+        SAT:10)
+            if python3 "$ROOT/scripts/verify_model.py" --model "$TMP/out" "$cnf" >/dev/null; then
+                echo "OK    $inst: SAT, el modelo satisface la CNF original"
+            else bad "$inst: el modelo NO satisface la CNF original"; fi ;;
+        *) bad "$inst: esperado $expected, código $code" ;;
+    esac
+done < "$ROOT/bench/symm/expected.csv"
+
+# Control negativo: la misma tubería sin '--append-proof' debe dar una prueba
+# inválida.  Garantiza que el OK de arriba depende de verdad del prefijo.
+cnf="$ROOT/bench/symm/php_12_11.cnf"   # su refutación corta depende del prefijo
+"$ROOT/tools/satsuma" fix "$cnf" --silent --full-skip-limit 100000000 \
+    --add-reduced-as-unit --bsr --proof-file "$TMP/neg" --out-file "$TMP/sb.cnf" >/dev/null 2>&1
+"$LABESAT_KISSAT" --no-binary "$TMP/sb.cnf" "$TMP/neg" >/dev/null
+if "$DSR" "$cnf" "$TMP/neg" 2>&1 | grep -q "^s VERIFIED"; then
+    bad "control negativo: dsr-trim aceptó una prueba sin prefijo"
+else
+    echo "OK    control negativo: sin --append-proof la prueba se rechaza"
+fi
+
+# Ruta de respaldo: satsuma no disponible → kissat sobre la CNF original.
+cnf="$ROOT/bench/symm/php9x9_rand160u.cnf"
+LABESAT_SATSUMA=/bin/false "$W" "$cnf" "$TMP/fb" > "$TMP/out"; code=$?
+if [ $code = 20 ] && grep -q "sin simetrías" "$TMP/out" &&
+   "$DRAT" "$cnf" "$TMP/fb" 2>/dev/null | grep -q "s VERIFIED"; then
+    echo "OK    respaldo: satsuma falla → prueba DRAT pura verificada"
+else bad "respaldo (código $code)"; fi
+
+[ $fail = 0 ] && echo "test_symmetry: todo correcto" || echo "test_symmetry: HAY FALLOS"
+exit $fail

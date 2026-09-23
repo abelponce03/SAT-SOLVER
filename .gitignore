@@ -29,6 +29,7 @@ bench/dev/
 bench/test/
 *.cnf.xz
 !bench/smoke/*.cnf
+!bench/symm/*.cnf
 
 # --- Python ---
 __pycache__/

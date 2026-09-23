@@ -1,0 +1,5 @@
+instance,expected,note
+php_12_11.cnf,UNSAT,pigeonhole 12/11: kissat solo ~68 s; con ruptura de simetrías ~0.02 s
+php_9_9.cnf,SAT,pigeonhole 9/9 (satisfacible y muy simétrico)
+php9x9_rand160u.cnf,UNSAT,parte simétrica + parte aleatoria UNSAT: la prueba mezcla prefijo SR y DRAT de kissat
+php9x9_rand160s.cnf,SAT,parte simétrica + parte aleatoria SAT: el modelo debe satisfacer la CNF original

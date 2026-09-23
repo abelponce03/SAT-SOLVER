@@ -15,10 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Herramientas de verificación (drat-trim)
-        run: ./scripts/get_tools.sh
+      - name: Herramientas externas (drat-trim, satsuma, dsr-trim)
+        run: ./scripts/get_tools.sh --jobs 4
       - name: Suite de humo (build, tests de Kissat, modelos, pruebas DRAT, determinismo)
         run: ./scripts/smoke_test.sh
+      - name: Tubería de simetrías (satsuma → kissat, pruebas SR con dsr-trim)
+        run: ./scripts/test_symmetry.sh
 
   sanitize:
     name: Build con sanitizers
@@ -85,6 +87,12 @@ jobs:
             fi
           done < bench/smoke/expected.csv
           exit $fail
+      - name: Tubería de simetrías con el binario de competición
+        # '--append-proof' es una opción de la aplicación, no del solver: debe
+        # sobrevivir a '--no-options' o la prueba entregada sería inválida.
+        run: |
+          ./scripts/get_tools.sh --jobs 4
+          ./scripts/test_symmetry.sh
 
   scripts:
     name: Scripts de análisis
