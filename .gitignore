@@ -51,3 +51,5 @@ data/
 bench/calib/
 bench/calib2/
 bench/boundary/
+bench/symm2026/
+bench/symm2026-grandes/
