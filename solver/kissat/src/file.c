@@ -295,6 +295,28 @@ bool kissat_open_to_write_file (file *file, const char *path) {
   return true;
 }
 
+/* [SOLVER] Abre un fichero para añadir al final ('--append-proof').  Lo usa
+   la tubería satsuma+LabeSAT: satsuma escribe el prefijo SR de la prueba y
+   LabeSAT continúa la prueba en el mismo fichero.  Sólo ficheros sin
+   comprimir: un flujo comprimido no se puede continuar concatenando.  */
+bool kissat_open_to_append_file (file *file, const char *path) {
+#ifdef KISSAT_HAS_COMPRESSION
+  if (kissat_has_suffix (path, ".bz2") || kissat_has_suffix (path, ".gz") ||
+      kissat_has_suffix (path, ".lzma") || kissat_has_suffix (path, ".7z") ||
+      kissat_has_suffix (path, ".xz"))
+    return false;
+#endif
+  file->file = fopen (path, "a");
+  if (!file->file)
+    return false;
+  file->close = true;
+  file->reading = false;
+  file->compressed = false;
+  file->path = path;
+  file->bytes = 0;
+  return true;
+}
+
 void kissat_close_file (file *file) {
   assert (file);
   assert (file->file);
