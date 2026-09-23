@@ -165,6 +165,13 @@ se tomarán con presupuestos cortos y habrá que declararlo así.
 
 ## 5. Decisiones pendientes del autor
 
-1. ¿Hay acceso a un clúster?
-2. Consulta a los organizadores sobre la subcategoría de IA.
-3. Familia de problemas para los 20 benchmarks.
+Investigadas a fondo, con hechos, opciones, recomendación y un borrador de correo
+a los organizadores, en [`docs/research/04`](research/04-decisiones-pendientes.md).
+
+1. ¿Hay acceso a un clúster? → **no** (2026-09-23): todo se mide en local.
+2. Subcategoría de IA → **preguntar por escrito ya**. Caso base: subcategoría IA.
+3. Composición satsuma + kissat → riesgo bajo (hay precedentes en 2025 y 2026);
+   confirmarlo en el mismo correo.
+4. Familia de los 20 benchmarks → recomendación: **covering arrays**.
+5. MIT frente a cliques → esperar a EXP-007. Si hay coste, reimplementar la
+   clique máxima en MIT.

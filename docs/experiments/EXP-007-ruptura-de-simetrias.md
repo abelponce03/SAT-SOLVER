@@ -165,6 +165,13 @@ python3 scripts/run_ab_interleaved.py --solver solver/labesat \
       fijaba siempre `LABESAT_KISSAT`, y por eso el fallo no se vio);
     - `run_ab_interleaved.py` aborta si el solver no contesta `--id`.
   - El diseño no cambia.
+- **2026-09-23, durante el relanzamiento (parejas ~27–35).**
+  - Se ejecutaron en paralelo tests cortos (`test_symmetry.sh`, 8 veces) y dos
+    compilaciones de dsr-trim, con `nice` y usando como mucho 2 de los 4
+    núcleos, mientras la tanda ocupaba 1.
+  - El diseño intercalado reparte ese ruido entre las dos ramas. Se anota por
+    transparencia; no es motivo para descartar datos.
+  - Un reinicio del contenedor no afectó a la tanda: el proceso siguió vivo.
 
 ## 10. Resultados
 
