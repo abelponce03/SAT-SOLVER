@@ -15,7 +15,7 @@
 
 | # | Idea | Techo medido (ΔPAR-2) | Coste | Riesgo "ya hecho" | Veredicto |
 |---|---|---:|---|---|---|
-| **A1** | Cartera secuencial de configuraciones en un binario | **−798 s** (sin oráculo) | bajo | medio | **Primera** |
+| **A1** | Cartera secuencial de configuraciones en un binario | ~~−798 s~~ **(simulado con solvers de otros grupos: combinación PROHIBIDA por las reglas)** | bajo | medio | **Zona gris reglamentaria** (ver `docs/ROADMAP.md` §1.2) |
 | **A2** | Conmutación de configuración en caliente (sin reinicio) | ≤ −2257 s (oráculo) | medio | bajo | **Segunda** |
 | **A3** | Selección por instancia con features baratos | ≤ −2257 s (oráculo) | medio-alto | alto (SATzilla) | Tercera |
 | **A4.1** | Reparto adaptativo entre los 2 modos existentes | **−2.2 s en dev, IC incluye el 0** | medio | bajo | **Implementado; sin confirmar** |
