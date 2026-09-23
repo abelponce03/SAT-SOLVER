@@ -63,3 +63,37 @@ no puede cambiar nada en esa instancia.
   coste se puede expresar en instancias concretas, y una reimplementación MIT de
   la búsqueda de cliques que usa satsuma (máxima clique acotada) pasaría a ser
   una tarea candidata.
+
+## Segunda parte: kissat sobre la salida con cliques (2026-09-23, tras EXP-007)
+
+**Diseño**:
+- solo las 8 instancias cuya salida difiere;
+- `solver/labesat` con satsuma MIT frente a satsuma con cliques;
+- el mismo kissat, T = 180 s, orden intercalado.
+- Datos: `results/satsuma-builds/cliques_ab.csv`. El binario con cliquer vive
+  solo en `/tmp`.
+
+| instancia | estrato | MIT (sin cliques) | con cliques |
+|---|---|---|---|
+| 043c9100… | H | TIMEOUT | **UNSAT 0,8 s** |
+| 0f1070ba… | H | TIMEOUT | **UNSAT 0,2 s** |
+| 1a3bef9e… | H | TIMEOUT | **UNSAT 0,4 s** |
+| 65bf849f… | H | TIMEOUT | **UNSAT 1,6 s** |
+| 6ddda968… | H | TIMEOUT | **UNSAT 0,9 s** |
+| e5787bb4… | H | TIMEOUT | **UNSAT 0,5 s** |
+| 9ba8145e… | H | UNSAT 18,0 s | UNSAT 19,3 s |
+| f52a3496… | N | SAT 37,5 s | SAT 32,5 s |
+
+**Lectura**:
+
+- **Mantener MIT sin cliques cuesta 6 instancias de las 45 del estrato H**, que
+  pasan de timeout a resolverse en menos de 2 s. A T = 180 s son unos 358 s
+  de PAR-2 por instancia, es decir, unos **−29 s** de PAR-2 medio sobre las 74
+  de EXP-007.
+- Las 5 que cliquer refutaba dentro de satsuma (§ anterior) están entre ellas.
+  Las otras dos instancias que difieren quedan casi iguales.
+- **Consecuencia para D-005**: el coste es real. De las opciones de
+  `research/04` §4, la **c** (reimplementar la clique máxima en MIT) mantiene
+  la directriz del director («mantén MIT») y recupera este efecto. La **b**
+  (ejecutable GPL aparte) la recupera sin trabajo, pero introduce GPL en lo que
+  se distribuye.
