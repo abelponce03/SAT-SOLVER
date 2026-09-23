@@ -151,6 +151,14 @@ python3 scripts/run_ab_interleaved.py --solver solver/labesat \
     --opts-a="--no-symmetry" --timeout 180 --seeds 1
 ```
 
+**Análisis** (script fijado antes de que terminara la tanda):
+
+```bash
+python3 scripts/analyze_exp007.py results/exp007/A.csv results/exp007/B.csv
+python3 scripts/verify_symm_answers.py results/exp007/B.csv \
+    --bench bench/symm2026 --out results/exp007/seguridad.csv
+```
+
 ## 9. Incidencias de ejecución
 
 - **2026-09-23, primer lanzamiento, abortado.**
