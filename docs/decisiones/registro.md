@@ -16,8 +16,8 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | ID | Decisión | Estado | Quién decide | Dónde |
 |---|---|---|---|---|
 | D-001 | Commits ya publicados con autoría de Claude | ✅ opción b (2026-09-23) | Director | §D-001 · issue #5 · [correspondencia de SHA](D-001-correspondencia-sha.md) |
-| D-002 | ¿Subcategoría IA o categoría regular? | 🟡 | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
-| D-003 | ¿Se admite la composición satsuma + kissat? | 🟡 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
+| D-002 | ¿Subcategoría IA o categoría regular? | ⏸️ correo aplazado hasta definir las mejoras (límite recomendado: 1-feb-2027) | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
+| D-003 | ¿Se admite la composición satsuma + kissat? | ⏸️ mismo correo que D-002 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
 | D-005 | ¿MIT o cliques (GPL)? | ⏸️ esperando a EXP-007 | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
@@ -96,3 +96,21 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     los PR.
 - **Recomendación**: a o c.
 - **Agenda**: Reunión 1 (issue #4).
+
+## D-002 y D-003 — Aplazamiento del correo a los organizadores
+
+- **Decisión del director (2026-09-23)**: el correo se envía **cuando esté
+  definido el conjunto final de mejoras de LabeSAT**, porque las cifras que
+  declara (líneas cambiadas, qué va activado, cliques sí o no) todavía van a
+  cambiar.
+- **Texto y cifras a recalcular**: [`borrador-correo-organizadores.md`](borrador-correo-organizadores.md).
+- **Riesgo anotado y fecha límite recomendada, el 1 de febrero de 2027**:
+  - La respuesta decide si se apunta a la categoría regular, lo que puede
+    exigir reescribir código a mano o cambiar la declaración.
+  - Los 20 benchmarks se entregan con el registro (en 2026, el 19 de abril).
+- **Mientras tanto**: se sigue planificando con el caso base de
+  `research/04` §1, es decir, la subcategoría IA con declaración honesta.
+  D-003 tiene riesgo bajo por los precedentes, y la tubería no cambia.
+- **Nota técnica**: el conector de Gmail de la sesión no tenía permiso de
+  redacción, así que el borrador no pudo dejarse en Gmail. Si se quiere, se
+  reconecta con ese permiso en https://claude.ai/customize/connectors.
