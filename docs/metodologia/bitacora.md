@@ -236,3 +236,33 @@ al cerrar cada sesión.
     (lo que se pidió) y «un solo solver» (lo que se quería) no son lo mismo.
   - Compilar aparte (`--dir`) permite seguir desarrollando sin invalidar un
     experimento en curso.
+
+## 2026-09-23 (noche) — Revisión de enfoques probabilísticos (research/05)
+
+- **Se pidió**:
+  - una búsqueda exhaustiva, con conectores académicos, de enfoques
+    probabilísticos que mejoren los solvers SAT y sus métricas;
+  - documentar sin obligación de aplicar;
+  - descartar lo que por sí solo sería ruido.
+- **Se hizo**:
+  - ~22 consultas en Consensus, Scholar Gateway y web, con ~75 trabajos
+    catalogados;
+  - un inventario previo de lo que Kissat 4.0.4 ya hace (walk probSAT, fases
+    objetivo, rephasing, randec, Luby), para no «descubrirlo» de nuevo;
+  - veredictos con un criterio de ruido explícito: el umbral de lo que
+    podemos medir y el precedente nulo de EXP-006;
+  - una exploración con los datos de EXP-007, etiquetada como tal.
+- **Decisiones**:
+  - Se recomiendan tres cosas (R1–R3). Las tres encajan en trabajo ya
+    planificado (EXP-009, ADR-0003, P5) y no añaden frentes nuevos.
+  - NeuroBack queda aparcado a pesar de tener el mayor efecto publicado sobre
+    Kissat, por el coste de integrarlo en el binario de competición.
+- **Salió mal**:
+  - Scholar Gateway cubre sobre todo el corpus de Wiley y casi no indexa las
+    sedes de SAT; se compensó con Consensus y la web.
+  - Consensus limitó la frecuencia de consultas: hubo que ir en tandas.
+- **Aprendido**:
+  - Revisar la literatura **contra el código de la base** evita recomendar lo
+    que ya existe.
+  - Con los datos propios se pueden descartar ideas antes de implementarlas:
+    el reparto temporal se descartó con una simulación de 20 líneas.

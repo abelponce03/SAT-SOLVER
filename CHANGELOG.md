@@ -5,6 +5,19 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Investigación (2026-09-23)
+- **research/05**: revisión de enfoques probabilísticos para SAT (~75
+  trabajos; Consensus, Scholar Gateway y web).
+  - Recomendaciones:
+    - **R1**: B3 como decisión probabilística calibrada;
+    - **R2**: supervivencia, IC por estrato y varianza entre semillas;
+    - **R3**: topes de satsuma por cuantiles.
+  - Aparcadas: NeuroBack, BMM, bandido VSIDS/CHB.
+  - Descartadas, por ruido o porque no aplican: el resto, con motivo.
+  - Exploración con los datos de EXP-007: repartir el tiempo entre fórmula con
+    y sin ruptura no mejora a aplicarla siempre (71,4 frente a 69,0 s). El
+    oráculo llega a 57,0 s, así que la ganancia está en **clasificar**.
+
 ### Añadido (2026-09-23): ruptura de simetrías dentro de Kissat (D-016, ADR-0007)
 - **Un solo binario**: con `configure --symmetry` (o `build.sh --symmetry`),
   satsuma se compila dentro de Kissat, y `kissat --symmetry <cnf> [<prueba>]`

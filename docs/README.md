@@ -42,6 +42,7 @@ workflow.
 | [`research/01`](research/01-analisis-empirico-sc2026.md) | Análisis de los resultados oficiales de 2026 |
 | [`research/02`](research/02-catalogo-de-ideas.md) | Catálogo de ideas y su estado |
 | [`research/03`](research/03-coste-de-mantener-mit.md) | Coste de mantener MIT (satsuma sin cliques) |
+| [`research/05`](research/05-enfoques-probabilisticos.md) | Enfoques probabilísticos para SAT: revisión de ~75 trabajos, recomendaciones R1–R3 y descartes por ruido |
 | [`research/04`](research/04-decisiones-pendientes.md) | Investigación de las decisiones pendientes del autor |
 | [`experiments/`](experiments/) | EXP-001 a EXP-008 y EXP-010 a EXP-012: hipótesis antes de medir, resultados después |
 
