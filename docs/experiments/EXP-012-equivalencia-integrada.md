@@ -82,7 +82,10 @@ python3 scripts/compare_integrada.py --bench bench/symm2026 \
 
 ## 6. Incidencias de ejecución
 
-_Ninguna por ahora._
+- **Binario integrado**: `solver/kissat/build-symm/kissat`, compilado desde cero
+  en el commit del preregistro (`--id` `a071e7e8…`, SHA-1 `5f5fc0e9…`).
+- **Lanzamiento**: encadenado para empezar cuando termine la secuencia en
+  curso (EXP-008 y partes 2 de EXP-010 y EXP-011).
 
 ## 7. Resultados
 
