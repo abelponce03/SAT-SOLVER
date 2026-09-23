@@ -120,7 +120,10 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
     t0 = time.monotonic()
     killed = False
     with tempfile.TemporaryFile() as fout:
-        proc = subprocess.Popen(cmd, stdout=fout, stderr=subprocess.DEVNULL)
+        # Sesión propia: si hay que matar, se mata el GRUPO.  Con un guion como
+        # solver/labesat, matar solo al hijo directo dejaría kissat huérfano.
+        proc = subprocess.Popen(cmd, stdout=fout, stderr=subprocess.DEVNULL,
+                                start_new_session=True)
         deadline = (t0 + hard_limit) if hard_limit else None
         delay = 0.002
         while True:
@@ -129,7 +132,10 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
                 break
             if deadline and time.monotonic() > deadline:
                 killed = True
-                proc.kill()
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
                 pid, wstatus, ru = os.wait4(proc.pid, 0)
                 break
             time.sleep(delay)

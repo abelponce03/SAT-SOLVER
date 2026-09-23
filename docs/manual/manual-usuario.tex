@@ -1,0 +1,252 @@
+% Manual de usuario de LabeSAT.
+% Fuente canónica en LaTeX (ADR-0006). La compila CI: trabajo «documentacion».
+% Local:  latexmk -pdf -cd docs/manual/manual-usuario.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\input{../comun/macros.tex}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{black!30},
+  backgroundcolor=\color{black!3},
+  showstringspaces=false,
+  breaklines=true,
+  % listings no entiende UTF-8 multibyte: las tildes de los comentarios se
+  % mapean a mano (si no, pdflatex aborta dentro de los bloques de código).
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+           {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+           {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {→}{{$\rightarrow$}}1,
+}
+
+\title{\labesat{} --- Manual de usuario}
+\author{Abel Ponce}
+\date{Versión del documento: \versiondoc}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+\labesat{} es un solver SAT para fórmulas en forma normal conjuntiva (formato
+DIMACS). Se basa en Kissat~4.0.4 y añade un preprocesado de \emph{ruptura de
+simetrías} (satsuma) cuyo resultado se puede verificar. Este manual explica
+cómo instalarlo, cómo usarlo, cómo verificar sus respuestas y cómo reproducir
+los experimentos del proyecto.
+\end{abstract}
+
+\tableofcontents
+
+%======================================================================
+\section{Qué es \labesat{}}
+
+\labesat{} decide si una fórmula proposicional en CNF es satisfacible:
+\begin{itemize}
+  \item si lo es, imprime un \emph{modelo}, es decir, una asignación que la
+        satisface;
+  \item si no lo es, puede escribir una \emph{prueba} de insatisfacibilidad que
+        un verificador independiente comprueba.
+\end{itemize}
+
+Consta de dos programas que se ejecutan en tubería:
+\begin{enumerate}
+  \item \textbf{satsuma} (M.~Anders, licencia MIT) busca simetrías de la
+        fórmula y añade restricciones que las rompen. Escribe la fórmula
+        simplificada y el comienzo de la prueba en formato SR
+        (\emph{substitution redundancy}).
+  \item \textbf{kissat} (A.~Biere, licencia MIT, con modificaciones de
+        \labesat{}) resuelve la fórmula simplificada y \emph{continúa} la misma
+        prueba.
+\end{enumerate}
+
+El guion \texttt{solver/labesat} coordina los dos. Si satsuma falla o tarda
+demasiado, resuelve la fórmula original solo con kissat.
+
+%======================================================================
+\section{Instalación}
+
+\subsection{Requisitos}
+\begin{itemize}
+  \item Linux o macOS, con compilador de C (gcc o clang) y \texttt{make}.
+  \item Para la ruptura de simetrías: compilador de C++20, CMake~$\geq$~3.5 y
+        \texttt{git}.
+  \item Python~3.10 o superior para los scripts de experimentos
+        (\texttt{pip install -r requirements.txt}).
+  \item \texttt{xz}, \texttt{gzip} o \texttt{bzip2} si las instancias vienen
+        comprimidas.
+\end{itemize}
+
+\subsection{Compilación}
+\begin{lstlisting}[language=bash]
+git clone https://github.com/abelponce03/SAT-SOLVER.git
+cd SAT-SOLVER
+./scripts/build.sh          # compila solver/kissat/build/kissat
+./scripts/get_tools.sh      # satsuma (MIT), dejavu, dsr-trim y drat-trim en tools/
+./scripts/smoke_test.sh     # comprobación rápida de que todo funciona
+\end{lstlisting}
+
+\texttt{get\_tools.sh} descarga cada herramienta fijada a un commit concreto,
+para que cualquier resultado sea reproducible. satsuma se compila \emph{sin}
+la biblioteca cliquer (GPL), de modo que todo lo que se distribuye es MIT.
+
+\subsection{Configuración de competición}
+\texttt{./scripts/build.sh --competition} compila la configuración que se
+entrega a la SAT Competition. No admite opciones en tiempo de ejecución, salvo
+las de la aplicación (\texttt{-n}, \texttt{--time}, \texttt{--append-proof},
+\ldots).
+
+%======================================================================
+\section{Uso}
+
+\subsection{Línea de órdenes}
+\begin{lstlisting}
+solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>]
+\end{lstlisting}
+
+\begin{description}
+  \item[\texttt{<cnf>}] Fórmula en formato DIMACS, sin comprimir o comprimida
+        (\texttt{.xz}, \texttt{.gz}, \texttt{.bz2}, \texttt{.lzma}).
+  \item[\texttt{<prueba>}] Fichero donde se escribe la prueba si la fórmula es
+        insatisfacible. Opcional.
+  \item[\texttt{--symmetry}] Activa la ruptura de simetrías (satsuma). Hoy está
+        \textbf{desactivada por defecto}: el experimento EXP-007 mostró que gana
+        mucho en instancias con simetría explotable (37 de 45 resueltas frente a
+        8), pero ralentiza 1{,}42$\times$ las que no la tienen. Se activará sola
+        cuando la activación condicional (B3) esté validada. También se puede
+        activar con \texttt{LABESAT\_SYMMETRY=1}.
+  \item[\texttt{--no-symmetry}] Desactiva satsuma aunque \texttt{LABESAT\_SYMMETRY=1}.
+  \item[\texttt{--time=N}] Límite de \textbf{tiempo total} en segundos. El
+        tiempo que consume satsuma se descuenta del de kissat.
+  \item[otras opciones] Cualquier opción que empiece por \texttt{-} se pasa a
+        kissat; por ejemplo, \texttt{-n} (no imprimir el modelo),
+        \texttt{-q} o \texttt{--seed=S}. Lista completa: \texttt{kissat -h}.
+\end{description}
+
+\subsection{Ejemplos}
+\begin{lstlisting}[language=bash]
+# Resolver una fórmula y ver el modelo, si lo hay
+solver/labesat formula.cnf
+
+# Resolver con ruptura de simetrías, límite de 5000 s, y escribir la prueba
+solver/labesat --symmetry --time=5000 formula.cnf.xz prueba.out
+
+# Solo kissat (comportamiento por defecto)
+solver/labesat formula.cnf
+\end{lstlisting}
+
+\subsection{Salida y códigos de salida}
+La salida sigue el formato de la SAT Competition:
+\begin{itemize}
+  \item las líneas que empiezan por \texttt{c} son comentarios;
+  \item exactamente una línea \texttt{s} con la respuesta;
+  \item si la fórmula es satisfacible, líneas \texttt{v} con el modelo,
+        terminadas en \texttt{0}.
+\end{itemize}
+Las líneas \texttt{c [labesat]} informan de qué hizo la tubería.
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Código & Línea de solución & Significado \\
+\midrule
+10 & \texttt{s SATISFIABLE}   & Hay modelo (líneas \texttt{v}) \\
+20 & \texttt{s UNSATISFIABLE} & No hay modelo; prueba en \texttt{<prueba>} \\
+0  & \texttt{s UNKNOWN}       & Se agotó el tiempo o se interrumpió \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Variables de entorno}
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}lXl@{}}
+\toprule
+Variable & Efecto & Por defecto \\
+\midrule
+\texttt{LABESAT\_KISSAT} & Binario de kissat & \texttt{solver/kissat/build/kissat} \\
+\texttt{LABESAT\_SATSUMA} & Binario de satsuma & \texttt{tools/satsuma} \\
+\texttt{LABESAT\_SYMM\_TIMEOUT} & Segundos máximos para satsuma & 60 \\
+\texttt{LABESAT\_SYMM\_MAXBYTES} & Tamaño máximo de la CNF para aplicar satsuma & 512\,MiB \\
+\texttt{LABESAT\_KISSAT\_ARGS} & Argumentos extra para kissat & (vacío) \\
+\texttt{LABESAT\_SYMMETRY} & 1 activa la ruptura de simetrías & 0 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+Los valores por defecto de los topes son provisionales y se fijarán con el
+experimento EXP-007.
+
+%======================================================================
+\section{Verificar las respuestas}
+
+Una respuesta solo vale si se puede comprobar de forma independiente.
+
+\paragraph{Satisfacible.} El modelo tiene que satisfacer la fórmula
+\emph{original}, no la simplificada:
+\begin{lstlisting}[language=bash]
+solver/labesat formula.cnf > salida.txt
+python3 scripts/verify_model.py --model salida.txt formula.cnf
+\end{lstlisting}
+
+\paragraph{Insatisfacible.} La prueba combina el prefijo SR de satsuma y los
+pasos DRAT de kissat, así que se verifica con \texttt{dsr-trim}:
+\begin{lstlisting}[language=bash]
+solver/labesat formula.cnf prueba.out
+tools/dsr-trim formula.cnf prueba.out           # debe imprimir: s VERIFIED UNSAT
+tools/dsr-trim-sc2026 formula.cnf prueba.out    # versión exacta de la SAT Competition 2026
+\end{lstlisting}
+Si no se usó \texttt{--symmetry}, o si satsuma no llegó a actuar, la prueba es
+DRAT pura y también la acepta \texttt{tools/drat-trim}.
+
+%======================================================================
+\section{Reproducir los experimentos}
+
+Cada experimento está descrito en \texttt{docs/experiments/EXP-NNN-*.md}, que
+recoge hipótesis, diseño, criterio de decisión e instrucciones exactas para
+reproducirlo. Por ejemplo, el A/B de la ruptura de simetrías (EXP-007):
+\begin{lstlisting}[language=bash]
+python3 scripts/select_symm_bench.py --download
+python3 scripts/run_ab_interleaved.py --solver solver/labesat \
+    --guard solver/kissat/build/kissat --guard tools/satsuma \
+    --bench bench/symm2026 --out-a A.csv --out-b B.csv \
+    --opts-a="--no-symmetry" --opts-b="--symmetry" --timeout 180 --seeds 1
+python3 scripts/par2.py A.csv B.csv
+\end{lstlisting}
+
+%======================================================================
+\section{Solución de problemas}
+
+\begin{description}
+  \item[\texttt{labesat: no encuentro kissat}] Compila con
+        \texttt{./scripts/build.sh} o indica el binario con
+        \texttt{LABESAT\_KISSAT}.
+  \item[\texttt{c [labesat] sin simetrías: satsuma no disponible}] Ejecuta
+        \texttt{./scripts/get\_tools.sh}. \labesat{} funciona igualmente, pero
+        sin ruptura de simetrías.
+  \item[\texttt{failed to open and append proof}] \texttt{--append-proof} no
+        admite ficheros de prueba comprimidos. Usa un nombre sin
+        \texttt{.xz}/\texttt{.gz}.
+\end{description}
+
+%======================================================================
+\section{Licencias y créditos}
+
+\labesat{} se distribuye bajo licencia MIT. Incorpora Kissat (MIT; A.~Biere,
+M.~Fleury, F.~Pollitt) y usa satsuma y dejavu (MIT; M.~Anders). Para verificar
+usa dsr-trim (Apache~2.0; C.~R.~Codel) y drat-trim (MIT; M.~Heule,
+N.~Wetzler). El detalle está en \texttt{THIRD\_PARTY\_NOTICES.md}.
+
+\end{document}

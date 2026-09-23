@@ -1,0 +1,27 @@
+{
+  "label": "B-terminator",
+  "solver": "/home/user/SAT-SOLVER/solver/kissat/build/kissat",
+  "solver_version": "4.0.4",
+  "solver_sha1": "64e9c08c1674d29ea58111d5393341ef4920d71e",
+  "git_commit": "4c905973258d60af9356a61d51652aef2bbd9e12",
+  "git_dirty": false,
+  "bench": "/home/user/SAT-SOLVER/bench/calib2",
+  "n_instances": 20,
+  "seeds": [
+    1
+  ],
+  "budget_kind": "time",
+  "budget_value": 180.0,
+  "opts": "",
+  "parallel_jobs": 4,
+  "host": "vm",
+  "nproc": 4,
+  "platform": "Linux-6.18.44-fc-v37-x86_64-with-glibc2.39",
+  "loadavg": [
+    0.587890625,
+    0.2373046875,
+    0.509765625
+  ],
+  "cc": "/usr/bin/gcc",
+  "started_at": "2026-09-23T03:15:12+00:00"
+}

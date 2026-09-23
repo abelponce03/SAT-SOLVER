@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "Si usas LabeSAT, cítalo con estos metadatos."
+title: "LabeSAT: un solver SAT basado en Kissat con ruptura de simetrías verificable"
+type: software
+authors:
+  - family-names: Ponce
+    given-names: Abel
+license: MIT
+repository-code: "https://github.com/abelponce03/SAT-SOLVER"
+keywords:
+  - SAT solving
+  - CDCL
+  - symmetry breaking
+  - proof checking
+  - SAT Competition
+references:
+  - type: software
+    title: Kissat
+    authors:
+      - family-names: Biere
+        given-names: Armin
+    version: "4.0.4"
+    license: MIT
+    repository-code: "https://github.com/arminbiere/kissat"
+  - type: software
+    title: satsuma
+    authors:
+      - family-names: Anders
+        given-names: Markus
+    license: MIT
+    repository-code: "https://github.com/markusa4/satsuma"

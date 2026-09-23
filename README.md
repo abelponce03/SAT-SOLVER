@@ -1,10 +1,26 @@
-# SAT-SOLVER — fork de Kissat para la SAT Competition 2027
+# LabeSAT
 
-Repositorio de trabajo para preparar una entrada a la **Main Track** de la
-[SAT Competition 2027](https://satcompetition.github.io/). La base es un
-**fork de [Kissat](https://github.com/arminbiere/kissat) 4.0.4** (MIT, Armin
-Biere), el solver secuencial sobre el que se construyen las entradas ganadoras
-recientes; encima van nuestras mejoras, cada una validada con un A/B propio.
+**LabeSAT** es un solver SAT para la **Main Track** de la
+[SAT Competition 2027](https://satcompetition.github.io/). Es un **fork de
+[Kissat](https://github.com/arminbiere/kissat) 4.0.4** (MIT, Armin Biere), el
+solver secuencial sobre el que se construyen las entradas ganadoras recientes;
+encima van nuestras mejoras, y ninguna entra por defecto sin un A/B que la
+respalde.
+
+```
+$ ./solver/kissat/build/kissat --banner
+LabeSAT SAT Solver
+
+Copyright (c) 2026 Abel Ponce (LabeSAT modifications)
+Based on Kissat 4.0.4 by Armin Biere (MIT license):
+Copyright (c) 2021-2024 Armin Biere University of Freiburg
+Copyright (c) 2019-2021 Armin Biere Johannes Kepler University Linz
+```
+
+> El binario conserva el nombre `kissat` y el directorio `solver/kissat/` por
+> una razón práctica: es un `git subtree` del upstream, y renombrar ficheros
+> convertiría cada sincronización con Kissat en un conflicto. La identidad del
+> solver está en el banner, que es lo que la competición registra.
 
 > **Por qué Kissat y no CaDiCaL** (el proyecto arrancó como fork de CaDiCaL):
 > ver [ADR-0001](docs/adr/0001-migracion-cadical-a-kissat.md). Resumen: sobre
@@ -30,8 +46,13 @@ docs/archive/       etapa CaDiCaL (jul–sep 2026), conservada como histórico
 
 ```bash
 ./scripts/build.sh                 # compila el fork -> solver/kissat/build/kissat
-./scripts/get_tools.sh             # drat-trim, para verificar respuestas UNSAT
+./scripts/get_tools.sh             # drat-trim, satsuma (MIT), dsr-trim -> tools/
 ./scripts/smoke_test.sh            # build + tests + modelos + pruebas DRAT + determinismo
+./scripts/test_symmetry.sh         # tubería satsuma → kissat con pruebas SR (ADR-0004)
+
+# LabeSAT completo: ruptura de simetrías + CDCL, con prueba verificable
+./solver/labesat --symmetry bench/symm/php_12_11.cnf /tmp/proof
+./tools/dsr-trim bench/symm/php_12_11.cnf /tmp/proof     # s VERIFIED UNSAT
 
 # una corrida completa sobre el banco de humo
 python3 scripts/run_experiment.py --solver solver/kissat/build/kissat \
@@ -91,8 +112,25 @@ complementariedad entre configuraciones es un recurso mayor que la mejor técnic
 nueva publicada, y nadie lo está cobrando. Detalle en
 [`docs/research/01`](docs/research/01-analisis-empirico-sc2026.md).
 
+## Documentación
+
+Índice completo en [`docs/README.md`](docs/README.md):
+
+- manual de usuario (LaTeX → PDF);
+- página `labesat(1)`;
+- ADR y registro de decisiones;
+- experimentos y metodología del desarrollo asistido por IA.
+
+Los PDF se descargan como artefactos del trabajo `documentacion` de CI.
+
 ## Licencia
 
+LabeSAT se publica bajo licencia **MIT** (`LICENSE`). Los componentes de
+terceros y sus licencias están en `THIRD_PARTY_NOTICES.md`; cómo citarlo, en
+`CITATION.cff`.
+
 El código bajo `solver/kissat/` es de Armin Biere y se distribuye bajo licencia
-MIT (ver `solver/kissat/LICENSE`); nuestras modificaciones se publican bajo la
-misma licencia. El harness y la documentación son originales de este proyecto.
+MIT (ver `solver/kissat/LICENSE`). Las modificaciones de LabeSAT se publican
+bajo la misma licencia, y el banner del binario conserva el aviso de copyright
+de Kissat, como exige la MIT. El harness y la documentación son originales de
+este proyecto.

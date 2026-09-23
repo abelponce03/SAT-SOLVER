@@ -15,10 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Herramientas de verificación (drat-trim)
-        run: ./scripts/get_tools.sh
+      - name: Herramientas externas (drat-trim, satsuma, dsr-trim)
+        run: ./scripts/get_tools.sh --jobs 4
       - name: Suite de humo (build, tests de Kissat, modelos, pruebas DRAT, determinismo)
         run: ./scripts/smoke_test.sh
+      - name: Tubería de simetrías (satsuma → kissat, pruebas SR con dsr-trim)
+        run: ./scripts/test_symmetry.sh
 
   sanitize:
     name: Build con sanitizers
@@ -85,6 +87,58 @@ jobs:
             fi
           done < bench/smoke/expected.csv
           exit $fail
+      - name: Tubería de simetrías con el binario de competición
+        # '--append-proof' es una opción de la aplicación, no del solver: debe
+        # sobrevivir a '--no-options' o la prueba entregada sería inválida.
+        run: |
+          ./scripts/get_tools.sh --jobs 4
+          ./scripts/test_symmetry.sh
+
+  autoria:
+    name: Autoría (ADR-0005)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Sin coautorías de herramientas en los commits nuevos
+        run: |
+          base="origin/${GITHUB_BASE_REF:-main}"
+          ./scripts/check_authorship.sh "$base..HEAD"
+
+  documentacion:
+    name: Documentación (LaTeX → PDF, página man)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # declaracion_ia.sh compara contra la base del fork
+      - name: Cifras de la declaración de IA (plan Main Track §5)
+        # Falla si un fichero modificado de Kissat está sin clasificar como
+        # activo o inactivo: la cifra declarada nunca puede quedar desfasada.
+        run: ./scripts/declaracion_ia.sh | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Instalar TeX Live y groff
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends latexmk \
+            texlive-latex-recommended texlive-latex-extra texlive-lang-spanish \
+            texlive-fonts-recommended texlive-publishers lmodern groff >/dev/null
+      - name: Compilar los PDF
+        run: |
+          set -e
+          for tex in docs/manual/manual-usuario.tex docs/competicion/descripcion-solver.tex; do
+            latexmk -pdf -interaction=nonstopmode -halt-on-error -cd "$tex"
+          done
+      - name: Validar la página man
+        run: |
+          out=$(groff -k -man -Tutf8 -ww docs/man/labesat.1 2>&1 >/dev/null)
+          if [ -n "$out" ]; then echo "$out"; exit 1; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: documentacion-pdf
+          path: |
+            docs/manual/*.pdf
+            docs/competicion/*.pdf
 
   scripts:
     name: Scripts de análisis

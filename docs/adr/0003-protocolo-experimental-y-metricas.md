@@ -76,6 +76,24 @@ Una comparación A/B se considera concluyente solo si:
 - Toda corrida escribe CSV en `results/` con esas columnas; los CSV de
   referencia se versionan.
 
+### 4b. Comparaciones entre sesiones (añadido tras EXP-004)
+
+Comparar una tanda nueva contra corridas **de otra sesión** mide también la
+deriva de la máquina. Medida en EXP-004: **~4 %** entre dos sesiones separadas
+31 horas, con trayectorias de búsqueda **idénticas** (39/39 instancias con el
+mismo recuento de conflictos) y aun así Wilcoxon p ≈ 0.
+
+Reglas:
+
+1. **Preferir siempre** las dos ramas en la misma sesión y con el mismo binario
+   (feature detrás de una opción, ADR-0002 §3). Es lo que hacen EXP-003 y EXP-005.
+2. Si la comparación entre sesiones es inevitable (p. ej. un parche que no se
+   puede poner detrás de una opción), **comprobar primero si las trayectorias
+   coinciden** (recuento de conflictos con la misma semilla). Si coinciden, la
+   diferencia de tiempo es de la máquina y no se interpreta.
+3. Ninguna diferencia de tiempo **por debajo del 4 %** entre sesiones distintas
+   se reporta como efecto.
+
 ### 5. Escalado del timeout
 
 La competición usa `T = 5000 s`. Localmente se usa `T ∈ {60, 300, 900} s` según

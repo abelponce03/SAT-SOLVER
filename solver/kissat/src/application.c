@@ -16,7 +16,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#define SOLVER_NAME "Kissat SAT Solver"
+/* [SOLVER] Nombre de la entrada a la SAT Competition 2027.  El banner sigue
+   imprimiendo el copyright de Kissat: la licencia MIT exige conservarlo. */
+#define SOLVER_NAME "LabeSAT SAT Solver"
 
 typedef struct application application;
 
@@ -28,6 +30,7 @@ struct application {
   const char *proof_path;
   file proof_file;
   int binary;
+  bool append;
 #endif
 #if !defined(NPROOFS) || !defined(KISSAT_HAS_COMPRESSION)
   bool force;
@@ -196,6 +199,7 @@ static void print_complete_usage (void) {
 #endif
 #ifndef NPROOFS
   printf ("  --force              same as '-f' (force writing proof)\n");
+  printf ("  --append-proof       append proof to existing file\n");
 #endif
   printf ("  --id                 print 'git' identifier (SHA-1 hash)\n");
 #ifndef NOPTIONS
@@ -492,6 +496,8 @@ static bool parse_options (application *application, int argc,
 #ifndef NPROOFS
     else if (LONG_FALSE_OPTION (arg, "binary"))
       application->binary = -1;
+    else if (!strcmp (arg, "--append-proof"))
+      application->append = true;
 #endif
 #ifndef NOPTIONS
     else if (arg[0] == '-' && arg[1] == '-' &&
@@ -673,6 +679,16 @@ static bool write_proof (application *application) {
   if (!strcmp (path, "-")) {
     binary = false;
     kissat_write_already_open_file (file, stdout, "<stdout>");
+  } else if (application->append) {
+    /* [SOLVER] satsuma escribe su prefijo SR siempre en binario, y los
+       verificadores (dsr-trim) detectan el formato una sola vez por
+       fichero: la continuación tiene que ir en el mismo formato.  Por eso
+       aquí se respeta el binario por defecto ('--no-binary' sólo para
+       prefijos en texto).  */
+    if (!kissat_open_to_append_file (file, path))
+      ERROR ("failed to open and append proof to '%s'", path);
+    if (application->binary < 0)
+      binary = false;
   } else if (!kissat_open_to_write_file (file, path))
     ERROR ("failed to open and write proof to '%s'", path);
   else if (application->binary < 0)

@@ -1,0 +1,100 @@
+% Descripción del sistema para la SAT Competition (formato exigido: IEEE
+% Proceedings, 1-2 páginas, PDF). Se redacta en inglés, el idioma de los
+% proceedings. BORRADOR vivo: se completa a medida que cierran los
+% experimentos (ADR-0006). Las marcas \pendiente{} deben desaparecer antes
+% del envío.
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[nopatch=eqnum]{microtype}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\input{../comun/macros.tex}
+\newcommand{\pendiente}[1]{\textcolor{red}{[PENDING: #1]}}
+
+\begin{document}
+
+\title{\labesat{}: Kissat with Verifiable Symmetry Breaking\\
+       \large (draft for SAT Competition 2027)}
+
+\author{\IEEEauthorblockN{Abel Ponce}
+\IEEEauthorblockA{\pendiente{affiliation}}}
+
+\maketitle
+
+\section{Introduction}
+
+\labesat{} is a sequential CDCL solver for the Main Track. It is built from
+\kissat{}~4.0.4~\cite{kissat} and, as a separate preprocessing program, uses
+the symmetry-breaking tool \satsuma{}~\cite{satsuma}. \satsuma{}'s
+substitution-redundancy (SR) proof prefix is continued by our \kissat{}
+derivative, and the complete proof is checked against the original formula
+with DSRtrim/Trestle~\cite{dsrtrim}.
+
+\section{Solving pipeline}
+
+A driver script first runs \texttt{satsuma fix} with time and size caps. It
+then runs \labesat{}'s \kissat{} on the simplified formula with the new
+application option \texttt{--append-proof}, which opens the proof file in
+append mode. If \satsuma{} fails, exceeds its cap, or the input is too large,
+the driver solves the original formula with \kissat{} alone and writes a pure
+DRAT proof. The time spent in \satsuma{} is deducted from the solver's time
+limit.
+
+\satsuma{} is compiled without the optional clique component (cliquer, GPL),
+so that the whole entry is MIT licensed. \pendiente{final decision D-005 and
+its measured cost; see EXP-007}
+
+\section{Changes to \kissat{}}
+
+\begin{itemize}
+  \item \texttt{--append-proof}: continue an existing (binary) proof file.
+  \item A termination fix: the \emph{lucky} phases now return control to the
+        solver's terminator (time/conflict limits).
+  \item \pendiente{conditional activation of symmetry breaking (B3), if
+        validated}
+\end{itemize}
+
+An adaptive stable/focused scheduler was implemented and evaluated, but it
+showed no effect in a pre-registered experiment (factor $0.983\times$,
+$p=0.69$). It is therefore \emph{disabled} in the submitted configuration.
+
+\section{Mandatory statement}
+
+\begin{itemize}
+  \item \textbf{Code base}: \kissat{} 4.0.4 (upstream commit
+        \texttt{8af8e56}); \satsuma{} commit \texttt{c6ad1b5} (unmodified);
+        dejavu commit \texttt{4c275e9} (unmodified).
+  \item \textbf{Amount of change}: 390 lines added and 10 removed in
+        \kissat{}'s 38\,944 lines of C (1.0\,\%). Only 105 added lines are
+        active in the submitted configuration; 285 belong to the disabled
+        adaptive scheduler and its tracing. A 125-line driver script was also
+        added. Figures produced by \texttt{scripts/declaracion\_ia.sh}.
+        \pendiente{regenerate at submission}
+  \item \textbf{Changes due to AI}: all of the added lines were written by
+        an AI coding assistant (Claude Code) under the author's direction.
+        The experimental methodology was also AI-assisted.
+        \pendiente{final wording after the organizers answer (D-002)}
+  \item \textbf{Heuristics tuned by AI}: none by automated search. The
+        \satsuma{} time/size caps were fixed in a pre-registered experiment
+        designed with AI assistance. \pendiente{confirm}
+\end{itemize}
+
+\section*{Acknowledgments}
+We thank A.~Biere and colleagues for \kissat{}, M.~Anders for \satsuma{} and
+dejavu, and C.~R.~Codel, J.~Avigad and M.~J.~H.~Heule for DSRtrim and
+Trestle.
+
+\begin{thebibliography}{9}
+\bibitem{kissat} A.~Biere, T.~Faller, K.~Fazekas, M.~Fleury, N.~Froleyks and
+  F.~Pollitt, ``CaDiCaL, Gimsatul, IsaSAT and Kissat entering the SAT
+  Competition 2024,'' in \emph{Proc.\ SAT Competition 2024}, 2024, pp.~8--10.
+\bibitem{satsuma} M.~Anders, \emph{satsuma}, \url{https://github.com/markusa4/satsuma}.
+\bibitem{dsrtrim} C.~R.~Codel, J.~Avigad and M.~J.~H.~Heule, ``Verified
+  substitution redundancy checking,'' SAT Competition 2026 proof checker
+  documentation.
+\end{thebibliography}
+
+\end{document}

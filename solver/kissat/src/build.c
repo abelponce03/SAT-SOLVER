@@ -11,7 +11,12 @@ const char *kissat_id (void) { return ID; }
 
 const char *kissat_compiler (void) { return COMPILER; }
 
+/* [SOLVER] LabeSAT es un fork de Kissat 4.0.4.  Las dos líneas de Armin Biere
+   se conservan tal cual: la licencia MIT de Kissat exige mantener el aviso de
+   copyright en toda copia o parte sustancial del software.  */
 static const char *copyright_lines[] = {
+    "Copyright (c) 2026 Abel Ponce (LabeSAT modifications)",
+    "Based on Kissat 4.0.4 by Armin Biere (MIT license):",
     "Copyright (c) 2021-2024 Armin Biere University of Freiburg",
     "Copyright (c) 2019-2021 Armin Biere Johannes Kepler University Linz",
     0};

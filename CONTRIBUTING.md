@@ -42,6 +42,17 @@ evita perder semanas.
   Ejemplo: `feat(solver): bandit UCB en la decisión de rephase (EXP-004)`.
 - El cuerpo del commit explica **por qué**, no qué (el diff ya dice qué). Si el
   commit nace de una medición, el número va en el cuerpo.
+- **Autoría** (ADR-0005): los commits llevan solo la identidad del
+  desarrollador, `Abel Ponce <abelponce03@gmail.com>`.
+  - Sin `Co-Authored-By` de herramientas de IA, sin «Generated with…» y sin
+    enlaces de sesión, ni en los commits ni en los PR.
+  - `scripts/check_authorship.sh` lo comprueba y CI lo ejecuta.
+  - El uso de IA se declara en `docs/metodologia/`, no en git.
+- **Decisiones abiertas** (ADR-0005 §2): lo que el levantamiento de requisitos
+  no cubre se registra en `docs/decisiones/registro.md` y se agenda en un issue
+  con la etiqueta `decisión`. Mientras tanto, se sigue con la opción reversible.
+- **Documentación en el mismo PR** (ADR-0006): CHANGELOG, manual o man, ADR y
+  bitácora, según lo que toque el cambio.
 
 ## 4. Código dentro de `solver/kissat/`
 

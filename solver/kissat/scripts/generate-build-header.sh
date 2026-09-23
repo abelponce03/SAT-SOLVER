@@ -22,10 +22,15 @@ cat <<EOF
 #define COMPILER "$COMPILER"
 EOF
 #START-CUT-OUT-ID
-if [ -d .git -o -d ../.git ]
+# [SOLVER] Kissat solo buscaba '.git' en el directorio actual y en el padre.
+# Vendorizado con 'git subtree' dentro de LabeSAT, el '.git' está tres niveles
+# más arriba y el binario salía como 'unknown'.  'git rev-parse' encuentra el
+# repositorio desde cualquier punto del árbol, de modo que cada binario lleva
+# el commit exacto del que sale -- imprescindible para reproducir una medición.
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1
 then
-  ID="`git show 2>/dev/null|awk '{print $2; exit}'`"
-  [ "$ID" = "" ] && die "could not get git id with 'git show'"
+  ID="`git rev-parse HEAD 2>/dev/null`"
+  [ "$ID" = "" ] && die "could not get git id with 'git rev-parse'"
 else
   ID=unknown
 fi

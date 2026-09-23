@@ -1,0 +1,108 @@
+.\" Página de manual de labesat. Fuente canónica (roff).  Ver:  man -l docs/man/labesat.1
+.TH LABESAT 1 "2026-09-23" "LabeSAT" "Órdenes de usuario"
+.SH NOMBRE
+labesat \- solver SAT (Kissat 4.0.4 + ruptura de simetrías verificable)
+.SH SINOPSIS
+.B labesat
+.RB [ \-\-symmetry " | " \-\-no\-symmetry ]
+.RI [ opciones\-de\-kissat ]
+.I cnf
+.RI [ prueba ]
+.SH DESCRIPCIÓN
+.B labesat
+decide si la fórmula en CNF
+.I cnf
+(DIMACS, opcionalmente comprimida con xz, gzip, bzip2 o lzma) es satisfacible.
+Con
+.B \-\-symmetry
+ejecuta primero
+.B satsuma
+(ruptura de simetrías) y después
+.B kissat
+sobre la fórmula simplificada; sin ella, solo kissat. Si se indica
+.IR prueba ,
+escribe en ese fichero una prueba de insatisfacibilidad en formato SR
+(prefijo de satsuma más pasos DRAT de kissat), verificable con
+.BR dsr\-trim .
+Si satsuma falla, se pasa de tiempo o la entrada es demasiado grande,
+resuelve la fórmula original solo con kissat, y la prueba es DRAT.
+.SH OPCIONES
+.TP
+.B \-\-symmetry
+Ejecuta satsuma antes de kissat. Desactivado por defecto hasta validar la
+activación condicional (EXP-007: gana mucho con simetría explotable, pero
+ralentiza 1.42x las instancias sin ella).
+.TP
+.B \-\-no\-symmetry
+No ejecuta satsuma aunque
+.B LABESAT_SYMMETRY=1.
+.TP
+.BI \-\-time= N
+Límite de tiempo \fItotal\fP en segundos. El tiempo de satsuma se descuenta
+del de kissat.
+.TP
+.I otras
+Cualquier opción que empiece por \- se pasa a kissat (p. ej.
+.BR \-n ,
+.BR \-q ,
+.BR \-\-seed=\fIS\fP ).
+.B labesat \-\-id
+y
+.B labesat \-\-version
+las contesta kissat.
+.SH SALIDA
+Formato de la SAT Competition: comentarios
+.RB ( c ),
+una línea de solución
+.RB ( s )
+y, si es satisfacible, el modelo en líneas
+.BR v .
+Las líneas
+.B c [labesat]
+describen lo que hizo la tubería.
+.SH ESTADO DE SALIDA
+.TP
+.B 10
+Satisfacible.
+.TP
+.B 20
+Insatisfacible.
+.TP
+.B 0
+Desconocido (tiempo agotado o interrupción).
+.TP
+.B 1
+Error de uso o de entrada.
+.SH ENTORNO
+.TP
+.B LABESAT_KISSAT
+Binario de kissat (por defecto, el que está junto al guion).
+.TP
+.B LABESAT_SATSUMA
+Binario de satsuma (por defecto,
+.IR tools/satsuma ).
+.TP
+.B LABESAT_SYMM_TIMEOUT
+Segundos máximos para satsuma (60).
+.TP
+.B LABESAT_SYMM_MAXBYTES
+Tamaño máximo de la CNF para aplicar satsuma (536870912).
+.TP
+.B LABESAT_KISSAT_ARGS
+Argumentos extra para kissat.
+.TP
+.B LABESAT_SYMMETRY
+1 activa la ruptura de simetrías (por defecto 0).
+.SH EJEMPLOS
+.nf
+labesat formula.cnf
+labesat \-\-symmetry \-\-time=5000 formula.cnf.xz prueba.out
+dsr\-trim formula.cnf prueba.out
+.fi
+.SH VÉASE TAMBIÉN
+.BR kissat (1),
+.BR dsr\-trim (1).
+Manual de usuario: docs/manual/manual\-usuario.tex.
+.SH AUTOR
+Abel Ponce. LabeSAT se basa en Kissat (A. Biere et al.) y usa satsuma
+(M. Anders).
