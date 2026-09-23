@@ -26,6 +26,32 @@ jobs:
       - name: Tubería de simetrías con satsuma-mclique
         run: LABESAT_SATSUMA="$PWD/tools/satsuma-mclique" ./scripts/test_symmetry.sh
 
+  simetrias-integradas:
+    name: Ruptura de simetrías integrada en Kissat (D-016)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: satsuma vendorizado = upstream fijado, sin modificar
+        run: ./scripts/vendor_satsuma.sh --check
+      - name: Herramientas externas (satsuma de referencia, dsr-trim, drat-trim)
+        run: ./scripts/get_tools.sh --jobs 4
+      - name: Compilar con --symmetry
+        run: ./scripts/build.sh --dir=build-symm --symmetry
+      - name: Equivalencia con satsuma externo, pruebas SR y respaldo
+        run: |
+          ./scripts/build.sh >/dev/null   # binario sin soporte, para el control
+          ./scripts/test_symmetry_integrada.sh solver/kissat/build-symm/kissat
+      - name: Build de competición con --symmetry
+        run: |
+          ./scripts/build.sh --dir=build-comp-symm --competition --symmetry
+          set +e
+          K=solver/kissat/build-comp-symm/kissat
+          $K --symmetry bench/symm/php_12_11.cnf /tmp/c.proof >/dev/null
+          [ $? = 20 ] || { echo "no responde UNSAT"; exit 1; }
+          for d in tools/dsr-trim tools/dsr-trim-sc2026; do
+            $d bench/symm/php_12_11.cnf /tmp/c.proof | grep -aq '^s VERIFIED' || { echo "$d rechaza la prueba"; exit 1; }
+          done
+
   sanitize:
     name: Build con sanitizers
     runs-on: ubuntu-latest

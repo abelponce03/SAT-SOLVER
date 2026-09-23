@@ -8,6 +8,10 @@
   cliquer se reimplementa en MIT (**mclique**, `solver/mclique/`). Se compila
   aparte como `tools/satsuma-mclique`, y pasa a ser el satsuma por defecto solo
   si EXP-010 lo valida.
+- **D-016 (2026-09-23)**: la parte de «programa externo» queda **sustituida
+  por ADR-0007**. satsuma pasa a compilarse dentro del binario de Kissat
+  (`--symmetry`). Las licencias, el formato de prueba y la verificación de esta
+  ADR siguen vigentes.
 - **Fecha**: 2026-09-23
 - **Decide**: Abel Ponce («usa satsuma como programa externo y mantén MIT»)
 

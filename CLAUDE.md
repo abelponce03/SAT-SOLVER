@@ -8,8 +8,8 @@ que quede constancia.
 
 ## Proyecto
 
-LabeSAT es un solver SAT, fork de Kissat 4.0.4 más ruptura de simetrías con
-satsuma como programa externo. El objetivo es la **SAT Competition 2027, Main
+LabeSAT es un solver SAT: un único binario, fork de Kissat 4.0.4, con la
+ruptura de simetrías de satsuma montada dentro (ADR-0007, por fases). El objetivo es la **SAT Competition 2027, Main
 Track**, con PAR-2 como métrica, y artículos sobre el proceso. Idioma de trabajo:
 **español**, en código, commits y documentación. Punto de entrada:
 `README.md`. Hoja de ruta: `docs/ROADMAP.md`.
@@ -108,6 +108,8 @@ enviar correos, registrarse en la competición.
 
 ```bash
 ./scripts/build.sh [--competition]      # compila solver/kissat/build/kissat
+./scripts/build.sh --dir=build-symm --symmetry  # Kissat con satsuma dentro (ADR-0007)
+./scripts/test_symmetry_integrada.sh    # kissat --symmetry: equivalencia y pruebas SR
 ./scripts/get_tools.sh                  # drat-trim, satsuma (MIT), dsr-trim (actual y SC2026)
 ./scripts/smoke_test.sh                 # build + tests + modelos + DRAT + determinismo
 ./scripts/test_symmetry.sh              # tubería satsuma → kissat con pruebas SR

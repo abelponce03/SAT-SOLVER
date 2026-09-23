@@ -5,6 +5,28 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-09-23): ruptura de simetrías dentro de Kissat (D-016, ADR-0007)
+- **Un solo binario**: con `configure --symmetry` (o `build.sh --symmetry`),
+  satsuma se compila dentro de Kissat, y `kissat --symmetry <cnf> [<prueba>]`
+  hace lo mismo que la tubería `solver/labesat`:
+  - satsuma se ejecuta en un proceso hijo del propio Kissat;
+  - la prueba SR continúa en el mismo fichero;
+  - si satsuma falla, se pasa del tope o la entrada es demasiado grande, se
+    resuelve la CNF original con prueba DRAT pura.
+
+  **Apagado por defecto**; sin `configure --symmetry` el build no cambia.
+- satsuma, dejavu y tsl van **vendorizados sin modificar** en `solver/satsuma/`
+  (`scripts/vendor_satsuma.sh`, con `--check` en CI).
+- `scripts/test_symmetry_integrada.sh`, en CI junto al build de competición
+  con `--symmetry`:
+  - CNF intermedia idéntica byte a byte a la de satsuma externo;
+  - pruebas aceptadas por los dos dsr-trim;
+  - modelos correctos contra la CNF original;
+  - entrada `.xz`;
+  - respaldo con prueba DRAT pura.
+- `build.sh --dir=NOMBRE`: compila en otro directorio sin tocar
+  `build/kissat`, útil mientras un experimento lo vigila.
+
 ### En curso (2026-09-23): base de Kissat y clique máxima MIT
 - **EXP-008** preregistrado y en ejecución: Kissat 4.0.4 (LabeSAT) frente a
   Kissat «sc2026» en calib + calib2 (decide D-013). `get_tools.sh` compila

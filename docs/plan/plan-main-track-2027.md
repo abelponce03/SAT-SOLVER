@@ -44,7 +44,7 @@ partir de las instancias de 2026 (EXP-007 §4), y se dice así en cada informe.
 
 | # | Palanca | Evidencia hasta hoy | Coste | Decisión o experimento |
 |---|---|---|---|---|
-| **P1** | Ruptura de simetrías (satsuma MIT) | **EXP-007 (cerrado)**: H 37/45 frente a 8/45 (p = 8·10⁻¹⁰); **en N ralentiza 1.42×**; estimación de −90 s. Veredicto: **solo condicional** | Hecho | Opcional (`--symmetry`) hasta P2 |
+| **P1** | Ruptura de simetrías (satsuma MIT) | **EXP-007 (cerrado)**: H 37/45 frente a 8/45 (p = 8·10⁻¹⁰); **en N ralentiza 1.42×**; estimación de −90 s. Veredicto: **solo condicional** | Hecho. **Integrada en el binario de Kissat** (D-016, ADR-0007, fase 1) | Opcional (`--symmetry`) hasta P2; equivalencia en EXP-012 |
 | **P2** | **Activación condicional** (B3). **Prioridad n.º 1 tras EXP-007** | El oráculo valdría −322 s extra (research/01). EXP-007: el coste en N viene de la búsqueda de kissat sobre la fórmula modificada, no del tiempo de satsuma. El criterio debe predecir si la ruptura **ayuda** | Medio | EXP-009, preregistrado |
 | **P3** | Cliques en MIT (reimplementar la clique máxima) | **Medido**: sin cliques quedan sin resolver 6 instancias de H que con cliques caen en < 2 s (≈ −29 s de PAR-2 en el banco de EXP-007) | 1–2 días | D-005 (#9) |
 | **P4** | **Base Kissat sc2026** en lugar de 4.0.4 | sc2026 (sin publicar, MIT) quedó 16.º en solitario. No se sabe si mejora a 4.0.4 | Portar ~105 líneas activas (`scripts/declaracion_ia.sh`) | **EXP-008** → D-013 |
@@ -92,6 +92,7 @@ respalde. **No se presenta nada sin medir.**
 | **H1 · Cierre de EXP-007** | ✅ **2026-09-23** | Solo condicional; seguridad 61/61 sin fallos | — |
 | **H2 · Base decidida** (EXP-008) | nov 2026 | A/B de Kissat 4.0.4 frente a sc2026, preregistrado, en calib + calib2 | H1 (máquina libre) |
 | **H3 · Cliques decididos** (D-005) | nov 2026 | Coste de mantener MIT medido en PAR-2; si hay coste, reimplementación MIT validada | H1 |
+| **H3b · Un solo binario** (D-016) | oct 2026 | `kissat --symmetry` equivalente a la tubería (EXP-012), en CI y en la configuración de competición; la entrega deja de depender de `solver/labesat` | — |
 | **H4 · B3 validado** (EXP-009) | dic 2026 – ene 2027 | Criterio de activación entrenado sin `bench/test` y validado preregistrado | H1, H2 |
 | **H5 · Mejoras definidas** | **≤ 25 ene 2027** | Contenido de V1–V4 congelado | H2–H4 |
 | **H6 · Correo a los organizadores** | **≤ 1 feb 2027** | Enviado con las cifras de H5 | H5 |

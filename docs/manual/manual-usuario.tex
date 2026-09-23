@@ -104,6 +104,20 @@ cd SAT-SOLVER
 para que cualquier resultado sea reproducible. satsuma se compila \emph{sin}
 la biblioteca cliquer (GPL), de modo que todo lo que se distribuye es MIT.
 
+\subsection{Ruptura de simetrías dentro del binario}
+Con \texttt{./scripts/build.sh --dir=build-symm --symmetry}, satsuma (incluido
+en \texttt{solver/satsuma}, sin modificar) se compila dentro de Kissat y queda
+un \textbf{único binario}, \texttt{solver/kissat/build-symm/kissat}. Hace
+falta un compilador de C++20. La ruptura se activa con la opción
+\texttt{--symmetry} del propio binario (ADR-0007):
+\begin{lstlisting}[language=bash]
+solver/kissat/build-symm/kissat --symmetry formula.cnf.xz prueba.out
+\end{lstlisting}
+Hace lo mismo que \texttt{solver/labesat --symmetry}: la CNF intermedia es
+idéntica, la prueba continúa el prefijo de satsuma y, si satsuma no se puede
+aplicar, se resuelve la fórmula original con una prueba DRAT pura. Los topes se
+fijan con las mismas variables de entorno (sección~\ref{sec:entorno}).
+
 \subsection{Configuración de competición}
 \texttt{./scripts/build.sh --competition} compila la configuración que se
 entrega a la SAT Competition. No admite opciones en tiempo de ejecución, salvo
@@ -171,7 +185,7 @@ Código & Línea de solución & Significado \\
 \end{tabular}
 \end{center}
 
-\subsection{Variables de entorno}
+\subsection{Variables de entorno}\label{sec:entorno}
 \begin{center}
 \begin{tabularx}{\linewidth}{@{}lXl@{}}
 \toprule

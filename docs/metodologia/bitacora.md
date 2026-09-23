@@ -198,3 +198,41 @@ al cerrar cada sesión.
   corrección del algoritmo (contra fuerza bruta) y equivalencia del efecto en
   el sistema completo (CNF de salida y resultados de kissat). Y una garantía
   que el original da «gratis» (terminar pronto) también hay que medirla.
+
+## 2026-09-23 (tarde) — Un solo binario: simetrías montadas sobre Kissat (D-016)
+
+- **Se pidió**: primero un resumen de lo hecho y lo pendiente. Al leerlo, el
+  director aclaró su objetivo: «tomar los algoritmos y montarlos sobre kissat,
+  no tener un selector de solucionadores». Eligió la opción c (por fases) y
+  dijo «procede».
+- **Se hizo**: fase 1 de ADR-0007.
+  - satsuma, dejavu y tsl vendorizados sin modificar, con comprobación en CI.
+  - Una unión C++ de 20 líneas.
+  - `src/symmetry.c` en Kissat: proceso hijo, topes y respaldo.
+  - La opción `--symmetry` en la aplicación.
+  - `configure --symmetry` y `build.sh --dir`.
+  - `test_symmetry_integrada.sh`: CNF intermedia idéntica a la del satsuma
+    externo, pruebas aceptadas por los dos dsr-trim y respaldo. Pasa con gcc,
+    con clang y en la configuración de competición.
+- **Decisiones**:
+  - Satsuma corre en un **proceso hijo** del propio binario, no en una llamada
+    directa. Así la salida es idéntica a la de la tubería (EXP-007 sigue
+    valiendo), y un `exit()` o un tope de satsuma no tumban al solver.
+  - Todo va detrás de `configure --symmetry` más la opción `--symmetry`: el
+    build por defecto no cambia.
+  - Sin `-march=native` en satsuma, pensando en la máquina de la competición.
+- **Salió mal**:
+  - `kissat_looks_like_a_compressed_file` solo existe en builds sin
+    compresión. Se detecta la compresión con el campo `compressed` de la
+    apertura.
+  - Un patrón con `^` no encontraba el «s VERIFIED» de drat-trim, que lo
+    escribe tras caracteres de control de su barra de progreso.
+  - Tres compilaciones con `make -j4` durante EXP-008. Tenían `nice` y se
+    hicieron en directorios aparte, pero son carga concurrente y se anotan
+    en su §8.
+- **Aprendido**:
+  - Antes de cambiar de arquitectura hay que explicar lo que hay y
+    confirmarlo con el director. La confusión venía de que «programa externo»
+    (lo que se pidió) y «un solo solver» (lo que se quería) no son lo mismo.
+  - Compilar aparte (`--dir`) permite seguir desarrollando sin invalidar un
+    experimento en curso.

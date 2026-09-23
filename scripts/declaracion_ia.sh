@@ -34,7 +34,10 @@ clase() {
         solver/kissat/src/application.c|solver/kissat/src/file.c|\
         solver/kissat/src/file.h|solver/kissat/src/build.c)
             echo ACTIVA ;;     # B3'' terminador, --append-proof, identidad del banner
-        solver/kissat/UPSTREAM.md|solver/kissat/scripts/*)
+        solver/kissat/src/symmetry.c|solver/kissat/src/symmetry.h)
+            echo INACTIVA ;;   # D-016: solo con 'configure --symmetry' y '--symmetry'
+        solver/kissat/UPSTREAM.md|solver/kissat/scripts/*|\
+        solver/kissat/configure|solver/kissat/makefile.in)
             echo DOC/BUILD ;;
         *) echo SIN-CLASIFICAR ;;
     esac
@@ -59,6 +62,9 @@ guion=$(wc -l < solver/labesat)
 # es código de Kissat; las pruebas no entran en la cifra del solver.
 mclique=$(cat solver/mclique/mclique.[ch] solver/mclique/satsuma/* | wc -l)
 mclique_test=$(wc -l < solver/mclique/test_mclique.c)
+# Unión C++ con satsuma (D-016).  satsuma y dejavu vendorizados: 0 líneas
+# nuestras (vendor_satsuma.sh --check lo garantiza en CI).
+union=$(wc -l < solver/symmetry/satsuma_entry.cpp)
 c_add=$(( ${add[ACTIVA]:-0} + ${add[INACTIVA]:-0} ))
 pct=$(awk -v a="$c_add" -v b="$base_lines" 'BEGIN{printf "%.1f", 100*a/b}')
 
@@ -74,6 +80,8 @@ cat <<EOF
 - **mclique** (\`solver/mclique\`, clique máxima para satsuma, D-005): **$mclique**
   líneas de C, más $mclique_test de pruebas. Solo entra en la entrega si EXP-010
   la valida.
+- **Unión con satsuma** (\`solver/symmetry/satsuma_entry.cpp\`, D-016): **$union** líneas
+  de C++. satsuma y dejavu van vendorizados **sin modificar** (0 líneas).
 - **Escritas por IA**: todas las anteriores (asistente de IA bajo la dirección del autor).
 - **satsuma y dejavu**: se usan sin modificar (0 líneas). mclique ocupa el
   hueco de cliquer sin tocar satsuma.

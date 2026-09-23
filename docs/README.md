@@ -29,7 +29,7 @@ workflow.
 | [`ROADMAP.md`](ROADMAP.md) | Fases hasta la SAT Competition 2027 |
 | [`plan/plan-main-track-2027.md`](plan/plan-main-track-2027.md) | **Plan vigente**: Main Track con declaración honesta; hitos H1–H11 |
 | [`competicion/declaracion-ia.md`](competicion/declaracion-ia.md) | Registro vivo de la declaración de IA (cifras con `scripts/declaracion_ia.sh`) |
-| [`adr/`](adr/) | Decisiones de diseño (ADR-0001 a ADR-0006) |
+| [`adr/`](adr/) | Decisiones de diseño (ADR-0001 a ADR-0007; la 0007 integra la ruptura de simetrías en Kissat) |
 | [`decisiones/registro.md`](decisiones/registro.md) | Decisiones abiertas y resueltas (D-NNN) |
 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Cómo se trabaja: flujo, ramas, commits, autoría |
 | [`../CHANGELOG.md`](../CHANGELOG.md) | Cambios por hito |

@@ -115,6 +115,16 @@ python3 scripts/analyze_speedup.py results/exp008/A.csv results/exp008/B.csv
     misma sesión.
   - HEAD ya no es `c5f2e4c` (hay commits de documentación y de mclique
     posteriores), pero **el binario es el mismo**, y la guarda lo vigila.
+- **Carga concurrente tras la reanudación** (entre las 18:45 y las 19:20 UTC,
+  aproximadamente): compilaciones de Kissat con satsuma integrado (D-016) en
+  directorios aparte (`build-symm`, etc.). Tres de ellas usaron `make -j4` con
+  `nice`. El binario del experimento no se tocó (la guarda lo vigila). El
+  orden intercalado reparte ese ruido entre las dos ramas.
+- **HARDKILL en la rama B**: Kissat sc2026 no respetó `--time=180` en al menos
+  dos corridas (`b54b26f3…`, las dos semillas), y el arnés lo mató a los
+  ~252 s (1,25·T + 30). Cuenta como no resuelta, igual que un TIMEOUT: no
+  cambia el PAR-2, que usa 2T para toda no resuelta. Se anota por si sc2026
+  llegara a ser la base, porque en competición el tiempo lo impone el entorno.
 
 ## 9. Resultados
 

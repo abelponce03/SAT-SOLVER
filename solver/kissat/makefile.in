@@ -7,7 +7,12 @@ VPATH=../src:../test
 %.o: %.c ../[st]*/*.h makefile
 	$(CC) -c $<
 
-APPSRC=application.c handle.c parse.c witness.c
+# [SOLVER] symmetry.c: ruptura de simetrías integrada (D-016, ADR-0007).
+APPSRC=application.c handle.c parse.c symmetry.c witness.c
+
+# [SOLVER] Con 'configure --symmetry', satsuma (solver/satsuma, MIT) se
+# compila dentro del binario; sin ella, SYMOBJ queda vacío.
+SYMOBJ=@SYMOBJ@
 
 LIBSRT=$(sort $(wildcard ../src/*.c))
 LIBSUB=$(subst ../src/,,$(LIBSRT))
@@ -45,11 +50,15 @@ coverage:
 format:
 	clang-format -i ../*/*.[ch]
 
-kissat: main.o $(APPOBJ) libkissat.a makefile
-	$(LD) -o $@ main.o $(APPOBJ) $(LIBS) -lm
+kissat: main.o $(APPOBJ) $(SYMOBJ) libkissat.a makefile
+	$(LD) -o $@ main.o $(APPOBJ) $(SYMOBJ) $(LIBS) -lm
 
-tissat: test.o $(TSTOBJ) libkissat.a makefile
-	$(LD) -o $@ test.o $(TSTOBJ) $(LIBS) -lm
+tissat: test.o $(TSTOBJ) $(SYMOBJ) libkissat.a makefile
+	$(LD) -o $@ test.o $(TSTOBJ) $(SYMOBJ) $(LIBS) -lm
+
+# [SOLVER] satsuma vendorizado, compilado con su propio compilador de C++.
+satsuma.o: ../../symmetry/satsuma_entry.cpp ../../satsuma/src/*.h makefile
+	@CXX@ -c -o $@ $<
 
 kitten: kitten.c random.h stack.h makefile
 	$(CC) $(CFLAGS) -DSTAND_ALONE_KITTEN -o $@ ../src/kitten.c

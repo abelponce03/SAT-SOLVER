@@ -32,6 +32,7 @@ shared=no
 static=no
 statistics=unknown
 symbols=unknown
+symmetry=no # [SOLVER]
 testdefault=unknown
 ultimate=no
 unsat=no
@@ -101,6 +102,7 @@ configuration, disable messages, profiling and certain statistics.
   --quiet           disable messages, built-in profiling and metrics
                    
   --competition     same as '--no-options --quiet' (competition configuration)
+  --symmetry        [LabeSAT] build in satsuma symmetry breaking (needs C++20)
   --extreme         same as '--compact --no-options --quiet'
                    
   --no-proofs       do not include code for proof generation
@@ -232,6 +234,7 @@ do
     --quiet) quiet=yes;;
     --extreme) extreme=yes;;
     --competition) options=no; quiet=yes;;
+    --symmetry) symmetry=yes;; # [SOLVER] satsuma integrado (D-016)
 
     --default) default=yes;;
     --sat) sat=yes;;
@@ -633,6 +636,28 @@ else
   msg "linker '$LD' (additional options)"
 fi
 
+# [SOLVER] Ruptura de simetrías integrada (D-016, ADR-0007): satsuma
+# (solver/satsuma, MIT, sin modificar) se compila con el compilador de C++
+# que corresponde al de C, y el binario se enlaza con él.
+SYMOBJ=""
+CXX="false"
+if [ $symmetry = yes ]
+then
+  case "$CC" in
+    *clang*) CXXBIN="`echo \"$CC\"|sed -e 's,clang,clang++,'`";;
+    *gcc*) CXXBIN="`echo \"$CC\"|sed -e 's,gcc,g++,'`";;
+    *) CXXBIN="c++";;
+  esac
+  CFLAGS="$CFLAGS -DLABESAT_SYMMETRY"
+  SYMOBJ="satsuma.o"
+  # Sin '-march=native': el binario de competición tiene que funcionar en
+  # otra máquina.  '-w' porque el código de satsuma no es nuestro.
+  CXX="$CXXBIN -std=c++20 -O3 -DNDEBUG -DCLIQUES=0 -w$passtocompiler -I$ROOT/../satsuma/src"
+  LD="$CXXBIN`echo \"$LD\"|sed -e \"s,^$CC,,\"`"
+  msg "symmetry breaking built in (satsuma), C++ compiler '$CXX'"
+  msg "linker '$LD'"
+fi
+
 case "$CC" in
   *-linux-gnu-gcc)
     architecture="`echo $CC|sed -e 's,\(.*\)-linux-gnu-gcc,\1,'`"
@@ -703,6 +728,8 @@ sed \
   -e "s#@LD@#$LD#" \
   -e "s#@AR@#$AR#" \
   -e "s#@GOALS@#$goals#" \
+  -e "s#@SYMOBJ@#$SYMOBJ#" \
+  -e "s#@CXX@#$CXX#" \
   ../makefile.in > makefile
 
 if [ -f ../src/makefile ]

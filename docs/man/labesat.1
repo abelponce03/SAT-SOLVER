@@ -26,6 +26,15 @@ escribe en ese fichero una prueba de insatisfacibilidad en formato SR
 .BR dsr\-trim .
 Si satsuma falla, se pasa de tiempo o la entrada es demasiado grande,
 resuelve la fórmula original solo con kissat, y la prueba es DRAT.
+.PP
+El binario de Kissat compilado con
+.B "configure \-\-symmetry"
+hace lo mismo sin este guion:
+.B "kissat \-\-symmetry"
+.I cnf
+.RI [ prueba ]
+ejecuta satsuma dentro del propio binario, con los mismos topes y el mismo
+respaldo (ADR\-0007).
 .SH OPCIONES
 .TP
 .B \-\-symmetry

@@ -30,6 +30,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
+| D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
 
 ---
 
@@ -170,3 +171,26 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   - EXP-010, parte 1: misma CNF que cliquer en 72 de 74, pero un tope nuevo de
     60 s en `9ba8145e`, así que v1 no se adopta. mclique v2 añade un
     presupuesto de trabajo determinista; se valida en EXP-011.
+
+## D-016 — Ruptura de simetrías montada sobre Kissat
+
+- **Surge** (2026-09-23): al resumir el estado, el director aclara que su
+  objetivo es «tomar los algoritmos y montarlos sobre kissat, no tener un
+  selector de solucionadores». La arquitectura de ADR-0004 (satsuma como
+  programa aparte, D-008) no encaja del todo con ese objetivo.
+- **Aclaración previa**: en el repositorio hay un solo solucionador (el fork de
+  Kissat).
+  - satsuma es un preprocesador.
+  - Kissat sc2026 es solo la rama de comparación de EXP-008.
+  - B3 decide si se aplica la ruptura, no qué solver se usa.
+  - V1–V4 son entradas distintas de la competición.
+- **Opciones**:
+  - **a.** Dejarlo externo.
+  - **b.** Reimplementar ya en C, dentro de Kissat. Son meses de trabajo.
+  - **c.** Por fases: satsuma compilado dentro del binario y, después,
+    reimplementación pieza a pieza.
+- **Resolución (director): opción c.** Detalle en
+  [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md).
+  - La fase 1 está implementada: `configure --symmetry` y la opción
+    `--symmetry`, apagada por defecto.
+  - Su equivalencia con la tubería se valida en EXP-012.

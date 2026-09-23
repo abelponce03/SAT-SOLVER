@@ -10,6 +10,7 @@
 #include "print.h"
 #include "proof.h"
 #include "resources.h"
+#include "symmetry.h" /* [SOLVER] ruptura de simetrías integrada (D-016) */
 #include "witness.h"
 
 #include <inttypes.h>
@@ -42,6 +43,9 @@ struct application {
   bool partial;
   bool witness;
   int max_var;
+  /* [SOLVER] ruptura de simetrías integrada (D-016, ADR-0007) */
+  bool symmetry;
+  symmetry_outcome symm;
 };
 
 static void init_app (application *application, kissat *solver) {
@@ -201,6 +205,9 @@ static void print_complete_usage (void) {
   printf ("  --force              same as '-f' (force writing proof)\n");
   printf ("  --append-proof       append proof to existing file\n");
 #endif
+  /* [SOLVER] */
+  printf ("  --symmetry           symmetry breaking with built-in satsuma\n");
+  printf ("  --no-symmetry        no symmetry breaking (default)\n");
   printf ("  --id                 print 'git' identifier (SHA-1 hash)\n");
 #ifndef NOPTIONS
   printf ("  --range              print option range list\n");
@@ -493,6 +500,14 @@ static bool parse_options (application *application, int argc,
         ERROR ("invalid argument in '%s' (try '-h')", arg);
     } else if (!strcmp (arg, "--partial"))
       application->partial = true;
+    /* [SOLVER] Opciones de la aplicación, no del solver: sobreviven a
+       '--no-options' (configuración de competición). */
+    else if (!strcmp (arg, "--symmetry")) {
+      if (!kissat_symmetry_compiled ())
+        ERROR ("'--symmetry' needs 'configure --symmetry'");
+      application->symmetry = true;
+    } else if (!strcmp (arg, "--no-symmetry"))
+      application->symmetry = false;
 #ifndef NPROOFS
     else if (LONG_FALSE_OPTION (arg, "binary"))
       application->binary = -1;
@@ -783,8 +798,39 @@ static void print_limits (application *application) {
 
 #endif
 
+/* [SOLVER] Paso de satsuma (D-016).  El '--time' ya corre como alarma desde
+   que se leyó la opción, así que el tiempo de satsuma se descuenta solo; el
+   paso nunca pasa del tiempo que queda. */
+static double application_started;
+
+static void run_symmetry (application *application) {
+  kissat *solver = application->solver;
+  double budget = 0;
+  if (application->time > 0)
+    budget = application->time -
+             (kissat_wall_clock_time () - application_started);
+  const char *proof = 0;
+#ifndef NPROOFS
+  proof = application->proof_path;
+#endif
+  kissat_section (solver, "symmetry");
+  kissat_symmetry_preprocess (application->input_path, proof, budget,
+                              &application->symm);
+  if (application->symm.applied) {
+    kissat_message (solver, "%s", application->symm.reason);
+    application->input_path = application->symm.path;
+#ifndef NPROOFS
+    if (proof)
+      application->append = true; /* continúa el prefijo SR de satsuma */
+#endif
+  } else
+    kissat_message (solver, "sin simetrías: %s", application->symm.reason);
+  (void) solver;
+}
+
 static int run_application (kissat *solver, int argc, char **argv,
                             bool *cancel_alarm_ptr) {
+  application_started = kissat_wall_clock_time (); /* [SOLVER] */
   *cancel_alarm_ptr = false;
   if (argc == 2)
     if (parsed_one_option_and_return_zero_exit_code (argv[1]))
@@ -803,11 +849,20 @@ static int run_application (kissat *solver, int argc, char **argv,
     fflush (stdout);
   }
 #endif
+  /* [SOLVER] La ruptura de simetrías va antes de abrir la prueba y de
+     leer la CNF: si se aplica, se lee la CNF simplificada y la prueba
+     continúa el prefijo SR que escribe satsuma. */
+  if (application.symmetry)
+    run_symmetry (&application);
 #ifndef NPROOFS
-  if (!write_proof (&application))
+  if (!write_proof (&application)) {
+    kissat_symmetry_cleanup (&application.symm);
     return 1;
+  }
 #endif
-  if (!parse_input (&application)) {
+  const bool parsed = parse_input (&application);
+  kissat_symmetry_cleanup (&application.symm); /* [SOLVER] */
+  if (!parsed) {
 #ifndef NPROOFS
     close_proof (&application);
 #endif

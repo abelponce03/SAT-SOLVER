@@ -1,5 +1,6 @@
 # --- Artefactos de compilación del fork (regenerables con scripts/build.sh) ---
 solver/kissat/build/
+solver/kissat/build-*/
 solver/kissat/makefile
 solver/*/build/
 *.o
