@@ -1,6 +1,7 @@
 # EXP-006 — A4.1: ¿acelera el planificador adaptativo? (hipótesis preregistrada)
 
-- **Estado**: **preregistrado** — escrito **antes** de ejecutar (ADR-0003 §6)
+- **Estado**: **cerrado — H1 NO confirmada** (preregistrado antes de ejecutar,
+  ADR-0003 §6)
 - **Fecha**: 2026-09-23
 - **Origen**: hallazgo exploratorio de [EXP-005 §7](EXP-005-a4-reparto-adaptativo.md)
 - **Por qué existe**: para convertir una observación hecha *después* de ver los
@@ -116,4 +117,56 @@ python3 scripts/analyze_speedup.py results/exp006/A.csv results/exp006/B.csv
 
 ## 8. Resultados
 
-_Pendiente de ejecución._
+Ejecutado el 2026-09-23. La tanda terminó sin incidencias.
+
+- **Procedencia**:
+  - binario `d424a01f1b42`, `--id` = HEAD `12f871b`, árbol limpio;
+  - 120 parejas intercaladas;
+  - datos en `results/exp006/`.
+- **Análisis**: el preregistrado, `analyze_speedup.py`, sin cambios.
+
+### Métrica primaria (§3)
+
+| | valor |
+|---|---|
+| parejas válidas | 75, en **40 instancias** (37 descartadas porque alguna rama no resuelve; 8 por t < 1 s) |
+| instancias en que B es más rápida / más lenta | 24 / 16 |
+| factor geométrico `t_B/t_A` | **0.983×**, IC95 % [0.819×, 1.151×] |
+| Wilcoxon (unidad = instancia) | W = 380, **p = 0.692** |
+| propagaciones `prop_B/prop_A` (control de deriva) | 0.999×, IC95 % [0.865×, 1.136×], p = 0.746 |
+
+### Veredicto según §4
+
+**H1 no se confirma.**
+
+- El factor 0.648× de EXP-005 no aparece en datos frescos: aquí es 0.983×, y el
+  IC incluye 1 con holgura por los dos lados.
+- El esfuerzo determinista tampoco se mueve (0.999×). No es que el tiempo esté
+  enmascarado por la deriva: **el planificador adaptativo no cambia la cantidad
+  de búsqueda necesaria**.
+
+### PAR-2, informado por completitud (no es el contraste de este experimento)
+
+| | A (upstream) | B (adaptativo) |
+|---|---:|---:|
+| PAR-2 (T = 180 s) | 127.105 s | 125.614 s |
+| corridas resueltas | 87 / 120 | 88 / 120 |
+
+- ΔPAR-2 = −1.49 s, IC95 % [−12.6, +9.7]; Wilcoxon p = 0.48.
+- McNemar: 2 instancias solo las resuelve A y 3 solo B, p = 1.0.
+
+Es la misma imagen que en EXP-005: una diferencia pequeña, siempre dentro del
+ruido.
+
+### Lectura
+
+- **El patrón de EXP-005 era ruido.** El 10 de 12 de EXP-005 salió de mirar una
+  segunda métrica tras un nulo en la primera. Con n = 40 y potencia holgada
+  (§5), el efecto desaparece. Justo por esto el proyecto preregistra: sin este
+  experimento, A4.1 se habría presentado como «acelera un 35 %».
+- **Decisión**: A4.1 se cierra como **«implementado, sin efecto detectado»**.
+  - El código se queda detrás de `modeadaptive=0`, que es el valor por defecto.
+    No cambia nada del comportamiento entregado, y sirve de base si A4.2 (más
+    brazos) se retoma.
+  - El seguimiento previsto con presupuesto largo, **EXP-008, no se hace**,
+    porque su condición de entrada era que H1 se confirmara.

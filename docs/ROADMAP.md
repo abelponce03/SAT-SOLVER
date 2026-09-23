@@ -78,13 +78,11 @@ permite presentarlas por separado y juntas.
 
 ### Fase 1 — Cerrar A4.1 · octubre 2026
 
-- [ ] **EXP-006** (en curso): ¿acelera A4.1 las instancias que resuelve? Hipótesis
-      preregistrada, datos frescos.
-- [ ] Si se confirma → **EXP-007**: ¿se traduce en PAR-2 con presupuesto largo?
-      La aceleración solo gana puntos si convierte timeouts en resueltas, y eso
-      pasa en el borde del presupuesto, no a 180 s.
-- [ ] Si no se confirma → A4.1 se cierra como «sin efecto» y se documenta.
-- [ ] **Resolver el acceso a cómputo** (ver §4). Bloquea EXP-007.
+- [x] **EXP-006**: ¿acelera A4.1 las instancias que resuelve? **No**: 0.983×,
+      p = 0.69, con las propagaciones sin cambio (0.999×).
+- [x] A4.1 cerrado como «sin efecto detectado». El seguimiento con presupuesto
+      largo (renumerado EXP-008) no se hace.
+- [ ] **Resolver el acceso a cómputo** (ver §4). Sigue siendo el mayor riesgo.
 
 ### Fase 2 — Preprocesado estructural condicional · noviembre–diciembre 2026
 
