@@ -90,15 +90,22 @@ permite presentarlas por separado y juntas.
 
 La mayor palanca de PAR-2 medida en todo el proyecto.
 
-- [ ] Revisar licencia y viabilidad de integrar **satsuma** / **BreakID**.
-- [ ] Integrarlo **condicionado**: en los datos de 2026, aplicarlo siempre arregla
-      51 instancias y **rompe 13**; el oráculo condicional vale −322 s extra.
-- [ ] Criterio de activación (B3), preferiblemente con los features que Kissat
-      ya calcula (`classify.c`). El estudio previo con datos oficiales ya mostró
-      que condicionar gana a aplicar siempre.
-- [ ] Verificar pruebas DRAT: la ruptura de simetrías **no es compatible con DRAT
-      puro** en general. Hay que confirmar qué formato y qué verificador lo
-      admiten, porque una prueba incorrecta **descalifica**.
+- [x] Licencia y viabilidad (ADR-0004): **satsuma upstream es MIT** si se
+      compila con `CLIQUES=OFF` (cliquer, GPLv2, queda fuera). Se usa como
+      programa externo fijado a un commit; nada de la entrada GPLv3 de 2026.
+- [x] Pruebas: formato **SR** (prefijo de satsuma) + DRAT de kissat en el mismo
+      fichero (`--append-proof`, propio), verificado con **dsr-trim** contra la
+      CNF original. En CI con el build normal y el de competición, con control
+      negativo (`scripts/test_symmetry.sh`).
+- [x] Guion de entrada `solver/labesat` con respaldo a kissat puro si satsuma
+      falla o tarda.
+- [ ] **EXP-007**: A/B `labesat` vs `labesat --no-symmetry` (preregistrado),
+      contando también dónde **empeora** (en 2026: 51 arregladas, 13 rotas).
+- [ ] Coste de mantener MIT: satsuma sin cliques vs con cliques (medido fuera
+      del repositorio).
+- [ ] Integrarlo **condicionado** (B3): el oráculo condicional vale −322 s
+      extra. Criterio de activación, preferiblemente con features baratos
+      (tamaño, tiempo de satsuma, nº de generadores) o los de `classify.c`.
 
 ### Fase 3 — A4.2: más brazos · enero 2027 (solo si A4.1 se sostiene)
 

@@ -46,8 +46,13 @@ docs/archive/       etapa CaDiCaL (jul–sep 2026), conservada como histórico
 
 ```bash
 ./scripts/build.sh                 # compila el fork -> solver/kissat/build/kissat
-./scripts/get_tools.sh             # drat-trim, para verificar respuestas UNSAT
+./scripts/get_tools.sh             # drat-trim, satsuma (MIT), dsr-trim -> tools/
 ./scripts/smoke_test.sh            # build + tests + modelos + pruebas DRAT + determinismo
+./scripts/test_symmetry.sh         # tubería satsuma → kissat con pruebas SR (ADR-0004)
+
+# LabeSAT completo: ruptura de simetrías + CDCL, con prueba verificable
+./solver/labesat bench/symm/php_12_11.cnf /tmp/proof
+./tools/dsr-trim bench/symm/php_12_11.cnf /tmp/proof     # s VERIFIED UNSAT
 
 # una corrida completa sobre el banco de humo
 python3 scripts/run_experiment.py --solver solver/kissat/build/kissat \
