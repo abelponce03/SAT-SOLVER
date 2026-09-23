@@ -117,6 +117,7 @@ H8 se amplía.
 
 ## 8. Seguimiento en GitHub
 
+- **Épica del plan: #20**, con EXP-008 (#21), benchmarks (#22) y entrega (#23).
 - Épicas por fase, cada una con sub-issues:
   - fase 2 (#12);
   - base y variantes;

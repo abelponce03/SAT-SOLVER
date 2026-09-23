@@ -27,8 +27,8 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-010 | Documentación continua y multiformato, con LaTeX para los PDF | ✅ (2026-09-23) | Director | [ADR-0006](../adr/0006-documentacion-multiformato.md) |
 | D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 · issue #10 |
 | D-012 | Insignia «via Claude» en las acciones de GitHub hechas desde la sesión | 🟡 | Director | §D-012 · issue #11 |
-| D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 |
-| D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 |
+| D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
+| D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 
 ---
