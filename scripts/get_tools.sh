@@ -26,6 +26,10 @@ DEJAVU_URL=https://github.com/markusa4/dejavu.git
 DEJAVU_REV=4c275e9ebac4fe51a26aac406682b9bcbfd03a9d
 DSRTRIM_URL=https://github.com/ccodel/dsr-trim.git
 DSRTRIM_REV=c3119d8570b881d0179a8ae46f1974a32d41d9fc
+# El commit que usó la SAT Competition 2026 (checker.commits.txt de su web).
+# Hay 12 commits de correcciones entre ambos: una prueba que solo pase con el
+# nuevo descalificaría en la competición.  Se verifica con los dos.
+DSRTRIM_SC_REV=8f857dd6cb34ccff8eb94e2f4ed6cf012d6c8f35
 
 mkdir -p "$ROOT/tools"
 cd "$ROOT/tools"
@@ -76,4 +80,14 @@ if [ ! -x dsr-trim ]; then
     echo "   tools/dsr-trim listo"
 else
     echo "== dsr-trim ya está"
+fi
+
+if [ ! -x dsr-trim-sc2026 ]; then
+    echo "== dsr-trim ${DSRTRIM_SC_REV:0:7} (el de la SAT Competition 2026)"
+    fetch_rev dsr-trim-sc2026-src "$DSRTRIM_URL" "$DSRTRIM_SC_REV"
+    nice -n 10 make -C dsr-trim-sc2026-src -j "$JOBS" >/dev/null
+    cp dsr-trim-sc2026-src/bin/dsr-trim dsr-trim-sc2026
+    echo "   tools/dsr-trim-sc2026 listo"
+else
+    echo "== dsr-trim-sc2026 ya está"
 fi

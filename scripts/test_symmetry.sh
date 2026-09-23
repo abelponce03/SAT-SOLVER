@@ -18,12 +18,17 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export LABESAT_KISSAT="${1:-$ROOT/solver/kissat/build/kissat}"
 W="$ROOT/solver/labesat"
 DSR="$ROOT/tools/dsr-trim"
+DSR_SC="$ROOT/tools/dsr-trim-sc2026"   # el commit exacto de la competición
 DRAT="$ROOT/tools/drat-trim"
-for t in "$LABESAT_KISSAT" "$ROOT/tools/satsuma" "$DSR" "$DRAT"; do
+for t in "$LABESAT_KISSAT" "$ROOT/tools/satsuma" "$DSR" "$DSR_SC" "$DRAT"; do
     [ -x "$t" ] || { echo "falta $t (¿scripts/get_tools.sh?)"; exit 2; }
 done
 fail=0
 bad() { echo "FALLO $*"; fail=1; }
+# verified CHECKER CNF PROOF: guarda la salida ANTES de buscar en ella.  Con
+# pipefail, 'checker | grep -q' falla al azar: grep cierra la tubería al
+# encontrar la línea y el verificador muere por SIGPIPE si aún escribía.
+verified() { "$1" "$2" "$3" > "$TMP/check.out" 2>&1; grep -aq "^s VERIFIED" "$TMP/check.out"; }
 
 # Sin LABESAT_KISSAT, el guion debe encontrar kissat por sí solo: así es como
 # lo invocan los experimentos (EXP-007 se lanzó una vez con esto roto).
@@ -40,9 +45,9 @@ while IFS=, read -r inst expected _; do
     "$W" "$cnf" "$TMP/proof" > "$TMP/out"; code=$?
     case "$expected:$code" in
         UNSAT:20)
-            if "$DSR" "$cnf" "$TMP/proof" 2>&1 | grep -q "^s VERIFIED"; then
-                echo "OK    $inst: UNSAT, prueba SR verificada por dsr-trim"
-            else bad "$inst: dsr-trim no verificó la prueba combinada"; fi ;;
+            if verified "$DSR" "$cnf" "$TMP/proof" && verified "$DSR_SC" "$cnf" "$TMP/proof"; then
+                echo "OK    $inst: UNSAT, prueba SR verificada por dsr-trim (actual y el de SC2026)"
+            else bad "$inst: dsr-trim (actual o SC2026) no verificó la prueba combinada"; fi ;;
         SAT:10)
             if python3 "$ROOT/scripts/verify_model.py" --model "$TMP/out" "$cnf" >/dev/null; then
                 echo "OK    $inst: SAT, el modelo satisface la CNF original"
@@ -57,7 +62,7 @@ cnf="$ROOT/bench/symm/php_12_11.cnf"   # su refutación corta depende del prefij
 "$ROOT/tools/satsuma" fix "$cnf" --silent --full-skip-limit 100000000 \
     --add-reduced-as-unit --bsr --proof-file "$TMP/neg" --out-file "$TMP/sb.cnf" >/dev/null 2>&1
 "$LABESAT_KISSAT" --no-binary "$TMP/sb.cnf" "$TMP/neg" >/dev/null
-if "$DSR" "$cnf" "$TMP/neg" 2>&1 | grep -q "^s VERIFIED"; then
+if verified "$DSR" "$cnf" "$TMP/neg" || verified "$DSR_SC" "$cnf" "$TMP/neg"; then
     bad "control negativo: dsr-trim aceptó una prueba sin prefijo"
 else
     echo "OK    control negativo: sin --append-proof la prueba se rechaza"
@@ -67,7 +72,7 @@ fi
 cnf="$ROOT/bench/symm/php9x9_rand160u.cnf"
 LABESAT_SATSUMA=/bin/false "$W" "$cnf" "$TMP/fb" > "$TMP/out"; code=$?
 if [ $code = 20 ] && grep -q "sin simetrías" "$TMP/out" &&
-   "$DRAT" "$cnf" "$TMP/fb" 2>/dev/null | grep -q "s VERIFIED"; then
+   out=$("$DRAT" "$cnf" "$TMP/fb" 2>/dev/null) && grep -q "s VERIFIED" <<< "$out"; then
     echo "OK    respaldo: satsuma falla → prueba DRAT pura verificada"
 else bad "respaldo (código $code)"; fi
 
