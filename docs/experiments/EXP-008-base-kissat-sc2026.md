@@ -125,6 +125,25 @@ python3 scripts/analyze_speedup.py results/exp008/A.csv results/exp008/B.csv
   ~252 s (1,25·T + 30). Cuenta como no resuelta, igual que un TIMEOUT: no
   cambia el PAR-2, que usa 2T para toda no resuelta. Se anota por si sc2026
   llegara a ser la base, porque en competición el tiempo lo impone el entorno.
+- **Cambio de máquina (2026-09-23, 21:38 UTC): tanda de la nube descartada sin
+  promocionar.** El director indica que, en adelante, todos los experimentos
+  se ejecutan en su entorno local, no en el hardware de la sesión de nube.
+  - La tanda llevaba **112 de 120 parejas** medidas en la máquina de la nube
+    cuando se detuvo.
+  - **No se continúa esa tanda en otra máquina.** El diseño A/B intercalado
+    (ADR-0003 §4b) existe justamente para anular la deriva *dentro* de una
+    sesión y de una máquina; mezclar parejas medidas en dos equipos distintos
+    reintroduce exactamente esa deriva como una variable de confusión, sin
+    que el orden intercalado pueda repartirla. Siete de las 8 parejas
+    HARDKILL/TIMEOUT largas del final tampoco aportan mucha señal para no
+    reiniciar.
+  - Los CSV parciales (`results/exp008/{A,B}.csv`, 112 filas cada uno) se
+    quedan en el disco efímero de la sesión de nube y no se comiten: no
+    llegaron a un cierre de experimento (ADR-0003 §6, "solo se promocionan
+    los resultados de un experimento cerrado").
+  - **Se relanza de cero** en la máquina local del director con el mismo
+    comando de §7, ahora a través de `scripts/reanudar_experimentos.sh`
+    (idempotente **dentro de una misma máquina**, con guarda de SHA-1).
 
 ## 9. Resultados
 

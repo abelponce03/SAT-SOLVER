@@ -5,6 +5,15 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cambiado (2026-09-23): los experimentos pasan a ejecutarse en local
+- A partir de ahora, todos los experimentos se lanzan en el entorno local del
+  director, no en el hardware de las sesiones de nube.
+- `scripts/reanudar_experimentos.sh`: encadena EXP-008 y las partes
+  pendientes de EXP-010, EXP-011 y EXP-012, idempotente dentro de una misma
+  máquina.
+- La tanda de EXP-008 en la nube (112/120 parejas) se descartó sin
+  promocionar, por la razón de diseño de ADR-0003 §4b: ver EXP-008 §8.
+
 ### Investigación (2026-09-23): razonamiento XOR (research/06)
 - ¿Incorporar el Gauss-Jordan de CryptoMiniSat? Estructura XOR medida con
   `scripts/xor_detect.c` en 161 instancias de 2026:

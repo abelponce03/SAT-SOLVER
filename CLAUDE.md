@@ -115,7 +115,16 @@ enviar correos, registrarse en la competición.
 ./scripts/test_symmetry.sh              # tubería satsuma → kissat con pruebas SR
 ./solver/labesat <cnf> [<proof>]        # LabeSAT completo
 python3 scripts/run_ab_interleaved.py … # A/B (ver docs/experiments/EXP-007 §8)
+./scripts/reanudar_experimentos.sh      # EXP-008/010/011/012 pendientes, en LOCAL (ver nota abajo)
 ```
+
+**Máquina de los experimentos (2026-09-23)**: todos los experimentos se
+ejecutan en el entorno local del director, nunca en el hardware de las
+sesiones de nube. El diseño A/B intercalado (ADR-0003 §4b) exige que las dos
+ramas de una misma tanda se midan en la misma máquina; una tanda cortada a
+mitad **no se reanuda en otra máquina**, se relanza de cero donde vaya a
+correr completa. `scripts/reanudar_experimentos.sh` es idempotente solo
+*dentro* de una misma máquina.
 
 ## 7. Herramientas del entorno que se usan
 

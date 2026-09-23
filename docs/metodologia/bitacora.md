@@ -293,3 +293,27 @@ al cerrar cada sesión.
 - **Aprendido**: medir la estructura de las instancias reales antes de
   estimar el beneficio. Que haya XOR no basta: en la mayoría son puertas de
   circuito, no sistemas lineales.
+
+
+## 2026-09-23 (noche, 3) — Cambio a ejecución local de los experimentos
+
+- **Se pidió**: «para la ejecución de todos los experimentos la continuidad
+  será en un entorno local no usando el hardware de la nube».
+- **Se hizo**:
+  - se detuvieron los procesos en marcha en la sesión de nube: EXP-008 iba por
+    112 de 120 parejas;
+  - se descartó ese parcial **sin promocionarlo ni intentar reanudarlo en
+    otra máquina**: el diseño A/B intercalado (ADR-0003 §4b) asume una sola
+    máquina, y mezclar dos equipos reintroduce la deriva que ese diseño existe
+    para anular;
+  - se formalizó `scripts/reanudar_experimentos.sh`, que encadena EXP-008, las
+    partes pendientes de EXP-010 y EXP-011, y EXP-012, con --resume dentro de
+    una misma máquina;
+  - se documentó la incidencia en EXP-008 §8 y se cancelaron los vigilantes
+    (`send_later`) de la sesión de nube, que ya no aplican.
+- **Decisiones**: ninguna de diseño; es un cambio de dónde se ejecuta, no de
+  qué se mide. Los preregistros (EXP-008/010/011/012) no cambian: sus
+  comandos de "Reproducir" son los mismos, ahora lanzados en local.
+- **Aprendido**: el protocolo experimental (una sola máquina por tanda) hay
+  que aplicarlo también a los cambios de entorno de ejecución, no solo a los
+  cortes por reinicio dentro de la misma sesión.
