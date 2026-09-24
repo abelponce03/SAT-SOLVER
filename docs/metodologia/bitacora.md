@@ -367,6 +367,9 @@ al cerrar cada sesión.
     envoltorio de la sesión, cuya línea de órdenes contenía el nombre del
     guion. Es la misma trampa que ya recogía esta bitácora el 2026-09-23.
     Se corrigió esperando al PID del propio guion, desacoplado con `setsid`.
+  - **El CI falló** al abrir el PR: el clon superficial (`fetch-depth` 1) no
+    tiene el commit del que `get_tools.sh` reconstruye mclique v1. Ahora se
+    omite con aviso si el commit no está; lo exige solo la cadena local.
   - Un permiso denegado por el clasificador del entorno al leer ficheros
     temporales; se usó la herramienta de lectura en su lugar.
 - **Aprendido**:
