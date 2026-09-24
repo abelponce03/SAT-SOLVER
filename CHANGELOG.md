@@ -5,6 +5,38 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-09-24): VSA, vivificación programada por actividad (P6)
+- Opción `vivifyactivity` (apagada por defecto), de Kissat-VSA (2.º en UNSAT
+  de 2025): en modo estable, se vivifican antes las cláusulas cuya variable
+  menos activa tiene mayor puntuación.
+  - Con 0, búsqueda idéntica a la base (12/12 instancias).
+  - Con 1: 7/7 pruebas DRAT y 4/4 modelos verificados, sin asserts.
+- Documentada en el manual (§3.2, opciones experimentales) y en `labesat(1)`.
+- **EXP-015** preregistrado: A/B intercalado en 60 instancias de tesis-dev.
+
+### Investigación (2026-09-24): ganadores 2021–2026 y banco de la tesis (research/07)
+- **B2 retirada por error de hecho**: `kissat-mab-hypre` (3.º en 2026) es
+  satsuma + Kissat_MAB, no hiper-resolución binaria. Los tres primeros de
+  2026 llevan satsuma.
+- El ganador de 2025 (AE-Kissat-MAB) está evolucionado con LLM.
+- En la tesis, la complementariedad con otros solvers es pequeña (29 de 883
+  instancias). El oráculo de semilla vale −8,3 % de PAR-2, pero repartir el
+  tiempo entre semillas **empeora** (683 → 713 → 744 s): los reinicios fríos
+  a ciegas se descartan sin implementarlos.
+- Nuevas decisiones: D-017 (cómo comparar con la tesis) y D-018 (reabrir la
+  línea VSIDS/CHB como candidata a V3).
+
+### Añadido (2026-09-24): experimentos sobre el banco de la tesis
+- **EXP-013** (calibración: misma búsqueda y velocidad de la máquina frente a
+  la tesis), **EXP-014** (simetrías en la industria; parte 1 con
+  `scripts/scan_symmetry.py`) y EXP-015, preregistrados con sus guiones.
+- `scripts/cola_tesis.sh`: los tres en secuencia, de uno en uno.
+
+### Arreglado (2026-09-24): la máquina local se quedó sin RAM
+- Solapar tandas en la máquina local (15 GB) la dejó sin memoria y mató todos
+  los procesos. Desde ahora, una tanda pesada a la vez, y satsuma con tope de
+  memoria en `scan_symmetry.py` (`--mem-gb`). Detalle en EXP-008 §8.
+
 ### Añadido (2026-09-24): banco industrial de la tesis
 - `scripts/build_thesis_bench.py` integra las 1917 instancias industriales de
   la tesis del director (fuera del repositorio) y los resultados de Kissat

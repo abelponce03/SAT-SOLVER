@@ -32,6 +32,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
 | D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | 🟡 opción conservadora en marcha: calibrar (EXP-013) y decidir features solo con A/B local | Director | §D-017 · EXP-013 |
+| D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
 
@@ -224,3 +225,24 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   1. ¿Qué versión exacta de Kissat usó la tesis (paquete, commit o
      `kissat --version`)?
   2. ¿Qué CPU tenían `pc1` y `pc2`, y cuántas corridas iban en paralelo?
+
+## D-018 — ¿Reabrir la línea VSIDS/CHB (Kissat_MAB)?
+
+- **Surge**: el 2026-09-24, al revisar a los ganadores (research/07).
+- **Contexto**:
+  - El bandido que elige VSIDS o CHB en cada reinicio ganó la Main Track en
+    2021, 2022 y 2025 (esta última, con fórmulas evolucionadas con LLM).
+  - research/05 lo aparcó: efecto incremental y el precedente nulo de A4.1
+    (EXP-006).
+  - En 2026, las variantes «solo MAB» quedaron por debajo del Kissat de Biere,
+    pero ese Kissat no era la 4.0.4, y el 3.º (`kissat-mab-hypre`) es
+    satsuma + MAB.
+- **Opciones**:
+  - **a.** Mantenerla aparcada (research/05).
+  - **b. (recomendada)** Portar CHB y el UCB de Kissat_MAB (MIT) detrás de
+    una opción, **después** de EXP-008, y medirla como candidata a V3 con un
+    A/B preregistrado.
+  - **c.** Adoptar AE-Kissat-MAB entero como base: descartado, porque
+    cambiaría la base sin EXP-008 y mezclaría dos cambios.
+- **Mientras tanto**: nada; no se toca código hasta que EXP-008 decida la
+  base (D-013).

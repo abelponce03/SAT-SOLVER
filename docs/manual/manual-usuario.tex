@@ -151,6 +151,21 @@ solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>
         \texttt{-q} o \texttt{--seed=S}. Lista completa: \texttt{kissat -h}.
 \end{description}
 
+\subsection{Opciones experimentales de LabeSAT}
+Cambian la búsqueda y están \textbf{desactivadas por defecto} hasta que un
+experimento preregistrado las valide. Se pasan a kissat como cualquier otra
+opción.
+\begin{description}
+  \item[\texttt{--vivifyactivity=1}] \emph{Vivificación programada por
+        actividad} (VSA, de Kissat-VSA, SAT Competition 2025). En modo estable,
+        vivifica antes las cláusulas cuya variable menos activa tiene mayor
+        puntuación. Con \texttt{0}, la búsqueda es idéntica a la de Kissat
+        4.0.4. En evaluación: EXP-015.
+  \item[\texttt{--modeadaptive=1}] Reparto adaptativo del presupuesto entre
+        los modos estable y enfocado (A4.1). Cerrado sin efecto detectado
+        (EXP-006); se conserva para reproducir aquel experimento.
+\end{description}
+
 \subsection{Ejemplos}
 \begin{lstlisting}[language=bash]
 # Resolver una fórmula y ver el modelo, si lo hay

@@ -141,6 +141,18 @@ palancas, variantes, hitos H1–H11, presupuesto de cómputo y riesgos. Resumen:
 Las secciones de fase de abajo se conservan como referencia; el calendario
 vigente es el del plan.
 
+### Fase 3b — Banco industrial de la tesis y líneas de los ganadores · desde 2026-09-24
+
+- [x] Banco de la tesis integrado: 450 dev / 427 test / 871 reserva / 169
+      excluidas (`bench/tesis.list.csv`), con la referencia de Kissat.
+- [x] research/07: ganadores 2021–2026. **B2 retirada** (era satsuma + MAB);
+      reinicios fríos a ciegas descartados por simulación.
+- [x] VSA (P6) implementada detrás de `vivifyactivity`.
+- [ ] EXP-013 (calibración con la tesis) → D-017.
+- [ ] EXP-014 (simetrías en la industria) → datos para B3 y P5.
+- [ ] EXP-015 (VSA).
+- [ ] D-018: línea VSIDS/CHB, tras EXP-008.
+
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 
 - [ ] Elegir una familia de problemas nueva. Candidata natural: los dominios del

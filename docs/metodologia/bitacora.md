@@ -317,3 +317,62 @@ al cerrar cada sesión.
 - **Aprendido**: el protocolo experimental (una sola máquina por tanda) hay
   que aplicarlo también a los cambios de entorno de ejecución, no solo a los
   cortes por reinicio dentro de la misma sesión.
+
+## 2026-09-24 — Primera sesión local: revisión, banco de la tesis e ideas de los ganadores
+
+- **Se pidió**:
+  - verificar todo el repositorio y las líneas de investigación;
+  - trabajar con el banco industrial de la tesis del director (≈ 1900
+    instancias), comparando LabeSAT con los resultados de Kissat de la tesis
+    **sin volver a correr Kissat**;
+  - profundizar en ideas nuevas a partir de los ganadores de la Main Track;
+  - mantener las prácticas de GitHub, la documentación continua, la autoría
+    solo humana y el registro de decisiones.
+- **Se hizo**:
+  - **Revisión**: la rama de la nube iba 13 commits por delante de `main`
+    (EXP-008, mclique, satsuma integrado, research/05 y /06). La rama de la
+    sesión se colocó encima de ella. Build, `smoke_test.sh` y `test_symmetry.sh`
+    en verde en la máquina local.
+  - **Retomar la cadena pendiente** (EXP-008, 010, 011, 012): herramientas y
+    bancos bajados. Faltaba `satsuma-mclique-v1`, que solo existía en la
+    nube, y ahora `get_tools.sh` lo reconstruye desde su commit.
+  - **Banco de la tesis**: `build_thesis_bench.py`, con partición dev/test
+    estratificada y fijada antes de medir, y la referencia de Kissat en
+    `results/tesis-kissat.reference.csv`.
+  - **Hallazgo**: la tesis usó otra 4.0.x y otras máquinas (los conflictos
+    coinciden en 1 de 8 instancias con la misma semilla). De ahí D-017 y
+    EXP-013.
+  - **research/07**, con fuentes primarias (diapositivas y actas de 2025,
+    paquetes de 2026): B2 era un error de hecho; se descartan los reinicios
+    fríos a ciegas con una simulación sobre la tesis; VSA y VSIDS/CHB, a la
+    lista.
+  - **VSA** implementada detrás de una opción y verificada. EXP-013, 014 y
+    015 preregistrados y encolados.
+- **Decisiones**:
+  - D-017 (calibrar en vez de usar la tesis como brazo A);
+  - D-018 (reabrir VSIDS/CHB, después de EXP-008);
+  - EXP-014 parte 1 pasa de «en paralelo» a «sola» tras la caída.
+- **Salió mal**:
+  - **La máquina se quedó sin RAM** y cayó la sesión. Se solaparon la
+    cadena, el escaneo de satsuma, un `make -j8` y la prueba de un prototipo
+    de VSA que tenía un fallo. Se perdieron minutos, no datos: los guiones
+    son reanudables. Regla nueva: una tanda pesada a la vez, con topes de
+    memoria.
+  - **El fallo del prototipo de VSA**: una macro de comparación evaluaba dos
+    veces un argumento con efectos laterales (`A[++I]` en el quicksort de
+    Kissat). Lo detectó un `ulimit -v` en la verificación: el proceso pidió
+    4 GB en 5 s. Moraleja: en el código de Kissat, las macros `LESS` reciben
+    expresiones, no valores.
+  - **La cola esperaba al PID equivocado**: `pgrep -f` encontró el shell
+    envoltorio de la sesión, cuya línea de órdenes contenía el nombre del
+    guion. Es la misma trampa que ya recogía esta bitácora el 2026-09-23.
+    Se corrigió esperando al PID del propio guion, desacoplado con `setsid`.
+  - Un permiso denegado por el clasificador del entorno al leer ficheros
+    temporales; se usó la herramienta de lectura en su lugar.
+- **Aprendido**:
+  - En una máquina de escritorio, la memoria es el recurso que manda, no los
+    núcleos.
+  - Comprobar la **versión** de una referencia externa antes de compararse
+    con ella: una sola corrida con la misma semilla lo delata.
+  - Leer el paquete de un competidor antes de nombrar su técnica: el nombre
+    `hypre` llevó a un error que duró desde el 2026-09-21.
