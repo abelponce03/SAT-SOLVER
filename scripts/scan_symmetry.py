@@ -32,6 +32,7 @@ import csv
 import hashlib
 import os
 import re
+import resource
 import shutil
 import subprocess
 import sys
@@ -77,7 +78,7 @@ def descomprimir(src, dst):
         return subprocess.run(cmd, stdout=out, stderr=subprocess.DEVNULL).returncode == 0
 
 
-def escanear(satsuma, cnf, tmp, timeout, maxbytes):
+def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0):
     fila = {}
     inp = os.path.join(tmp, "in.cnf")
     if not descomprimir(cnf, inp):
@@ -89,15 +90,21 @@ def escanear(satsuma, cnf, tmp, timeout, maxbytes):
     cmd = [satsuma, "fix", inp, "--full-skip-limit", "100000000", "--add-reduced-as-unit",
            "--bsr", "--out-file", out, "--proof-file", prf]
     t0 = time.time()
+
+    def tope_memoria():
+        if mem_bytes:
+            resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
+
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, errors="replace",
-                           timeout=timeout, stdin=subprocess.DEVNULL)
+                           timeout=timeout, stdin=subprocess.DEVNULL, preexec_fn=tope_memoria)
         fila["wall_s"] = round(time.time() - t0, 3)
         fila["exit_code"] = r.returncode
         texto = r.stdout + r.stderr
     except subprocess.TimeoutExpired:
         return {**fila, "status": "TOPE", "wall_s": round(time.time() - t0, 3)}
     if r.returncode != 0 or not os.path.exists(out) or not os.path.getsize(out):
+        # con el tope de memoria, satsuma aborta (bad_alloc) con código != 0
         return {**fila, "status": "FALLO"}
     fila["status"] = "OK"
     fila["out_vars"], fila["out_clauses"] = cabecera(out)
@@ -134,6 +141,10 @@ def main():
     ap.add_argument("--satsuma", default=os.path.join(ROOT, "tools", "satsuma"))
     ap.add_argument("--timeout", type=float, default=60)
     ap.add_argument("--maxbytes", type=int, default=536870912)
+    ap.add_argument("--mem-gb", type=float, default=6,
+                    help="tope de memoria virtual de satsuma (RLIMIT_AS); 0 = sin tope. "
+                         "La máquina local tiene 15 GB: sin tope, una instancia grande "
+                         "puede agotarla (incidencia del 2026-09-24)")
     args = ap.parse_args()
 
     insts = []
@@ -161,7 +172,8 @@ def main():
                 sys.exit("ABORTO: el binario de satsuma cambió durante la tanda")
             tmp = tempfile.mkdtemp(prefix="scan-symm.")
             try:
-                fila = escanear(args.satsuma, cnf, tmp, args.timeout, args.maxbytes)
+                fila = escanear(args.satsuma, cnf, tmp, args.timeout, args.maxbytes,
+                                int(args.mem_gb * (1 << 30)))
             finally:
                 shutil.rmtree(tmp, ignore_errors=True)
             fila.update(instance=nombre, family=os.path.basename(os.path.dirname(cnf)),

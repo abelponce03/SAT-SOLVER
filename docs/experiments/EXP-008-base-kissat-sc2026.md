@@ -145,6 +145,23 @@ python3 scripts/analyze_speedup.py results/exp008/A.csv results/exp008/B.csv
     comando de §7, ahora a través de `scripts/reanudar_experimentos.sh`
     (idempotente **dentro de una misma máquina**, con guarda de SHA-1).
 
+- **2026-09-24, máquina local (i5-1135G7, 4 núcleos, 15 GB).**
+  - Relanzado de cero a las 19:17 UTC con el binario recompilado desde
+    `495512f` (SHA-1 `28b587cf…`), satsuma y `kissat-sc2026` bajados con
+    `get_tools.sh` y los bancos calib y calib2 bajados de GBD por hash.
+  - **Caída por falta de RAM** hacia las 19:25 UTC, con 3 parejas escritas. Se
+    solaparon la tanda, la parte 1 de EXP-014 (satsuma), un `make -j8` y una
+    prueba de un prototipo de VSA con un fallo que pedía memoria sin control
+    (ver commit `237c426`). El sistema mató todos los procesos en segundo
+    plano.
+  - Se reanuda con `--resume` **en la misma máquina** (lo permite §8 y el
+    guion): las 3 parejas completas se conservan, y la cuarta, a medias, no
+    llegó a escribirse. La carga concurrente pudo afectar a esas 3 parejas;
+    el diseño intercalado reparte ese efecto entre las dos ramas, y se anota
+    por transparencia.
+  - Desde entonces la tanda corre **sola**: un proceso pesado a la vez y
+    satsuma con tope de memoria.
+
 ## 9. Resultados
 
 _Pendiente._

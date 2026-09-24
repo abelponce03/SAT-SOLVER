@@ -119,7 +119,15 @@ python3 scripts/exp014_simetrias.py analizar
 
 ## 7. Incidencias de ejecución
 
-(vacío)
+- **2026-09-24, parte 1.** Lanzada a las 19:18 UTC en paralelo con EXP-008,
+  como fija §3.1. Hacia las 19:25 UTC la máquina se quedó sin RAM (ver EXP-008
+  §8) con 157 instancias escritas.
+  - Se reanuda sola, sin EXP-008 en paralelo, porque el guion salta las ya
+    registradas y la medida es de satsuma.
+  - Se añade `--mem-gb` (6 GB por defecto, `RLIMIT_AS`) para que una
+    instancia grande no pueda agotar la máquina. Si satsuma se queda sin
+    memoria, la instancia sale como `FALLO`: en `labesat` no hay tope, así
+    que cada `FALLO` se revisa a mano.
 
 ## 8. Resultados
 
