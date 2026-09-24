@@ -5,6 +5,21 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-09-24): banco industrial de la tesis
+- `scripts/build_thesis_bench.py` integra las 1917 instancias industriales de
+  la tesis del director (fuera del repositorio) y los resultados de Kissat
+  sobre 955 de ellas (3 semillas, T = 800 s):
+  - `bench/tesis.list.csv`: partición **dev (450) / test (427)**, estratificada
+    por familia y dificultad y fijada antes de correr nada; 871 instancias de
+    reserva sin referencia y 169 excluidas por `.xz` truncado;
+  - `results/tesis-kissat.reference.csv`: las 2865 corridas de Kissat.
+- Detalle y cautelas en `bench/README.md`.
+
+### Arreglado (2026-09-24): `get_tools.sh` compila `satsuma-mclique-v1`
+- EXP-011 parte 1 y EXP-010 parte 2 necesitan el binario de mclique v1, que
+  solo existía en la sesión de nube. Ahora se reconstruye desde el commit que
+  lo introdujo (`0b4ec1f`), en un árbol aparte.
+
 ### Cambiado (2026-09-23): los experimentos pasan a ejecutarse en local
 - A partir de ahora, todos los experimentos se lanzan en el entorno local del
   director, no en el hardware de las sesiones de nube.
