@@ -31,6 +31,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
+| D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | 🟡 opción conservadora en marcha: calibrar (EXP-013) y decidir features solo con A/B local | Director | §D-017 · EXP-013 |
 
 ---
 
@@ -194,3 +195,32 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   - La fase 1 está implementada: `configure --symmetry` y la opción
     `--symmetry`, apagada por defecto.
   - Su equivalencia con la tubería se valida en EXP-012.
+
+## D-017 — Cómo comparar LabeSAT con el Kissat de la tesis
+
+- **Surge**: el 2026-09-24. El director aporta los resultados de Kissat de su
+  tesis (955 instancias, 3 semillas, T = 800 s) y pide comparar LabeSAT con
+  ellos sin volver a correr Kissat.
+- **Hechos medidos en la sesión**:
+  - la tesis corrió en dos equipos (`pc1`: argumentation, bitvector,
+    cryptography y station-repacking; `pc2`: el resto); esta máquina es un
+    portátil i5-1135G7;
+  - con la misma semilla, Kissat 4.0.4 reproduce los conflictos de la tesis en
+    1 de 8 instancias del sondeo: la tesis usó **otra 4.0.x**;
+  - la tesis mide tiempo de reloj con la descompresión incluida.
+- **Opciones**:
+  - **a.** Tomar los tiempos de la tesis tal cual como brazo A. Barato, pero
+    mezcla máquina, versión y LabeSAT: no es defendible.
+  - **b. (en marcha)** Calibrar con EXP-013 (54 instancias, ≈ 100 min): la
+    tesis queda como referencia externa escalada por un factor con IC, y las
+    decisiones sobre features se toman con A/B intercalado en esta máquina.
+  - **c.** Volver a correr Kissat 4.0.4 sobre todo el banco en esta máquina.
+    Es la comparación limpia, pero cuesta días de cómputo y el director pidió
+    evitarlo.
+- **Recomendación**: b. LabeSAT por defecto hace hoy la misma búsqueda que
+  Kissat 4.0.4, así que la rama A de cada A/B **es** ya el Kissat de esta
+  máquina, sin coste añadido.
+- **Preguntas para el director** (cambian el alcance de la calibración):
+  1. ¿Qué versión exacta de Kissat usó la tesis (paquete, commit o
+     `kissat --version`)?
+  2. ¿Qué CPU tenían `pc1` y `pc2`, y cuántas corridas iban en paralelo?
