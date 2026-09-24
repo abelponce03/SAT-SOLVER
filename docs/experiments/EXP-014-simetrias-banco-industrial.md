@@ -131,4 +131,36 @@ python3 scripts/exp014_simetrias.py analizar
 
 ## 8. Resultados
 
-(pendiente)
+### 8.1 Parte 1 (cerrada el 2026-09-24): H1
+
+Datos: `results/exp014/satsuma.csv` (450 instancias, satsuma `9881df0f…`).
+
+| Familia | n | OK | Tope de 60 s | CNF > 512 MiB | **Cambia** (añade ruptura) | Tiempo de satsuma (mediana; máximo) |
+|---|---:|---:|---:|---:|---:|---|
+| argumentation | 48 | 48 | 0 | 0 | 3 | 0,02 s; 2,2 s |
+| bitvector | 48 | 48 | 0 | 0 | 3 | 0,42 s; 10,5 s |
+| cryptography | 56 | 56 | 0 | 0 | 2 | 0,20 s; 6,5 s |
+| hardware-verification | 45 | 44 | 1 | 0 | 29 | 1,54 s; 60 s |
+| miter | 60 | 60 | 0 | 0 | 29 | 0,14 s; 28,0 s |
+| planning | 47 | 44 | 2 | 1 | 25 | 0,24 s; 60 s |
+| scheduling | 58 | 55 | 3 | 0 | 31 | 0,82 s; 60 s |
+| software-verification | 33 | 28 | 4 | 1 | 16 | 3,58 s; 60 s |
+| station-repacking | 55 | 55 | 0 | 0 | **55** | **39,1 s**; 48,6 s |
+| **Total** | **450** | **438** | **10 (2,2 %)** | **2** | **193 (43 %)** | 0,49 s; media 6,8 s |
+
+- **H1**: satsuma añade predicados de ruptura en el **43 %** de las
+  instancias industriales de dev, muchas más de las que sugería el estrato N
+  de EXP-007. En station-repacking, en **todas**: mediana de 1067
+  generadores y 736 unidades, a un coste de ~39 s cada una.
+- **Tope**: 10 instancias (2,2 %) lo agotan, por debajo del umbral del 10 %
+  de §4. No hace falta medir los topes aparte antes de la parte 2.
+- **Amenaza de la carga concurrente (§6)**: ninguna instancia terminó entre
+  50 y 60 s, así que la carga no pudo mover ninguna de `OK` a `TOPE`.
+- **|S| = 193 > 80**: la parte 2 toma 80, estratificadas por familia (§3.2).
+- **Observación no prevista en el preregistro**: en **222** instancias con
+  `cambia` = 0, satsuma **reescribe** la fórmula (cambia el número de
+  cláusulas; p. ej., duplicados o unidades). Los controles de la parte 2 se
+  eligen, como estaba fijado, entre las que no cambian el número de cláusulas.
+  Por eso la estimación del §5 («fuera de S, solo el coste de satsuma») **no
+  está cubierta** para esas 222. Se informará con esa salvedad, y no se
+  cambia el diseño.
