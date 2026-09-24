@@ -143,6 +143,8 @@ vigente es el del plan.
 
 ### Fase 3b — Banco industrial de la tesis y líneas de los ganadores · desde 2026-09-24
 
+Épica: #30 (EXP-013 #25, EXP-014 #26, EXP-015 #27, D-017 #28, D-018 #29).
+
 - [x] Banco de la tesis integrado: 450 dev / 427 test / 871 reserva / 169
       excluidas (`bench/tesis.list.csv`), con la referencia de Kissat.
 - [x] research/07: ganadores 2021–2026. **B2 retirada** (era satsuma + MAB);
