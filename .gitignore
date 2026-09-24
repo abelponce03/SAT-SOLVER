@@ -54,6 +54,9 @@ bench/calib2/
 bench/boundary/
 bench/symm2026/
 bench/symm2026-grandes/
+# Banco industrial de la tesis: enlaces a ../benchmark (build_thesis_bench.py --links)
+bench/tesis-dev/
+bench/tesis-test/
 
 # --- LaTeX (los PDF los compila CI; ADR-0006) ---
 docs/**/*.aux

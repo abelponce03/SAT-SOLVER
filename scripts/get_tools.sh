@@ -110,6 +110,32 @@ else
     echo "== satsuma-mclique ya está"
 fi
 
+# mclique v1 (sin presupuesto de trabajo): el binario de EXP-010, que EXP-011
+# parte 1 compara con v2.  Se reconstruye desde el commit que lo introdujo, en
+# una copia aparte del árbol de satsuma para no pisar el build de v2.
+MCLIQUE_V1_REV=0b4ec1f
+if [ ! -x satsuma-mclique-v1 ]; then
+    echo "== satsuma ${SATSUMA_REV:0:7} con mclique v1 (commit $MCLIQUE_V1_REV, EXP-010)"
+    rm -rf satsuma-src-v1 && cp -r satsuma-src satsuma-src-v1
+    rm -rf satsuma-src-v1/src/cliquer satsuma-src-v1/build-mclique
+    mkdir -p satsuma-src-v1/src/cliquer
+    git -C "$ROOT" ls-tree -r --name-only "$MCLIQUE_V1_REV" solver/mclique |
+        grep -E '^solver/mclique/(mclique\.[ch]|satsuma/[^/]+)$' | while read -r f; do
+            git -C "$ROOT" show "$MCLIQUE_V1_REV:$f" > "satsuma-src-v1/src/cliquer/$(basename "$f")"
+        done
+    if grep -qil 'general public license' satsuma-src-v1/src/cliquer/*; then
+        echo "   ERROR: src/cliquer de v1 no es de mclique" >&2; exit 1
+    fi
+    cmake -S satsuma-src-v1 -B satsuma-src-v1/build-mclique -DCMAKE_BUILD_TYPE=Release \
+        -DCLIQUES=ON -DFETCHCONTENT_SOURCE_DIR_DEJAVU="$PWD/satsuma-src-v1/src/dejavu" \
+        >/dev/null
+    nice -n 10 cmake --build satsuma-src-v1/build-mclique -j "$JOBS" >/dev/null
+    cp satsuma-src-v1/build-mclique/satsuma satsuma-mclique-v1
+    echo "   tools/satsuma-mclique-v1 listo"
+else
+    echo "== satsuma-mclique-v1 ya está"
+fi
+
 if [ ! -x dsr-trim ]; then
     echo "== dsr-trim ${DSRTRIM_REV:0:7}"
     fetch_rev dsr-trim-src "$DSRTRIM_URL" "$DSRTRIM_REV"
