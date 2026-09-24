@@ -6,7 +6,8 @@ verifica contra la CNF ORIGINAL.
 
   - SAT:   se reejecuta `labesat` y el modelo se comprueba con verify_model.py.
   - UNSAT: si la rama la resolvió en <= --max-solve s, se reejecuta escribiendo
-           la prueba y dsr-trim la verifica (tope --check-timeout por prueba).
+           la prueba y la verifican los dos dsr-trim, el actual y el de la
+           SAT Competition 2026 (tope --check-timeout por prueba y verificador).
 
 Salida: CSV con instance,status,verificacion (OK / FALLO / TOPE / SALTADA) y un
 resumen.  Código de salida 1 si hay algún FALLO.
@@ -27,7 +28,10 @@ from run_experiment import find_instances  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LABESAT = os.path.join(ROOT, "solver", "labesat")
-DSR = os.path.join(ROOT, "tools", "dsr-trim")
+# La prueba tiene que pasar con los DOS verificadores: el actual y el commit
+# exacto que usó la SAT Competition 2026 (el que se tiene sin descargar se omite
+# y se avisa).
+DSRS = [os.path.join(ROOT, "tools", d) for d in ("dsr-trim", "dsr-trim-sc2026")]
 VERIFY = os.path.join(ROOT, "scripts", "verify_model.py")
 
 
@@ -53,6 +57,9 @@ def main():
     ap.add_argument("--check-timeout", type=int, default=1800)
     args = ap.parse_args()
 
+    faltan = [d for d in DSRS if not os.access(d, os.X_OK)]
+    if faltan:
+        sys.exit(f"ABORTADO: falta el verificador {faltan} (scripts/get_tools.sh)")
     rows = list(csv.DictReader(open(args.csv_b)))
     rutas = {os.path.basename(i): i for b in args.bench for i in find_instances(b)}
     res, cuenta = [], {}
@@ -83,9 +90,12 @@ def main():
                 else:
                     cnf = plain_cnf(inst, tmp)
                     try:
-                        p = subprocess.run([DSR, cnf, proof], capture_output=True, text=True,
-                                           timeout=args.check_timeout)
-                        ok = any(l.startswith("s VERIFIED") for l in p.stdout.splitlines())
+                        ok = True
+                        for dsr in DSRS:
+                            p = subprocess.run([dsr, cnf, proof], capture_output=True,
+                                               text=True, timeout=args.check_timeout)
+                            ok &= any(l.startswith("s VERIFIED")
+                                      for l in p.stdout.splitlines())
                         ver = "OK" if ok else "FALLO"
                     except subprocess.TimeoutExpired:
                         ver = "TOPE"

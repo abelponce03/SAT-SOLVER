@@ -26,6 +26,15 @@ escribe en ese fichero una prueba de insatisfacibilidad en formato SR
 .BR dsr\-trim .
 Si satsuma falla, se pasa de tiempo o la entrada es demasiado grande,
 resuelve la fórmula original solo con kissat, y la prueba es DRAT.
+.PP
+El binario de Kissat compilado con
+.B "configure \-\-symmetry"
+hace lo mismo sin este guion:
+.B "kissat \-\-symmetry"
+.I cnf
+.RI [ prueba ]
+ejecuta satsuma dentro del propio binario, con los mismos topes y el mismo
+respaldo (ADR\-0007).
 .SH OPCIONES
 .TP
 .B \-\-symmetry
@@ -46,6 +55,11 @@ Cualquier opción que empiece por \- se pasa a kissat (p. ej.
 .BR \-n ,
 .BR \-q ,
 .BR \-\-seed=\fIS\fP ).
+Opciones experimentales de LabeSAT, apagadas por defecto:
+.B \-\-vivifyactivity=1
+(vivificación programada por actividad, en evaluación en EXP-015) y
+.B \-\-modeadaptive=1
+(A4.1, cerrada sin efecto en EXP-006).
 .B labesat \-\-id
 y
 .B labesat \-\-version

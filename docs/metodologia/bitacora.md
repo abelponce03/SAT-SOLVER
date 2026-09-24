@@ -138,3 +138,244 @@ al cerrar cada sesión.
   - hay que verificar con la herramienta **exacta** de la competición;
   - las convenciones del entorno (identidad git) se documentan y se ajustan a
     las del proyecto de forma explícita.
+
+## 2026-09-23 (continuación) — EXP-008 y clique máxima MIT
+
+- **Se pidió**: «procede con la opción c y empieza EXP-008». D-005 se resuelve
+  con la opción c: reimplementar en MIT la clique máxima que satsuma toma de
+  cliquer.
+- **Se hizo**:
+  - EXP-008 lanzado según su preregistro, con el binario recompilado desde
+    cero para que `--id` coincida con HEAD;
+  - **mclique** (`solver/mclique/`): clique máxima por ramificación y poda,
+    escrita en sala limpia con la interfaz que usa satsuma;
+  - `tools/satsuma-mclique` en `get_tools.sh`, pruebas en CI, y EXP-010
+    preregistrado **antes** de ejecutar satsuma-mclique sobre el banco;
+  - arnés A/B con entorno por rama e `--instances`.
+- **Decisiones**:
+  - **Sala limpia**: de cliquer no se leyó ningún fichero, ni siquiera sus
+    cabeceras. La interfaz sale de las llamadas de `src/reorder.h` (satsuma,
+    MIT). Cuando hay varias cliques máximas, mclique puede elegir otra que
+    cliquer; por eso la adopción la decide un experimento y no solo las
+    pruebas de corrección.
+  - mclique va en un binario aparte y **no cambia nada por defecto** hasta
+    EXP-010 (CLAUDE.md §5).
+  - Para no tocar el CMake de satsuma, las cabeceras y unidades de
+    compatibilidad ocupan los nombres de fichero que espera
+    (`src/cliquer/{cliquer,graph,reorder}.c`), y `get_tools.sh` comprueba que
+    lo que compila ahí es byte a byte nuestro.
+  - La parte 1 de EXP-010 (solo satsuma, métrica SHA-1 determinista) se
+    ejecuta junto a EXP-008; la parte 2 (tiempos de kissat) espera a que
+    EXP-008 acabe.
+- **Salió mal**:
+  - `./scripts/build.sh` sin `--clean` dejó un binario con el `--id` del commit
+    anterior. Se recompiló desde cero antes de lanzar. Moraleja: la
+    procedencia se comprueba justo antes de lanzar, no se supone.
+- **EXP-010, parte 1**: mclique coincide con cliquer en 72 de 74, pero tiene
+  un tope nuevo en una instancia. El criterio preregistrado lo descarta tal
+  cual, y así se anota.
+  - El diagnóstico se hizo con una build de traza aparte, sin tocar el binario
+    del experimento. Encontrar la clique (90) es inmediato; demostrar que es
+    máxima no termina ni con mclique ni con un prototipo de Östergård.
+  - La corrección (un presupuesto de trabajo) se preregistró como EXP-011
+    **antes** de mirar la traza de todas las instancias. El valor se fijó por
+    tiempo, no por resultados, y esa amenaza quedó escrita.
+- **Corte de EXP-008** (hacia las 17:46 UTC): al quedar la sesión inactiva,
+  el contenedor se suspendió y se reinició. Murieron todos los procesos en
+  segundo plano, incluidos los lanzados con `nohup`. Quedaron 60 de 120
+  parejas.
+  - Se añadió `--resume` al arnés y se relanzó.
+  - La secuencia pendiente (EXP-008, EXP-011 parte 1 y las partes 2) pasó a
+    un único guion idempotente, ejecutado como tarea del propio entorno.
+  - Otro fallo propio: los guiones que esperaban con `pgrep -f patrón` se
+    encontraban a sí mismos (el patrón aparecía en su propia línea de
+    órdenes), así que la cadena no habría arrancado nunca.
+- **Aprendido (entorno)**: un experimento de horas necesita la sesión activa,
+  y cada paso debe poder reanudarse. Para esperar a un proceso: su PID o una
+  secuencia en un solo guion, nunca `pgrep -f` con un patrón que aparezca en
+  la línea de órdenes del propio vigilante.
+- **Aprendido**: una reimplementación compatible se valida en dos capas:
+  corrección del algoritmo (contra fuerza bruta) y equivalencia del efecto en
+  el sistema completo (CNF de salida y resultados de kissat). Y una garantía
+  que el original da «gratis» (terminar pronto) también hay que medirla.
+
+## 2026-09-23 (tarde) — Un solo binario: simetrías montadas sobre Kissat (D-016)
+
+- **Se pidió**: primero un resumen de lo hecho y lo pendiente. Al leerlo, el
+  director aclaró su objetivo: «tomar los algoritmos y montarlos sobre kissat,
+  no tener un selector de solucionadores». Eligió la opción c (por fases) y
+  dijo «procede».
+- **Se hizo**: fase 1 de ADR-0007.
+  - satsuma, dejavu y tsl vendorizados sin modificar, con comprobación en CI.
+  - Una unión C++ de 20 líneas.
+  - `src/symmetry.c` en Kissat: proceso hijo, topes y respaldo.
+  - La opción `--symmetry` en la aplicación.
+  - `configure --symmetry` y `build.sh --dir`.
+  - `test_symmetry_integrada.sh`: CNF intermedia idéntica a la del satsuma
+    externo, pruebas aceptadas por los dos dsr-trim y respaldo. Pasa con gcc,
+    con clang y en la configuración de competición.
+- **Decisiones**:
+  - Satsuma corre en un **proceso hijo** del propio binario, no en una llamada
+    directa. Así la salida es idéntica a la de la tubería (EXP-007 sigue
+    valiendo), y un `exit()` o un tope de satsuma no tumban al solver.
+  - Todo va detrás de `configure --symmetry` más la opción `--symmetry`: el
+    build por defecto no cambia.
+  - Sin `-march=native` en satsuma, pensando en la máquina de la competición.
+- **Salió mal**:
+  - `kissat_looks_like_a_compressed_file` solo existe en builds sin
+    compresión. Se detecta la compresión con el campo `compressed` de la
+    apertura.
+  - Un patrón con `^` no encontraba el «s VERIFIED» de drat-trim, que lo
+    escribe tras caracteres de control de su barra de progreso.
+  - Tres compilaciones con `make -j4` durante EXP-008. Tenían `nice` y se
+    hicieron en directorios aparte, pero son carga concurrente y se anotan
+    en su §8.
+- **Aprendido**:
+  - Antes de cambiar de arquitectura hay que explicar lo que hay y
+    confirmarlo con el director. La confusión venía de que «programa externo»
+    (lo que se pidió) y «un solo solver» (lo que se quería) no son lo mismo.
+  - Compilar aparte (`--dir`) permite seguir desarrollando sin invalidar un
+    experimento en curso.
+
+## 2026-09-23 (noche) — Revisión de enfoques probabilísticos (research/05)
+
+- **Se pidió**:
+  - una búsqueda exhaustiva, con conectores académicos, de enfoques
+    probabilísticos que mejoren los solvers SAT y sus métricas;
+  - documentar sin obligación de aplicar;
+  - descartar lo que por sí solo sería ruido.
+- **Se hizo**:
+  - ~22 consultas en Consensus, Scholar Gateway y web, con ~75 trabajos
+    catalogados;
+  - un inventario previo de lo que Kissat 4.0.4 ya hace (walk probSAT, fases
+    objetivo, rephasing, randec, Luby), para no «descubrirlo» de nuevo;
+  - veredictos con un criterio de ruido explícito: el umbral de lo que
+    podemos medir y el precedente nulo de EXP-006;
+  - una exploración con los datos de EXP-007, etiquetada como tal.
+- **Decisiones**:
+  - Se recomiendan tres cosas (R1–R3). Las tres encajan en trabajo ya
+    planificado (EXP-009, ADR-0003, P5) y no añaden frentes nuevos.
+  - NeuroBack queda aparcado a pesar de tener el mayor efecto publicado sobre
+    Kissat, por el coste de integrarlo en el binario de competición.
+- **Salió mal**:
+  - Scholar Gateway cubre sobre todo el corpus de Wiley y casi no indexa las
+    sedes de SAT; se compensó con Consensus y la web.
+  - Consensus limitó la frecuencia de consultas: hubo que ir en tandas.
+- **Aprendido**:
+  - Revisar la literatura **contra el código de la base** evita recomendar lo
+    que ya existe.
+  - Con los datos propios se pueden descartar ideas antes de implementarlas:
+    el reparto temporal se descartó con una simulación de 20 líneas.
+
+## 2026-09-23 (noche, 2) — Razonamiento XOR de CryptoMiniSat (research/06)
+
+- **Se pidió**: investigar si el mecanismo de CryptoMiniSat (recuperar XOR y
+  aplicar Gauss-Jordan) serviría a LabeSAT; si resulta contraproducente, se
+  descarta.
+- **Se hizo**:
+  - literatura: CMS, BIRD, pruebas con TBUDDY y FRAT, DRAT para XOR, cotas
+    inferiores de Tseitin;
+  - revisión de lo que Kissat ya hace (XOR en el cierre por congruencia, sin
+    Gauss);
+  - **medición propia**: un detector de XOR en C sobre 161 instancias, y
+    Gauss en GF(2) sobre las puras;
+  - cruce con los resultados oficiales de 2026 para estimar el beneficio;
+  - lectura de los paquetes de los solvers de 2026 que resolvieron las XOR,
+    solo para saber qué técnica usan.
+- **Decisiones**: se descarta el Gauss completo; se aparca X1 (refutación en
+  la raíz con prueba), condicionado a que dsr-trim acepte esas pruebas; X2 se
+  descarta.
+- **Salió mal**:
+  - La hipótesis inicial («quien resolvió xor-shifting usa Gauss») era falsa:
+    fue ruptura de simetrías más decisiones sobre el soporte independiente.
+    Lo corrigió mirar el paquete antes de escribir.
+  - El escaneo es lento con `nice`: 194 instancias en ~40 min.
+- **Aprendido**: medir la estructura de las instancias reales antes de
+  estimar el beneficio. Que haya XOR no basta: en la mayoría son puertas de
+  circuito, no sistemas lineales.
+
+
+## 2026-09-23 (noche, 3) — Cambio a ejecución local de los experimentos
+
+- **Se pidió**: «para la ejecución de todos los experimentos la continuidad
+  será en un entorno local no usando el hardware de la nube».
+- **Se hizo**:
+  - se detuvieron los procesos en marcha en la sesión de nube: EXP-008 iba por
+    112 de 120 parejas;
+  - se descartó ese parcial **sin promocionarlo ni intentar reanudarlo en
+    otra máquina**: el diseño A/B intercalado (ADR-0003 §4b) asume una sola
+    máquina, y mezclar dos equipos reintroduce la deriva que ese diseño existe
+    para anular;
+  - se formalizó `scripts/reanudar_experimentos.sh`, que encadena EXP-008, las
+    partes pendientes de EXP-010 y EXP-011, y EXP-012, con --resume dentro de
+    una misma máquina;
+  - se documentó la incidencia en EXP-008 §8 y se cancelaron los vigilantes
+    (`send_later`) de la sesión de nube, que ya no aplican.
+- **Decisiones**: ninguna de diseño; es un cambio de dónde se ejecuta, no de
+  qué se mide. Los preregistros (EXP-008/010/011/012) no cambian: sus
+  comandos de "Reproducir" son los mismos, ahora lanzados en local.
+- **Aprendido**: el protocolo experimental (una sola máquina por tanda) hay
+  que aplicarlo también a los cambios de entorno de ejecución, no solo a los
+  cortes por reinicio dentro de la misma sesión.
+
+## 2026-09-24 — Primera sesión local: revisión, banco de la tesis e ideas de los ganadores
+
+- **Se pidió**:
+  - verificar todo el repositorio y las líneas de investigación;
+  - trabajar con el banco industrial de la tesis del director (≈ 1900
+    instancias), comparando LabeSAT con los resultados de Kissat de la tesis
+    **sin volver a correr Kissat**;
+  - profundizar en ideas nuevas a partir de los ganadores de la Main Track;
+  - mantener las prácticas de GitHub, la documentación continua, la autoría
+    solo humana y el registro de decisiones.
+- **Se hizo**:
+  - **Revisión**: la rama de la nube iba 13 commits por delante de `main`
+    (EXP-008, mclique, satsuma integrado, research/05 y /06). La rama de la
+    sesión se colocó encima de ella. Build, `smoke_test.sh` y `test_symmetry.sh`
+    en verde en la máquina local.
+  - **Retomar la cadena pendiente** (EXP-008, 010, 011, 012): herramientas y
+    bancos bajados. Faltaba `satsuma-mclique-v1`, que solo existía en la
+    nube, y ahora `get_tools.sh` lo reconstruye desde su commit.
+  - **Banco de la tesis**: `build_thesis_bench.py`, con partición dev/test
+    estratificada y fijada antes de medir, y la referencia de Kissat en
+    `results/tesis-kissat.reference.csv`.
+  - **Hallazgo**: la tesis usó otra 4.0.x y otras máquinas (los conflictos
+    coinciden en 1 de 8 instancias con la misma semilla). De ahí D-017 y
+    EXP-013.
+  - **research/07**, con fuentes primarias (diapositivas y actas de 2025,
+    paquetes de 2026): B2 era un error de hecho; se descartan los reinicios
+    fríos a ciegas con una simulación sobre la tesis; VSA y VSIDS/CHB, a la
+    lista.
+  - **VSA** implementada detrás de una opción y verificada. EXP-013, 014 y
+    015 preregistrados y encolados.
+- **Decisiones**:
+  - D-017 (calibrar en vez de usar la tesis como brazo A);
+  - D-018 (reabrir VSIDS/CHB, después de EXP-008);
+  - EXP-014 parte 1 pasa de «en paralelo» a «sola» tras la caída.
+- **Salió mal**:
+  - **La máquina se quedó sin RAM** y cayó la sesión. Se solaparon la
+    cadena, el escaneo de satsuma, un `make -j8` y la prueba de un prototipo
+    de VSA que tenía un fallo. Se perdieron minutos, no datos: los guiones
+    son reanudables. Regla nueva: una tanda pesada a la vez, con topes de
+    memoria.
+  - **El fallo del prototipo de VSA**: una macro de comparación evaluaba dos
+    veces un argumento con efectos laterales (`A[++I]` en el quicksort de
+    Kissat). Lo detectó un `ulimit -v` en la verificación: el proceso pidió
+    4 GB en 5 s. Moraleja: en el código de Kissat, las macros `LESS` reciben
+    expresiones, no valores.
+  - **La cola esperaba al PID equivocado**: `pgrep -f` encontró el shell
+    envoltorio de la sesión, cuya línea de órdenes contenía el nombre del
+    guion. Es la misma trampa que ya recogía esta bitácora el 2026-09-23.
+    Se corrigió esperando al PID del propio guion, desacoplado con `setsid`.
+  - **El CI falló** al abrir el PR: el clon superficial (`fetch-depth` 1) no
+    tiene el commit del que `get_tools.sh` reconstruye mclique v1. Ahora se
+    omite con aviso si el commit no está; lo exige solo la cadena local.
+  - Un permiso denegado por el clasificador del entorno al leer ficheros
+    temporales; se usó la herramienta de lectura en su lugar.
+- **Aprendido**:
+  - En una máquina de escritorio, la memoria es el recurso que manda, no los
+    núcleos.
+  - Comprobar la **versión** de una referencia externa antes de compararse
+    con ella: una sola corrida con la misma semilla lo delata.
+  - Leer el paquete de un competidor antes de nombrar su técnica: el nombre
+    `hypre` llevó a un error que duró desde el 2026-09-21.

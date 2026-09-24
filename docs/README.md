@@ -29,7 +29,7 @@ workflow.
 | [`ROADMAP.md`](ROADMAP.md) | Fases hasta la SAT Competition 2027 |
 | [`plan/plan-main-track-2027.md`](plan/plan-main-track-2027.md) | **Plan vigente**: Main Track con declaración honesta; hitos H1–H11 |
 | [`competicion/declaracion-ia.md`](competicion/declaracion-ia.md) | Registro vivo de la declaración de IA (cifras con `scripts/declaracion_ia.sh`) |
-| [`adr/`](adr/) | Decisiones de diseño (ADR-0001 a ADR-0006) |
+| [`adr/`](adr/) | Decisiones de diseño (ADR-0001 a ADR-0007; la 0007 integra la ruptura de simetrías en Kissat) |
 | [`decisiones/registro.md`](decisiones/registro.md) | Decisiones abiertas y resueltas (D-NNN) |
 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Cómo se trabaja: flujo, ramas, commits, autoría |
 | [`../CHANGELOG.md`](../CHANGELOG.md) | Cambios por hito |
@@ -42,8 +42,12 @@ workflow.
 | [`research/01`](research/01-analisis-empirico-sc2026.md) | Análisis de los resultados oficiales de 2026 |
 | [`research/02`](research/02-catalogo-de-ideas.md) | Catálogo de ideas y su estado |
 | [`research/03`](research/03-coste-de-mantener-mit.md) | Coste de mantener MIT (satsuma sin cliques) |
+| [`research/06`](research/06-razonamiento-xor.md) | Razonamiento XOR / Gauss-Jordan (CryptoMiniSat): estructura XOR medida en 161 instancias, estimación sobre 2026 y veredicto |
+| [`research/05`](research/05-enfoques-probabilisticos.md) | Enfoques probabilísticos para SAT: revisión de ~75 trabajos, recomendaciones R1–R3 y descartes por ruido |
 | [`research/04`](research/04-decisiones-pendientes.md) | Investigación de las decisiones pendientes del autor |
-| [`experiments/`](experiments/) | EXP-001 a EXP-007: hipótesis antes de medir, resultados después |
+| [`research/07`](research/07-ganadores-y-banco-tesis.md) | Ganadores 2021–2026 (fuentes primarias), corrección de B2, lo que dice el banco de la tesis y líneas nuevas (VSA, VSIDS/CHB) |
+| [`../bench/README.md`](../bench/README.md) | Bancos de instancias, incluido el banco industrial de la tesis y sus particiones |
+| [`experiments/`](experiments/) | EXP-001 a EXP-008 y EXP-010 a EXP-015 (EXP-013 a 015, sobre el banco de la tesis): hipótesis antes de medir, resultados después |
 
 ## Metodología (desarrollo asistido por IA)
 

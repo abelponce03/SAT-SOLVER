@@ -44,11 +44,14 @@ partir de las instancias de 2026 (EXP-007 §4), y se dice así en cada informe.
 
 | # | Palanca | Evidencia hasta hoy | Coste | Decisión o experimento |
 |---|---|---|---|---|
-| **P1** | Ruptura de simetrías (satsuma MIT) | **EXP-007 (cerrado)**: H 37/45 frente a 8/45 (p = 8·10⁻¹⁰); **en N ralentiza 1.42×**; estimación de −90 s. Veredicto: **solo condicional** | Hecho | Opcional (`--symmetry`) hasta P2 |
-| **P2** | **Activación condicional** (B3). **Prioridad n.º 1 tras EXP-007** | El oráculo valdría −322 s extra (research/01). EXP-007: el coste en N viene de la búsqueda de kissat sobre la fórmula modificada, no del tiempo de satsuma. El criterio debe predecir si la ruptura **ayuda** | Medio | EXP-009, preregistrado |
+| **P1** | Ruptura de simetrías (satsuma MIT) | **EXP-007 (cerrado)**: H 37/45 frente a 8/45 (p = 8·10⁻¹⁰); **en N ralentiza 1.42×**; estimación de −90 s. Veredicto: **solo condicional** | Hecho. **Integrada en el binario de Kissat** (D-016, ADR-0007, fase 1) | Opcional (`--symmetry`) hasta P2; equivalencia en EXP-012 |
+| **P2** | **Activación condicional** (B3). **Prioridad n.º 1 tras EXP-007**. Diseño: decisión probabilística calibrada con regla de coste esperado (research/05, R1) | El oráculo valdría −322 s extra (research/01). EXP-007: el coste en N viene de la búsqueda de kissat sobre la fórmula modificada, no del tiempo de satsuma. El criterio debe predecir si la ruptura **ayuda** | Medio | EXP-009, preregistrado |
 | **P3** | Cliques en MIT (reimplementar la clique máxima) | **Medido**: sin cliques quedan sin resolver 6 instancias de H que con cliques caen en < 2 s (≈ −29 s de PAR-2 en el banco de EXP-007) | 1–2 días | D-005 (#9) |
 | **P4** | **Base Kissat sc2026** en lugar de 4.0.4 | sc2026 (sin publicar, MIT) quedó 16.º en solitario. No se sabe si mejora a 4.0.4 | Portar ~105 líneas activas (`scripts/declaracion_ia.sh`) | **EXP-008** → D-013 |
-| **P5** | Topes de satsuma (tiempo y tamaño) | Provisionales, 60 s y 512 MiB | Bajo | Se fijan con los datos de EXP-007 y EXP-009. Se **declaran** como heurística ajustada con asistencia de IA |
+| **P5** | Topes de satsuma (tiempo y tamaño) | Provisionales, 60 s y 512 MiB. **Más peso desde research/07**: los tres primeros de 2026 llevan satsuma y se separan por su configuración; en station-repacking satsuma gasta 35–50 s | Bajo | Se fijan con EXP-007, **EXP-014** y EXP-009. Se **declaran** como heurística ajustada con asistencia de IA |
+| **P6** | **VSA**: vivificación programada por actividad (2.º en UNSAT de 2025) | Implementada detrás de `vivifyactivity` (apagada); búsqueda idéntica con 0 y pruebas verificadas con 1 | Hecho (~60 líneas) | **EXP-015** preregistrado |
+| **P7** | Bandido VSIDS/CHB (Kissat_MAB; 1.º en 2021, 2022 y 2025) | research/07 §4; research/05 lo había aparcado | Medio | **D-018**: candidata a V3, solo después de EXP-008 |
+| — | ~~B2, hiper-resolución binaria~~ | Error de hecho: `kissat-mab-hypre` es satsuma + Kissat_MAB (research/07 §2.1) | — | **Retirada** |
 | — | ~~A4.2 (más brazos)~~ | A4.1 no tuvo efecto (EXP-006) | — | **Descartada**: la fase 3 original desaparece |
 
 ## 4. Variantes a presentar (hasta 4 solvers secuenciales por participante)
@@ -92,6 +95,7 @@ respalde. **No se presenta nada sin medir.**
 | **H1 · Cierre de EXP-007** | ✅ **2026-09-23** | Solo condicional; seguridad 61/61 sin fallos | — |
 | **H2 · Base decidida** (EXP-008) | nov 2026 | A/B de Kissat 4.0.4 frente a sc2026, preregistrado, en calib + calib2 | H1 (máquina libre) |
 | **H3 · Cliques decididos** (D-005) | nov 2026 | Coste de mantener MIT medido en PAR-2; si hay coste, reimplementación MIT validada | H1 |
+| **H3b · Un solo binario** (D-016) | oct 2026 | `kissat --symmetry` equivalente a la tubería (EXP-012), en CI y en la configuración de competición; la entrega deja de depender de `solver/labesat` | — |
 | **H4 · B3 validado** (EXP-009) | dic 2026 – ene 2027 | Criterio de activación entrenado sin `bench/test` y validado preregistrado | H1, H2 |
 | **H5 · Mejoras definidas** | **≤ 25 ene 2027** | Contenido de V1–V4 congelado | H2–H4 |
 | **H6 · Correo a los organizadores** | **≤ 1 feb 2027** | Enviado con las cifras de H5 | H5 |
@@ -105,11 +109,18 @@ respalde. **No se presenta nada sin medir.**
 
 | Experimento | Diseño | Coste estimado |
 |---|---|---|
-| EXP-007 (en curso) | 74 parejas, T = 180 s | ~5 h |
+| EXP-007 (cerrado) | 74 parejas, T = 180 s | ~5 h |
 | EXP-008 (base) | 60 instancias × 2 semillas, T = 180 s, intercalado | ~5 h |
+| EXP-013 (calibración con la tesis) | 54 instancias, 1 semilla, T = 800 s | ~2 h |
+| EXP-014 (simetrías en la industria) | Parte 1: satsuma en 450 instancias; parte 2: ≤ 90 parejas, T = 300 s | ~1 h + ≤ 15 h |
+| EXP-015 (VSA) | 60 instancias × 2 semillas, T = 300 s | ~6 h (≤ 20 h) |
 | EXP-009 (B3) | Entrenamiento con los datos de EXP-007 y de 2026, más validación en ~80 instancias | ~6–8 h |
 | H8 (validación final) | 60 instancias de test, T = 1000 s, 2 variantes | ~35 h en secuencial. Por eso se decide antes de H8 cuántas variantes se validan |
 | H7 (benchmarks) | Calibrar ~60 candidatas con MiniSat (60 s) y LabeSAT (≤ 1 h) | ~20–40 h |
+
+**Regla de la máquina local (2026-09-24)**: 15 GB de RAM; se ejecuta **una
+tanda pesada a la vez** (`scripts/cola_tesis.sh`), tras una caída por falta de
+memoria al solapar tandas (EXP-008 §8).
 
 **Riesgo principal**: sin clúster, H8 no puede reproducir T = 5000 s. Se
 declara en la descripción y en los artículos. Si aparece acceso a cómputo,

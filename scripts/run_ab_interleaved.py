@@ -46,7 +46,9 @@ from run_experiment import (CSV_FIELDS, family_of, find_instances,  # noqa: E402
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--solver", required=True)
+    ap.add_argument("--solver", required=True, help="binario de la rama A (y de la B si no se da --solver-b)")
+    ap.add_argument("--solver-b", default=None,
+                    help="binario distinto para la rama B (A/B entre dos binarios, p. ej. EXP-008)")
     ap.add_argument("--bench", required=True, nargs="+", help="uno o varios bancos")
     ap.add_argument("--out-a", required=True)
     ap.add_argument("--out-b", required=True)
@@ -54,6 +56,18 @@ def main():
     ap.add_argument("--label-b", default="B")
     ap.add_argument("--opts-a", default="")
     ap.add_argument("--opts-b", default="")
+    ap.add_argument("--env-a", action="append", default=[], metavar="VAR=VALOR",
+                    help="variable de entorno solo para la rama A (repetible), p. ej. "
+                         "LABESAT_SATSUMA=tools/satsuma")
+    ap.add_argument("--env-b", action="append", default=[], metavar="VAR=VALOR",
+                    help="ídem para la rama B")
+    ap.add_argument("--instances", default=None, metavar="LISTA",
+                    help="fichero con un nombre de instancia por línea: solo se "
+                         "corren esas (subconjunto preregistrado de un banco)")
+    ap.add_argument("--resume", action="store_true",
+                    help="reanuda una tanda interrumpida: conserva las parejas completas "
+                         "(A y B), descarta las filas de parejas a medias y sigue.  Exige "
+                         "que los binarios tengan el mismo SHA-1 que en el meta.json")
     ap.add_argument("--timeout", type=float, required=True)
     ap.add_argument("--seeds", default="1")
     ap.add_argument("--guard", action="append", default=[], metavar="FICHERO",
@@ -64,24 +78,69 @@ def main():
     args = ap.parse_args()
 
     seeds = [int(x) for x in args.seeds.split(",") if x.strip()]
+    solo = None
+    if args.instances:
+        with open(args.instances) as f:
+            solo = {ln.strip() for ln in f if ln.strip() and not ln.startswith("#")}
     tareas = []
     for bench in args.bench:
         for inst in find_instances(bench):
+            if solo is not None and os.path.basename(inst) not in solo:
+                continue
             for seed in seeds:
                 tareas.append((bench, inst, seed))
+    if solo is not None:
+        encontradas = {os.path.basename(t[1]) for t in tareas}
+        if encontradas != solo:
+            sys.exit(f"ABORTADO: de --instances faltan en los bancos: "
+                     f"{sorted(solo - encontradas)}")
 
+    def parse_env(pares):
+        env = {}
+        for p in pares:
+            k, sep, v = p.partition("=")
+            if not sep or not k:
+                sys.exit(f"ABORTADO: variable de entorno mal formada: {p!r}")
+            env[k] = v
+        return env
+    env_a, env_b = parse_env(args.env_a), parse_env(args.env_b)
+
+    solver_b = args.solver_b or args.solver
     sha = sha1_of(args.solver)
+    sha_b = sha1_of(solver_b)
     guardas = {g: sha1_of(g) for g in args.guard}
     ramas = {
-        "A": (args.label_a, args.opts_a.split() if args.opts_a else [], args.out_a),
-        "B": (args.label_b, args.opts_b.split() if args.opts_b else [], args.out_b),
+        "A": (args.label_a, args.opts_a.split() if args.opts_a else [], args.out_a, env_a),
+        "B": (args.label_b, args.opts_b.split() if args.opts_b else [], args.out_b, env_b),
     }
+    # Reanudación (ADR-0003 §4b): cada pareja A/B se mide con segundos de
+    # diferencia, así que una pareja completa sigue siendo válida aunque la
+    # tanda se corte.  Solo se descartan las filas de la pareja a medias.
+    hechas, previas, meta_previa = set(), {"A": [], "B": []}, None
+    if args.resume:
+        meta_path = os.path.splitext(args.out_a)[0] + ".meta.json"
+        meta_previa = json.load(open(meta_path))
+        if meta_previa["solver_sha1"] != sha or meta_previa.get("solver_b_sha1", sha) != sha_b:
+            sys.exit("ABORTADO: --resume con binarios distintos de los de la tanda original")
+        for k, out in (("A", args.out_a), ("B", args.out_b)):
+            previas[k] = list(csv.DictReader(open(out)))
+        claves = {k: {(r["instance"], r["seed"]) for r in previas[k]} for k in previas}
+        hechas = claves["A"] & claves["B"]
+        for k in previas:
+            descartadas = [r for r in previas[k] if (r["instance"], r["seed"]) not in hechas]
+            previas[k] = [r for r in previas[k] if (r["instance"], r["seed"]) in hechas]
+            for r in descartadas:
+                print(f"[reanudar] se descarta la fila {k} a medias: {r['instance'][:34]} s{r['seed']}")
+        print(f"[reanudar] {len(hechas)} parejas completas se conservan")
+
     ficheros, escritores = {}, {}
-    for k, (_, _, out) in ramas.items():
+    for k, (_, _, out, _) in ramas.items():
         os.makedirs(os.path.dirname(os.path.abspath(out)) or ".", exist_ok=True)
         ficheros[k] = open(out, "w", newline="")
         escritores[k] = csv.DictWriter(ficheros[k], fieldnames=CSV_FIELDS)
         escritores[k].writeheader()
+        escritores[k].writerows(previas[k])
+        ficheros[k].flush()
 
     # Metadatos de procedencia, como run_experiment.py: el ADR-0003 dice que un
     # resultado sin ellos "no se usa para nada".
@@ -105,6 +164,9 @@ def main():
     meta = {
         "diseno": "A/B intercalado (run_ab_interleaved.py)",
         "solver": os.path.abspath(args.solver), "solver_sha1": sha,
+        "solver_b": os.path.abspath(solver_b), "solver_b_sha1": sha_b,
+        "solver_b_version": subprocess.run([solver_b, "--version"], capture_output=True,
+                                           text=True).stdout.strip(),
         "solver_id": solver_id, "git_commit": head,
         "solver_id_coincide_con_head": solver_id == head,
         "guardas_sha1": {os.path.abspath(g): h for g, h in guardas.items()},
@@ -113,8 +175,9 @@ def main():
                                          capture_output=True, text=True).stdout.strip(),
         "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
         "seeds": seeds, "timeout": args.timeout,
-        "rama_a": {"label": args.label_a, "opts": args.opts_a},
-        "rama_b": {"label": args.label_b, "opts": args.opts_b},
+        "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a},
+        "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b},
+        "instances_filter": os.path.abspath(args.instances) if args.instances else None,
         "host": socket.gethostname(), "nproc": os.cpu_count(),
         "platform": platform.platform(), "loadavg": os.getloadavg(),
         "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -122,19 +185,29 @@ def main():
     if solver_id != head:
         print(f"[AVISO] el binario dice --id {solver_id[:12]} y HEAD es "
               f"{head[:12]}: se compiló desde otro commit.")
+    if meta_previa is not None:
+        # Se conserva el meta original y se añade la reanudación.
+        reanudacion = {k: meta[k] for k in ("git_commit", "git_dirty", "host", "loadavg",
+                                             "started_at", "solver_id_coincide_con_head")}
+        reanudacion["parejas_conservadas"] = len(hechas)
+        meta = meta_previa
+        meta.setdefault("reanudaciones", []).append(reanudacion)
     for out in (args.out_a, args.out_b):
         with open(os.path.splitext(out)[0] + ".meta.json", "w") as f:
             json.dump(meta, f, indent=2, ensure_ascii=False)
 
     print(f"== A/B intercalado: {len(tareas)} parejas (instancia × seed), "
-          f"binario {sha[:12]}")
-    print(f"   A = {args.label_a} [{args.opts_a or 'por defecto'}]")
-    print(f"   B = {args.label_b} [{args.opts_b or 'por defecto'}]\n")
+          f"binario A {sha[:12]}" + (f", binario B {sha_b[:12]}" if solver_b != args.solver else ""))
+    print(f"   A = {args.label_a} [{args.opts_a or 'por defecto'}]"
+          + (f" env {env_a}" if env_a else ""))
+    print(f"   B = {args.label_b} [{args.opts_b or 'por defecto'}]"
+          + (f" env {env_b}" if env_b else "") + "\n")
 
     for n, (bench, inst, seed) in enumerate(tareas, 1):
-        if sha1_of(args.solver) != sha:
-            sys.exit(f"\nABORTADO: el binario cambió a mitad de la tanda "
-                     f"({sha[:12]} -> {sha1_of(args.solver)[:12]}). "
+        if (os.path.basename(inst), str(seed)) in hechas:
+            continue   # --resume: pareja ya medida (el orden A-B/B-A se conserva por n)
+        if sha1_of(args.solver) != sha or sha1_of(solver_b) != sha_b:
+            sys.exit("\nABORTADO: un binario de las ramas cambió a mitad de la tanda. "
                      "Los parciales mezclarían dos binarios: se descartan.")
         for g, h in guardas.items():
             if sha1_of(g) != h:
@@ -143,10 +216,11 @@ def main():
         orden = ("A", "B") if n % 2 else ("B", "A")
         resumen = {}
         for k in orden:
-            label, opts, _ = ramas[k]
+            label, opts, _, env = ramas[k]
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
             status, code, wall, cpu, rss, stats = run_one(
-                args.solver, inst, seed, "time", args.timeout, opts, hard_grace=30.0)
+                args.solver if k == "A" else solver_b, inst, seed, "time",
+                args.timeout, opts, hard_grace=30.0, env=env)
             escritores[k].writerow({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,

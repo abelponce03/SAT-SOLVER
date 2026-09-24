@@ -8,8 +8,8 @@ que quede constancia.
 
 ## Proyecto
 
-LabeSAT es un solver SAT, fork de Kissat 4.0.4 más ruptura de simetrías con
-satsuma como programa externo. El objetivo es la **SAT Competition 2027, Main
+LabeSAT es un solver SAT: un único binario, fork de Kissat 4.0.4, con la
+ruptura de simetrías de satsuma montada dentro (ADR-0007, por fases). El objetivo es la **SAT Competition 2027, Main
 Track**, con PAR-2 como métrica, y artículos sobre el proceso. Idioma de trabajo:
 **español**, en código, commits y documentación. Punto de entrada:
 `README.md`. Hoja de ruta: `docs/ROADMAP.md`.
@@ -108,12 +108,23 @@ enviar correos, registrarse en la competición.
 
 ```bash
 ./scripts/build.sh [--competition]      # compila solver/kissat/build/kissat
+./scripts/build.sh --dir=build-symm --symmetry  # Kissat con satsuma dentro (ADR-0007)
+./scripts/test_symmetry_integrada.sh    # kissat --symmetry: equivalencia y pruebas SR
 ./scripts/get_tools.sh                  # drat-trim, satsuma (MIT), dsr-trim (actual y SC2026)
 ./scripts/smoke_test.sh                 # build + tests + modelos + DRAT + determinismo
 ./scripts/test_symmetry.sh              # tubería satsuma → kissat con pruebas SR
 ./solver/labesat <cnf> [<proof>]        # LabeSAT completo
 python3 scripts/run_ab_interleaved.py … # A/B (ver docs/experiments/EXP-007 §8)
+./scripts/reanudar_experimentos.sh      # EXP-008/010/011/012 pendientes, en LOCAL (ver nota abajo)
 ```
+
+**Máquina de los experimentos (2026-09-23)**: todos los experimentos se
+ejecutan en el entorno local del director, nunca en el hardware de las
+sesiones de nube. El diseño A/B intercalado (ADR-0003 §4b) exige que las dos
+ramas de una misma tanda se midan en la misma máquina; una tanda cortada a
+mitad **no se reanuda en otra máquina**, se relanza de cero donde vaya a
+correr completa. `scripts/reanudar_experimentos.sh` es idempotente solo
+*dentro* de una misma máquina.
 
 ## 7. Herramientas del entorno que se usan
 

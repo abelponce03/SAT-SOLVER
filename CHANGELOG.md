@@ -5,6 +5,147 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-09-24): VSA, vivificación programada por actividad (P6)
+- Opción `vivifyactivity` (apagada por defecto), de Kissat-VSA (2.º en UNSAT
+  de 2025): en modo estable, se vivifican antes las cláusulas cuya variable
+  menos activa tiene mayor puntuación.
+  - Con 0, búsqueda idéntica a la base (12/12 instancias).
+  - Con 1: 7/7 pruebas DRAT y 4/4 modelos verificados, sin asserts.
+- Documentada en el manual (§3.2, opciones experimentales) y en `labesat(1)`.
+- **EXP-015** preregistrado: A/B intercalado en 60 instancias de tesis-dev.
+
+### Investigación (2026-09-24): ganadores 2021–2026 y banco de la tesis (research/07)
+- **B2 retirada por error de hecho**: `kissat-mab-hypre` (3.º en 2026) es
+  satsuma + Kissat_MAB, no hiper-resolución binaria. Los tres primeros de
+  2026 llevan satsuma.
+- El ganador de 2025 (AE-Kissat-MAB) está evolucionado con LLM.
+- En la tesis, la complementariedad con otros solvers es pequeña (29 de 883
+  instancias). El oráculo de semilla vale −8,3 % de PAR-2, pero repartir el
+  tiempo entre semillas **empeora** (683 → 713 → 744 s): los reinicios fríos
+  a ciegas se descartan sin implementarlos.
+- Nuevas decisiones: D-017 (cómo comparar con la tesis) y D-018 (reabrir la
+  línea VSIDS/CHB como candidata a V3).
+
+### Añadido (2026-09-24): experimentos sobre el banco de la tesis
+- **EXP-013** (calibración: misma búsqueda y velocidad de la máquina frente a
+  la tesis), **EXP-014** (simetrías en la industria; parte 1 con
+  `scripts/scan_symmetry.py`) y EXP-015, preregistrados con sus guiones.
+- `scripts/cola_tesis.sh`: los tres en secuencia, de uno en uno.
+
+### Arreglado (2026-09-24): la máquina local se quedó sin RAM
+- Solapar tandas en la máquina local (15 GB) la dejó sin memoria y mató todos
+  los procesos. Desde ahora, una tanda pesada a la vez, y satsuma con tope de
+  memoria en `scan_symmetry.py` (`--mem-gb`). Detalle en EXP-008 §8.
+
+### Añadido (2026-09-24): banco industrial de la tesis
+- `scripts/build_thesis_bench.py` integra las 1917 instancias industriales de
+  la tesis del director (fuera del repositorio) y los resultados de Kissat
+  sobre 955 de ellas (3 semillas, T = 800 s):
+  - `bench/tesis.list.csv`: partición **dev (450) / test (427)**, estratificada
+    por familia y dificultad y fijada antes de correr nada; 871 instancias de
+    reserva sin referencia y 169 excluidas por `.xz` truncado;
+  - `results/tesis-kissat.reference.csv`: las 2865 corridas de Kissat.
+- Detalle y cautelas en `bench/README.md`.
+
+### Arreglado (2026-09-24): `get_tools.sh` compila `satsuma-mclique-v1`
+- EXP-011 parte 1 y EXP-010 parte 2 necesitan el binario de mclique v1, que
+  solo existía en la sesión de nube. Ahora se reconstruye desde el commit que
+  lo introdujo (`0b4ec1f`), en un árbol aparte.
+
+### Cambiado (2026-09-23): los experimentos pasan a ejecutarse en local
+- A partir de ahora, todos los experimentos se lanzan en el entorno local del
+  director, no en el hardware de las sesiones de nube.
+- `scripts/reanudar_experimentos.sh`: encadena EXP-008 y las partes
+  pendientes de EXP-010, EXP-011 y EXP-012, idempotente dentro de una misma
+  máquina.
+- La tanda de EXP-008 en la nube (112/120 parejas) se descartó sin
+  promocionar, por la razón de diseño de ADR-0003 §4b: ver EXP-008 §8.
+
+### Investigación (2026-09-23): razonamiento XOR (research/06)
+- ¿Incorporar el Gauss-Jordan de CryptoMiniSat? Estructura XOR medida con
+  `scripts/xor_detect.c` en 161 instancias de 2026:
+  - el 80 % no tiene ninguna XOR;
+  - el 2,5 % son sistemas lineales casi puros, que `scripts/gauss_xor.py`
+    decide en 0,01–0,04 s (Kissat tardó 113–1613 s).
+- **Veredicto**:
+  - Gauss en toda la búsqueda, al estilo CMS: **descartado por
+    contraproducente**; coste alto, pruebas difíciles y beneficio en pocas
+    familias.
+  - **X1**, refutar en la raíz los sistemas lineales inconsistentes con
+    prueba: **aparcado con prioridad** para la fase 2 de ADR-0007. Sobre
+    2026, +4 resueltas y unos −112 s de PAR-2. Antes hay que comprobar que
+    dsr-trim acepta esas pruebas.
+  - X2, fases desde la solución lineal: descartado por efecto pequeño (−6 s).
+
+### Investigación (2026-09-23)
+- **research/05**: revisión de enfoques probabilísticos para SAT (~75
+  trabajos; Consensus, Scholar Gateway y web).
+  - Recomendaciones:
+    - **R1**: B3 como decisión probabilística calibrada;
+    - **R2**: supervivencia, IC por estrato y varianza entre semillas;
+    - **R3**: topes de satsuma por cuantiles.
+  - Aparcadas: NeuroBack, BMM, bandido VSIDS/CHB.
+  - Descartadas, por ruido o porque no aplican: el resto, con motivo.
+  - Exploración con los datos de EXP-007: repartir el tiempo entre fórmula con
+    y sin ruptura no mejora a aplicarla siempre (71,4 frente a 69,0 s). El
+    oráculo llega a 57,0 s, así que la ganancia está en **clasificar**.
+
+### Añadido (2026-09-23): ruptura de simetrías dentro de Kissat (D-016, ADR-0007)
+- **Un solo binario**: con `configure --symmetry` (o `build.sh --symmetry`),
+  satsuma se compila dentro de Kissat, y `kissat --symmetry <cnf> [<prueba>]`
+  hace lo mismo que la tubería `solver/labesat`:
+  - satsuma se ejecuta en un proceso hijo del propio Kissat;
+  - la prueba SR continúa en el mismo fichero;
+  - si satsuma falla, se pasa del tope o la entrada es demasiado grande, se
+    resuelve la CNF original con prueba DRAT pura.
+
+  **Apagado por defecto**; sin `configure --symmetry` el build no cambia.
+- satsuma, dejavu y tsl van **vendorizados sin modificar** en `solver/satsuma/`
+  (`scripts/vendor_satsuma.sh`, con `--check` en CI).
+- `scripts/test_symmetry_integrada.sh`, en CI junto al build de competición
+  con `--symmetry`:
+  - CNF intermedia idéntica byte a byte a la de satsuma externo;
+  - pruebas aceptadas por los dos dsr-trim;
+  - modelos correctos contra la CNF original;
+  - entrada `.xz`;
+  - respaldo con prueba DRAT pura.
+- **EXP-012** preregistrado: equivalencia del binario integrado con la
+  tubería en las 74 instancias de 2026 (CNF intermedia, trayectoria con
+  presupuesto de conflictos y seguridad), con `scripts/compare_integrada.py`.
+- `build.sh --dir=NOMBRE`: compila en otro directorio sin tocar
+  `build/kissat`, útil mientras un experimento lo vigila.
+
+### En curso (2026-09-23): base de Kissat y clique máxima MIT
+- **EXP-008** preregistrado y en ejecución: Kissat 4.0.4 (LabeSAT) frente a
+  Kissat «sc2026» en calib + calib2 (decide D-013). `get_tools.sh` compila
+  `tools/kissat-sc2026` desde el paquete oficial, comprobando el sha256.
+- **mclique** (`solver/mclique/`, MIT): clique máxima por ramificación y poda
+  con cota por coloreado voraz, escrita en sala limpia (D-005, opción c).
+  Implementa la interfaz de cliquer que usa satsuma, y `get_tools.sh` compila
+  con ella `tools/satsuma-mclique` (`CLIQUES=ON`, sin cliquer). **No se usa por
+  defecto** hasta que lo valide EXP-010 (preregistrado); se prueba con
+  `LABESAT_SATSUMA=tools/satsuma-mclique`.
+- **EXP-010, parte 1**: mclique da la misma CNF que cliquer en 72 de 74
+  instancias y refuta dentro de satsuma las 6 de R6, pero llega al tope de
+  60 s en `9ba8145e` (grafo de 896 vértices y densidad 0,76, donde demostrar la
+  optimalidad es exponencial). Con el criterio preregistrado, v1 no se adopta.
+- **mclique v2**: presupuesto de trabajo determinista (5·10⁸ unidades, ~0,7 s
+  en ese grafo); si se agota, devuelve la mejor clique encontrada, ampliada
+  hasta ser maximal. Es seguro porque satsuma solo usa la clique para ordenar
+  columnas. Validación preregistrada en **EXP-011**.
+- `run_ab_interleaved.py --resume`: reanuda una tanda cortada conservando las
+  parejas completas, con comprobación de SHA-1 de los binarios. Nace del corte
+  de EXP-008 por un reinicio del contenedor.
+- `verify_symm_answers.py` verifica cada prueba UNSAT con **los dos** dsr-trim
+  (el actual y el de SC2026), como ya hacía `test_symmetry.sh`.
+- `scripts/test_mclique.sh`: pruebas frente a fuerza bruta y a una búsqueda
+  exhaustiva de referencia (3300 grafos aleatorios), casos conocidos y la
+  compilación de la interfaz tal como la usa satsuma. En CI, junto con la
+  tubería de simetrías usando satsuma-mclique.
+- `run_ab_interleaved.py`: `--solver-b` (A/B entre dos binarios),
+  `--env-a/--env-b` (entorno por rama) e `--instances` (subconjunto
+  preregistrado de un banco).
+
 ### Añadido (2026-09-22 → 2026-09-23)
 - **Ruptura de simetrías verificable** (ADR-0004):
   - `solver/labesat` ejecuta satsuma (MIT, `CLIQUES=OFF`) y después kissat;

@@ -439,6 +439,64 @@ static void copy_countrefs (vivifier *vivifier) {
   RELEASE_STACK (*countrefs);
 }
 
+/* [SOLVER VSA] Vivificación programada por actividad (Kissat-VSA, Li y
+   Zhang, SAT Competition 2025).  En modo estable, el candidato cuya variable
+   MENOS activa tiene la puntuación VSIDS más alta se vivifica antes.  Se
+   conservan la prioridad de los candidatos marcados 'vivify' y el orden de
+   los literales dentro de cada cláusula; los empates mantienen el orden de
+   Kissat.  Como la planificación saca los candidatos del final de la pila,
+   se ordena de forma ascendente.  Opción 'vivifyactivity', apagada por
+   defecto hasta que la valide un experimento (EXP-015). */
+
+typedef struct vsaref vsaref;
+
+struct vsaref {
+  double key;
+  unsigned pos;
+  bool vivify;
+  reference ref;
+};
+
+typedef STACK (vsaref) vsarefs;
+
+static inline bool less_vsaref (vsaref a, vsaref b) {
+  if (a.vivify != b.vivify)
+    return !a.vivify;
+  if (a.key != b.key)
+    return a.key < b.key;
+  return a.pos < b.pos;
+}
+
+/* El quicksort de 'sort.h' pasa expresiones con efectos laterales
+   ('A[++I]'): cada argumento debe evaluarse una sola vez. */
+#define LESS_VSAREF(A, B) less_vsaref ((A), (B))
+
+static void sort_vivification_candidates_by_activity (vivifier *vivifier) {
+  kissat *solver = vivifier->solver;
+  references *schedule = &vivifier->schedule;
+  heap *scores = SCORES;
+  vsarefs vsarefs;
+  INIT_STACK (vsarefs);
+  unsigned pos = 0;
+  for (all_stack (reference, ref, *schedule)) {
+    clause *c = kissat_dereference_clause (solver, ref);
+    double key = 0;
+    bool first = true;
+    for (all_literals_in_clause (lit, c)) {
+      const double score = kissat_get_heap_score (scores, IDX (lit));
+      if (first || score < key)
+        key = score, first = false;
+    }
+    vsaref vr = {.key = key, .pos = pos++, .vivify = c->vivify, .ref = ref};
+    PUSH_STACK (vsarefs, vr);
+  }
+  SORT_STACK (vsaref, vsarefs, LESS_VSAREF);
+  CLEAR_STACK (*schedule);
+  for (all_stack (vsaref, vr, vsarefs))
+    PUSH_STACK (*schedule, vr.ref);
+  RELEASE_STACK (vsarefs);
+}
+
 static void sort_vivification_candidates (vivifier *vivifier) {
 #ifndef QUIET
   kissat *solver = vivifier->solver;
@@ -1272,6 +1330,8 @@ static void vivify_round (vivifier *vivifier, uint64_t limit) {
       kissat_extremely_verbose (
           solver, "not sorting %s vivification candidates", vivifier->name);
   }
+  if (GET_OPTION (vivifyactivity) && solver->stable) /* [SOLVER VSA] */
+    sort_vivification_candidates_by_activity (vivifier);
 
   kissat_watch_large_clauses (solver);
 #ifndef QUIET

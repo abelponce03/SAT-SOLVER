@@ -161,6 +161,7 @@
   OPTION (tumble, 1, 0, 1, "tumbled external indices order") \
   NQTOPT (verbose, 0, 0, 3, "verbosity level") \
   OPTION (vivify, 1, 0, 1, "vivify clauses") \
+  OPTION (vivifyactivity, 0, 0, 1, "stable mode: vivify by activity [SOLVER VSA]") \
   OPTION (vivifyeffort, 100, 0, 1e3, "effort in per mille") \
   OPTION (vivifyfocusedtiers, 1, 0, 1, "use focused tier limits") \
   OPTION (vivifyirr, 3, 0, 100, "relative irredundant effort") \

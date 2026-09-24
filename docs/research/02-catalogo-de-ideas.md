@@ -20,7 +20,7 @@
 | **A3** | Selección por instancia con features baratos | ≤ −2257 s (oráculo) | medio-alto | alto (SATzilla) | Tercera |
 | **A4.1** | Reparto adaptativo entre los 2 modos existentes | **−2.2 s en dev (EXP-005); sin aceleración en datos frescos: 0.983×, p = 0.69 (EXP-006)** | medio | bajo | **Cerrado: sin efecto detectado** (queda detrás de `modeadaptive=0`) |
 | **B1** | Ruptura de simetrías **condicional** | −964 s incond. / **−1287 s** cond. | alto | alto (satsuma) | Solo condicional |
-| **B2** | Hiper-resolución binaria condicional (hypre) | −615 s | medio-alto | alto | Alternativa a B1 |
+| ~~**B2**~~ | ~~Hiper-resolución binaria condicional (hypre)~~ | ~~−615 s~~ | — | — | **RETIRADA (2026-09-24)**: `kissat-mab-hypre` es satsuma + Kissat_MAB, no hiper-resolución (research/07 §2.1) |
 | **B3** | Detector barato de estructura para condicionar B1/B2 | habilita +322 s sobre B1 | medio | **bajo** | **Diferencial** |
 | ~~**B3'**~~ | ~~Condicionar las fases *lucky* por tamaño de fórmula~~ | **+2.3 s en el banco reservado** | muy bajo | — | **CERRADA: no replicó (EXP-003)** |
 | **B3''** | Hacer que `kissat_lucky` **ceda el control** al límite de tiempo | latencia 318 s → <1 s | bajo | ninguno (es un bug) | **HECHA (EXP-004)** |
@@ -191,7 +191,14 @@ públicas) como fase de preprocesado y aportar **el criterio de activación**.
 combinatoria simétrica. Apostarlo todo a B1 es apostar a la composición del
 banco de 2027, que se compone con el mismo script pero con otras sumisiones.
 
-## B2 · Hiper-resolución binaria condicional (hypre)
+## ~~B2 · Hiper-resolución binaria condicional (hypre)~~ — RETIRADA
+
+> **Corrección (2026-09-24)**: el nombre llevó a un error de hecho. El paquete
+> oficial de `zheng_kissat-mab-hypre` ejecuta **satsuma** y después un
+> **Kissat_MAB 4.0.2** (bandido VSIDS/CHB); no hace hiper-resolución binaria.
+> Su −615 s es de satsuma + MAB. Ver [research/07 §2.1](07-ganadores-y-banco-tesis.md).
+> El texto de abajo se conserva como registro de la hipótesis original.
+
 
 `kissat-mab-hypre` (2º y 3º de 2026, −615.3 s) gana en **las mismas familias**
 que satsuma con una técnica distinta y mucho más barata de implementar. Eso dice

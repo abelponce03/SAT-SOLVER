@@ -9,7 +9,8 @@
 #   - las líneas añadidas y eliminadas en Kissat, fichero a fichero, clasificadas
 #     como ACTIVA (entra en la configuración de competición), INACTIVA
 #     (detrás de una opción apagada por defecto) o DOC/BUILD;
-#   - las líneas del guion solver/labesat.
+#   - las líneas del guion solver/labesat;
+#   - las líneas de mclique (solver/mclique), la clique máxima MIT de satsuma.
 # Todo el código de LabeSAT lo escribe un asistente de IA bajo la dirección del
 # autor (docs/metodologia/), así que «líneas de IA» = líneas cambiadas.
 #
@@ -33,7 +34,10 @@ clase() {
         solver/kissat/src/application.c|solver/kissat/src/file.c|\
         solver/kissat/src/file.h|solver/kissat/src/build.c)
             echo ACTIVA ;;     # B3'' terminador, --append-proof, identidad del banner
-        solver/kissat/UPSTREAM.md|solver/kissat/scripts/*)
+        solver/kissat/src/symmetry.c|solver/kissat/src/symmetry.h)
+            echo INACTIVA ;;   # D-016: solo con 'configure --symmetry' y '--symmetry'
+        solver/kissat/UPSTREAM.md|solver/kissat/scripts/*|\
+        solver/kissat/configure|solver/kissat/makefile.in)
             echo DOC/BUILD ;;
         *) echo SIN-CLASIFICAR ;;
     esac
@@ -54,6 +58,13 @@ done < <(git diff --numstat "$BASE" HEAD -- solver/kissat)
 [ $sin = 0 ] || exit 1
 
 guion=$(wc -l < solver/labesat)
+# mclique: clique máxima MIT para satsuma (D-005).  Se cuenta aparte porque no
+# es código de Kissat; las pruebas no entran en la cifra del solver.
+mclique=$(cat solver/mclique/mclique.[ch] solver/mclique/satsuma/* | wc -l)
+mclique_test=$(wc -l < solver/mclique/test_mclique.c)
+# Unión C++ con satsuma (D-016).  satsuma y dejavu vendorizados: 0 líneas
+# nuestras (vendor_satsuma.sh --check lo garantiza en CI).
+union=$(wc -l < solver/symmetry/satsuma_entry.cpp)
 c_add=$(( ${add[ACTIVA]:-0} + ${add[INACTIVA]:-0} ))
 pct=$(awk -v a="$c_add" -v b="$base_lines" 'BEGIN{printf "%.1f", 100*a/b}')
 
@@ -66,8 +77,14 @@ cat <<EOF
   - inactivas (opción apagada o trazas): +${add[INACTIVA]:-0} / −${del[INACTIVA]:-0}.
 - **Documentación y build dentro de Kissat**: +${add[DOC/BUILD]:-0} / −${del[DOC/BUILD]:-0}.
 - **Guion de la tubería** (\`solver/labesat\`): **$guion** líneas.
+- **mclique** (\`solver/mclique\`, clique máxima para satsuma, D-005): **$mclique**
+  líneas de C, más $mclique_test de pruebas. Solo entra en la entrega si EXP-010
+  la valida.
+- **Unión con satsuma** (\`solver/symmetry/satsuma_entry.cpp\`, D-016): **$union** líneas
+  de C++. satsuma y dejavu van vendorizados **sin modificar** (0 líneas).
 - **Escritas por IA**: todas las anteriores (asistente de IA bajo la dirección del autor).
-- **satsuma y dejavu**: se usan sin modificar (0 líneas).
+- **satsuma y dejavu**: se usan sin modificar (0 líneas). mclique ocupa el
+  hueco de cliquer sin tocar satsuma.
 
 | Fichero | Clase | Añadidas | Eliminadas |
 |---|---|---:|---:|

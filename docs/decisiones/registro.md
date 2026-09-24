@@ -19,7 +19,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-002 | ¿Subcategoría IA o categoría regular? | ⏸️ correo aplazado hasta definir las mejoras (límite recomendado: 1-feb-2027) | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
 | D-003 | ¿Se admite la composición satsuma + kissat? | ⏸️ mismo correo que D-002 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
-| D-005 | ¿MIT o cliques (GPL)? | 🟡 **coste medido**: 6 instancias de H (≈ −29 s). Recomendada la opción c (clique máxima en MIT) | Director | [research/04 §4](../research/04-decisiones-pendientes.md), [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 |
+| D-005 | ¿MIT o cliques (GPL)? | ✅ **opción c** (2026-09-23): reimplementar la clique máxima en MIT | Director | [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 · EXP-010 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
 | D-007 | Nombre del solver | ✅ LabeSAT (2026-09-22) | Director | CHANGELOG |
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |
@@ -30,6 +30,9 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
+| D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
+| D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | 🟡 opción conservadora en marcha: calibrar (EXP-013) y decidir features solo con A/B local | Director | §D-017 · EXP-013 · issue #28 |
+| D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
 
@@ -144,3 +147,102 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   - V3 y V4 solo si algún experimento las respalda.
 - **Coste**: cada variante lleva su propia declaración de IA y consume cómputo
   en la validación final (H8).
+
+## D-005 — Resolución
+
+- **Decisión del director (2026-09-23): opción c**. La búsqueda de clique
+  máxima que satsuma toma de cliquer (GPLv2) se reimplementa en MIT.
+- **Motivo**: sin cliques, 6 instancias del estrato H pasan de resolverse en
+  menos de 2 s a timeout (research/03, segunda parte). La opción c es la única
+  que recupera ese efecto sin salir de la directriz «mantén MIT».
+- **Reglas de la reimplementación**:
+  - **sala limpia**: se implementa a partir de los algoritmos publicados
+    (Östergård 2002; Tomita y Seki 2003) y **sin leer el código de cliquer**;
+  - de satsuma (MIT) solo se usa su interfaz: la única llamada y los tipos que
+    consume `reorder.h`.
+- **Validación**: EXP-010, preregistrado, compara la versión MIT frente a la
+  versión con cliquer.
+- **Estado (2026-09-23)**:
+  - implementada como **mclique** (`solver/mclique/`): ramificación y poda con
+    cota por coloreado voraz sobre conjuntos de bits;
+  - `scripts/test_mclique.sh` la contrasta con fuerza bruta y con una búsqueda
+    exhaustiva de referencia;
+  - `get_tools.sh` compila `tools/satsuma-mclique`, y la tubería de simetrías
+    pasa con ella (pruebas SR verificadas);
+  - EXP-010 preregistrado; la adopción depende de su resultado.
+  - EXP-010, parte 1: misma CNF que cliquer en 72 de 74, pero un tope nuevo de
+    60 s en `9ba8145e`, así que v1 no se adopta. mclique v2 añade un
+    presupuesto de trabajo determinista; se valida en EXP-011.
+
+## D-016 — Ruptura de simetrías montada sobre Kissat
+
+- **Surge** (2026-09-23): al resumir el estado, el director aclara que su
+  objetivo es «tomar los algoritmos y montarlos sobre kissat, no tener un
+  selector de solucionadores». La arquitectura de ADR-0004 (satsuma como
+  programa aparte, D-008) no encaja del todo con ese objetivo.
+- **Aclaración previa**: en el repositorio hay un solo solucionador (el fork de
+  Kissat).
+  - satsuma es un preprocesador.
+  - Kissat sc2026 es solo la rama de comparación de EXP-008.
+  - B3 decide si se aplica la ruptura, no qué solver se usa.
+  - V1–V4 son entradas distintas de la competición.
+- **Opciones**:
+  - **a.** Dejarlo externo.
+  - **b.** Reimplementar ya en C, dentro de Kissat. Son meses de trabajo.
+  - **c.** Por fases: satsuma compilado dentro del binario y, después,
+    reimplementación pieza a pieza.
+- **Resolución (director): opción c.** Detalle en
+  [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md).
+  - La fase 1 está implementada: `configure --symmetry` y la opción
+    `--symmetry`, apagada por defecto.
+  - Su equivalencia con la tubería se valida en EXP-012.
+
+## D-017 — Cómo comparar LabeSAT con el Kissat de la tesis
+
+- **Surge**: el 2026-09-24. El director aporta los resultados de Kissat de su
+  tesis (955 instancias, 3 semillas, T = 800 s) y pide comparar LabeSAT con
+  ellos sin volver a correr Kissat.
+- **Hechos medidos en la sesión**:
+  - la tesis corrió en dos equipos (`pc1`: argumentation, bitvector,
+    cryptography y station-repacking; `pc2`: el resto); esta máquina es un
+    portátil i5-1135G7;
+  - con la misma semilla, Kissat 4.0.4 reproduce los conflictos de la tesis en
+    1 de 8 instancias del sondeo: la tesis usó **otra 4.0.x**;
+  - la tesis mide tiempo de reloj con la descompresión incluida.
+- **Opciones**:
+  - **a.** Tomar los tiempos de la tesis tal cual como brazo A. Barato, pero
+    mezcla máquina, versión y LabeSAT: no es defendible.
+  - **b. (en marcha)** Calibrar con EXP-013 (54 instancias, ≈ 100 min): la
+    tesis queda como referencia externa escalada por un factor con IC, y las
+    decisiones sobre features se toman con A/B intercalado en esta máquina.
+  - **c.** Volver a correr Kissat 4.0.4 sobre todo el banco en esta máquina.
+    Es la comparación limpia, pero cuesta días de cómputo y el director pidió
+    evitarlo.
+- **Recomendación**: b. LabeSAT por defecto hace hoy la misma búsqueda que
+  Kissat 4.0.4, así que la rama A de cada A/B **es** ya el Kissat de esta
+  máquina, sin coste añadido.
+- **Preguntas para el director** (cambian el alcance de la calibración):
+  1. ¿Qué versión exacta de Kissat usó la tesis (paquete, commit o
+     `kissat --version`)?
+  2. ¿Qué CPU tenían `pc1` y `pc2`, y cuántas corridas iban en paralelo?
+
+## D-018 — ¿Reabrir la línea VSIDS/CHB (Kissat_MAB)?
+
+- **Surge**: el 2026-09-24, al revisar a los ganadores (research/07).
+- **Contexto**:
+  - El bandido que elige VSIDS o CHB en cada reinicio ganó la Main Track en
+    2021, 2022 y 2025 (esta última, con fórmulas evolucionadas con LLM).
+  - research/05 lo aparcó: efecto incremental y el precedente nulo de A4.1
+    (EXP-006).
+  - En 2026, las variantes «solo MAB» quedaron por debajo del Kissat de Biere,
+    pero ese Kissat no era la 4.0.4, y el 3.º (`kissat-mab-hypre`) es
+    satsuma + MAB.
+- **Opciones**:
+  - **a.** Mantenerla aparcada (research/05).
+  - **b. (recomendada)** Portar CHB y el UCB de Kissat_MAB (MIT) detrás de
+    una opción, **después** de EXP-008, y medirla como candidata a V3 con un
+    A/B preregistrado.
+  - **c.** Adoptar AE-Kissat-MAB entero como base: descartado, porque
+    cambiaría la base sin EXP-008 y mezclaría dos cambios.
+- **Mientras tanto**: nada; no se toca código hasta que EXP-008 decida la
+  base (D-013).

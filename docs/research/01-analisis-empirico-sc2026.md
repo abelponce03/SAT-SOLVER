@@ -90,6 +90,10 @@ presentaron variantes de bandit y ninguna batió a la base por sí sola.
 Lo que sí ganó fue **transformar la fórmula antes de buscar**: ruptura de
 simetrías (satsuma, −964 s) e hiper-resolución binaria (hypre, −615 s).
 
+> **Corrección (2026-09-24)**: `kissat-mab-hypre` **no** es hiper-resolución
+> binaria: es satsuma + Kissat_MAB 4.0.2 (research/07 §2.1). Los tres primeros
+> de 2026 llevan satsuma.
+
 ---
 
 ## 2. Dónde gana el campeón: desglose por familia
