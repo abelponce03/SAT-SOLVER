@@ -114,7 +114,12 @@ fi
 # parte 1 compara con v2.  Se reconstruye desde el commit que lo introdujo, en
 # una copia aparte del árbol de satsuma para no pisar el build de v2.
 MCLIQUE_V1_REV=0b4ec1f
-if [ ! -x satsuma-mclique-v1 ]; then
+# Solo lo usan los experimentos (reanudar_experimentos.sh lo exige); en un
+# clon superficial (CI, fetch-depth 1) el commit no está y se omite con aviso.
+if [ ! -x satsuma-mclique-v1 ] && ! git -C "$ROOT" cat-file -e "$MCLIQUE_V1_REV^{commit}" 2>/dev/null; then
+    echo "== satsuma-mclique-v1 omitido: el commit $MCLIQUE_V1_REV no está en este clon"
+    echo "   (clon superficial). Solo hace falta para EXP-010/011: git fetch --unshallow"
+elif [ ! -x satsuma-mclique-v1 ]; then
     echo "== satsuma ${SATSUMA_REV:0:7} con mclique v1 (commit $MCLIQUE_V1_REV, EXP-010)"
     rm -rf satsuma-src-v1 && cp -r satsuma-src satsuma-src-v1
     rm -rf satsuma-src-v1/src/cliquer satsuma-src-v1/build-mclique
