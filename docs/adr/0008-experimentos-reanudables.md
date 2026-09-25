@@ -89,6 +89,8 @@ lo que colgó el portátil a la 01:13. Se corrigió en dos sitios:
 
 Para que arranque en cada encendido sin iniciar sesión hace falta
 `loginctl enable-linger`, una opción del sistema que decide el director.
+**Activada por el director el 2026-09-25** (`Linger=yes`): la cola arranca al
+encender el equipo, sin esperar a que alguien inicie sesión.
 
 ## Validez experimental de reanudar
 

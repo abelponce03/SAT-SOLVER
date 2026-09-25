@@ -407,9 +407,9 @@ al cerrar cada sesión.
     (D-013).
 - **Decisiones**:
   - instalar el servicio de usuario (pedido explícito del director);
-  - **no** activar `loginctl enable-linger`, que es una opción del sistema:
-    se le propone al director, porque sin ella la cola arranca al iniciar
-    sesión, no al encender.
+  - **no** activar `loginctl enable-linger` desde la sesión, porque es una
+    opción del sistema: se le propuso al director, que la activó él mismo.
+    Desde entonces, la cola arranca al encender el equipo.
 - **Salió mal**:
   - La primera versión de la prueba de reanudación daba «OK» sin comparar
     nada: un error de sintaxis dejaba vacías las dos claves, que
