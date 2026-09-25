@@ -5,6 +5,13 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Resultado (2026-09-25): EXP-008 cerrado — se mantiene Kissat 4.0.4 (D-013)
+- sc2026 frente a 4.0.4, 120 parejas intercaladas a 180 s: ΔPAR-2 = −4,7 s,
+  IC95 % [−18,7; +9,0], Wilcoxon p = 0,60. Sin diferencia detectable, así que
+  se mantiene la base, como fijaba el preregistro.
+- Descriptivo: sc2026 es más estable entre semillas (2 instancias inestables
+  frente a 8) y **no respeta `--time`** en una instancia (HARDKILL a 255 s).
+
 ### Añadido (2026-09-25): experimentos que sobreviven a apagados (ADR-0008)
 - `scripts/checkpoint.py`: filas íntegras y escritura duradera (fsync).
   `--resume` en `run_experiment.py`, `compare_satsuma_builds.py` y

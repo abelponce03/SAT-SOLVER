@@ -27,7 +27,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-010 | Documentación continua y multiformato, con LaTeX para los PDF | ✅ (2026-09-23) | Director | [ADR-0006](../adr/0006-documentacion-multiformato.md) |
 | D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 · issue #10 |
 | D-012 | Insignia «via Claude» en las acciones de GitHub hechas desde la sesión | 🟡 | Director | §D-012 · issue #11 |
-| D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
+| D-013 | Base de Kissat: 4.0.4 o sc2026 | ✅ **4.0.4** (2026-09-25), por el criterio preregistrado de EXP-008: p = 0,60, sin diferencia detectable | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
@@ -136,6 +136,11 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   intercalado, en calib y calib2.
 - **Coste de cambiar**: portar ~105 líneas activas (más el resto si procede) y
   repetir la validación de las pruebas.
+- **Resolución (2026-09-25)**: EXP-008 da ΔPAR-2 = −4,7 s con IC95 %
+  [−18,7; +9,0] y Wilcoxon p = 0,60. Según la regla fijada antes de medir, **se
+  mantiene 4.0.4**. sc2026 se mostró más estable entre semillas (2 inestables
+  frente a 8), así que queda como posible variante en D-014 si la robustez
+  pesa. El director puede revisarlo en la próxima reunión.
 
 ## D-014 — Variantes a presentar
 
