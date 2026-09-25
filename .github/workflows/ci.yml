@@ -188,3 +188,7 @@ jobs:
             --bench bench/smoke --out /tmp/a.csv --timeout 10 --seeds 1,2 --label A
           python3 scripts/par2.py /tmp/a.csv --by-family
           python3 scripts/par2.py /tmp/a.csv /tmp/a.csv --md
+      - name: Las tandas sobreviven a un apagón (ADR-0008)
+        run: ./scripts/test_reanudacion.sh
+      - name: La cola de experimentos es válida
+        run: python3 scripts/orquestador.py estado

@@ -93,7 +93,7 @@ respalde. **No se presenta nada sin medir.**
 | Hito | Fecha objetivo | Criterio de salida | Depende de |
 |---|---|---|---|
 | **H1 · Cierre de EXP-007** | ✅ **2026-09-23** | Solo condicional; seguridad 61/61 sin fallos | — |
-| **H2 · Base decidida** (EXP-008) | nov 2026 | A/B de Kissat 4.0.4 frente a sc2026, preregistrado, en calib + calib2 | H1 (máquina libre) |
+| **H2 · Base decidida** (EXP-008) | ✅ **2026-09-25**: se mantiene 4.0.4 (p = 0,60) | A/B de Kissat 4.0.4 frente a sc2026, preregistrado, en calib + calib2 | H1 (máquina libre) |
 | **H3 · Cliques decididos** (D-005) | nov 2026 | Coste de mantener MIT medido en PAR-2; si hay coste, reimplementación MIT validada | H1 |
 | **H3b · Un solo binario** (D-016) | oct 2026 | `kissat --symmetry` equivalente a la tubería (EXP-012), en CI y en la configuración de competición; la entrega deja de depender de `solver/labesat` | — |
 | **H4 · B3 validado** (EXP-009) | dic 2026 – ene 2027 | Criterio de activación entrenado sin `bench/test` y validado preregistrado | H1, H2 |

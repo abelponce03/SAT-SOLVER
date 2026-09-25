@@ -379,3 +379,46 @@ al cerrar cada sesión.
     con ella: una sola corrida con la misma semilla lo delata.
   - Leer el paquete de un competidor antes de nombrar su técnica: el nombre
     `hypre` llevó a un error que duró desde el 2026-09-21.
+
+## 2026-09-25 — Experimentos que sobreviven a apagados (ADR-0008) y cierre de EXP-008
+
+- **Se pidió**: «ya ha pasado más de un día». Si se perdieron las
+  ejecuciones, idear un mecanismo de checkpoints y de resistencia ante
+  apagados, «porque es tiempo que estamos desperdiciando».
+- **Se encontró**:
+  - EXP-008 había terminado (120/120, a las 00:45).
+  - La cadena murió a la 01:13 en EXP-011 parte 1 (80 de 84), sin error en
+    los logs: el equipo se apagó o suspendió. Después hubo tres reinicios.
+  - La cola de EXP-013–015, lanzada a mano, no sobrevivió y **nunca
+    arrancó**. Se perdieron unas 15 h de máquina.
+- **Se hizo**:
+  - **ADR-0008**, en tres capas:
+    - checkpoints duraderos en todos los arneses (`checkpoint.py`, fsync,
+      filas íntegras, `--resume` en los tres que no lo tenían);
+    - cola declarativa `cola.toml` con un orquestador (cerrojo, latido,
+      marcas);
+    - servicio systemd de usuario que la relanza al iniciar sesión, impide
+      la suspensión (también la de la tapa) y limita la memoria a 12 GB.
+  - `test_reanudacion.sh`, también en CI: simula el apagón con `kill -9` y
+    una línea cortada, y la tanda reanudada es idéntica a una sin cortes.
+  - Servicio instalado y en marcha. EXP-011 parte 1 reanudó en la instancia
+    81.
+  - **EXP-008 cerrado**: sin diferencia (p = 0,60), se mantiene 4.0.4
+    (D-013).
+- **Decisiones**:
+  - instalar el servicio de usuario (pedido explícito del director);
+  - **no** activar `loginctl enable-linger` desde la sesión, porque es una
+    opción del sistema: se le propuso al director, que la activó él mismo.
+    Desde entonces, la cola arranca al encender el equipo.
+- **Salió mal**:
+  - La primera versión de la prueba de reanudación daba «OK» sin comparar
+    nada: un error de sintaxis dejaba vacías las dos claves, que
+    «coincidían». Se detectó leyendo la salida, no el veredicto. Ahora un
+    CSV vacío hace fallar la prueba.
+  - `grep -c` escribe «0» y además sale con código 1: con `|| echo 0` se
+    imprimía «0» dos veces y se rompía la aritmética de la cola.
+- **Aprendido**:
+  - Un proceso lanzado a mano no es una cola: sin nada que lo relance, un
+    apagado cuesta la noche entera.
+  - Una prueba que puede pasar por vacío no prueba nada: hay que exigir que
+    lo comparado exista.
