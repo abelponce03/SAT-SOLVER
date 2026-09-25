@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# SUSTITUIDO (2026-09-25) por scripts/cola.toml + scripts/orquestador.py (ADR-0008).
+# Nunca llegó a ejecutarse: el equipo se apagó antes. No lo uses.
+#
 # cola_tesis.sh — experimentos sobre el banco de la tesis, en secuencia y de
 # uno en uno (la máquina local tiene 15 GB; ver EXP-008 §8, 2026-09-24).
 #

@@ -31,6 +31,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 from run_experiment import find_instances, sha1_of  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,6 +64,8 @@ def main():
     ap.add_argument("--satsuma-timeout", type=float, default=60.0)
     ap.add_argument("--check-timeout", type=float, default=600.0)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--resume", action="store_true",
+                    help="conservar las instancias ya registradas y seguir (ADR-0008)")
     args = ap.parse_args()
 
     shas = {p: sha1_of(p) for p in (args.integrado, args.kissat, args.satsuma)}
@@ -72,10 +75,14 @@ def main():
               "estado_tuberia", "estado_integrado", "conflicts_t", "conflicts_i",
               "decisions_t", "decisions_i", "propagations_t", "propagations_i",
               "trayectoria_igual", "seguridad"]
-    with open(args.out, "w", newline="") as fo:
-        w = csv.DictWriter(fo, fieldnames=campos)
-        w.writeheader()
+    previas = filas_completas(args.out, campos) if args.resume else []
+    hechas = {r["instance"] for r in previas}
+    if args.resume:
+        print(f"[reanudar] {len(hechas)} instancias se conservan", flush=True)
+    with EscritorDuradero(args.out, campos, previas) as ed:
         for n, inst in enumerate(insts, 1):
+            if os.path.basename(inst) in hechas:
+                continue
             for p, h in shas.items():
                 if sha1_of(p) != h:
                     sys.exit(f"ABORTADO: {p} cambió a mitad de la tanda")
@@ -140,8 +147,7 @@ def main():
                     "propagations_t": st_t.get("propagations", ""),
                     "propagations_i": st_i.get("propagations", ""),
                     "trayectoria_igual": igual_t, "seguridad": seg}
-            w.writerow(fila)
-            fo.flush()
+            ed.escribir(fila)
             print(f"[{n:>3}/{len(insts)}] {fila['instance'][:34]:<34} cnf={'=' if fila['cnf_igual'] else '≠'} "
                   f"tray={'=' if igual_t else '≠'} {fila['estado_integrado']:<7} seg={seg}", flush=True)
     filas = list(csv.DictReader(open(args.out)))

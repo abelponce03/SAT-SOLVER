@@ -25,7 +25,6 @@ A/B (mismo binario, la feature detrás de una opción — ADR-0002 §3):
     ... --label mod --opts "--mifeature=1"
 """
 import argparse
-import csv
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
@@ -42,6 +41,9 @@ import tempfile
 import sys
 import time
 from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 
 CSV_FIELDS = [
     "label", "instance", "family", "seed", "status", "exit_code",
@@ -180,6 +182,10 @@ def main():
     ap.add_argument("--opts", default="", help="opciones extra para el solver, entre comillas")
     ap.add_argument("--limit", type=int, default=None, help="usar solo las primeras N instancias (pruebas rápidas)")
     ap.add_argument("--append", action="store_true", help="añadir al CSV en vez de sobrescribir")
+    ap.add_argument("--resume", action="store_true",
+                    help="reanudar una tanda cortada (apagado, reinicio): conserva las filas "
+                         "íntegras y salta las (instancia, seed) ya medidas. Aborta si el binario, "
+                         "las opciones o el presupuesto no son los de la tanda original (ADR-0008)")
     ap.add_argument("--jobs", type=int, default=1,
                     help="corridas simultáneas. >1 multiplica el rendimiento del CRIBADO, "
                          "pero contamina la medición de tiempo (contención de memoria y caché): "
@@ -235,14 +241,25 @@ def main():
         "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     meta_path = os.path.splitext(args.out)[0] + ".meta.json"
+    previas, hechas = [], set()
+    if args.resume and os.path.exists(meta_path) and os.path.exists(args.out):
+        vieja = json.load(open(meta_path))
+        for k in ("solver_sha1", "opts", "budget_kind", "budget_value", "seeds"):
+            if vieja.get(k) != meta.get(k):
+                sys.exit(f"ABORTADO: --resume con {k} distinto de la tanda original "
+                         f"({vieja.get(k)!r} frente a {meta.get(k)!r})")
+        previas = filas_completas(args.out, CSV_FIELDS)
+        hechas = {(r["instance"], str(r["seed"])) for r in previas}
+        meta["reanudada"] = vieja.get("reanudada", []) + [
+            {"at": meta["started_at"], "filas_conservadas": len(previas)}]
+        meta["started_at"] = vieja.get("started_at", meta["started_at"])
+        print(f"[reanudar] {len(previas)} corridas íntegras se conservan")
+    elif args.append and os.path.exists(args.out):
+        previas = filas_completas(args.out, CSV_FIELDS)
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
 
-    mode = "a" if args.append and os.path.exists(args.out) else "w"
-    with open(args.out, mode, newline="") as f:
-        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
-        if mode == "w":
-            w.writeheader()
+    with EscritorDuradero(args.out, CSV_FIELDS, previas) as ed:
 
         total = len(instances) * len(seeds)
         done = 0
@@ -252,7 +269,9 @@ def main():
         print("-" * 78)
 
         sha_cache = {inst: sha1_of(inst) for inst in instances}
-        tasks = [(inst, seed) for inst in instances for seed in seeds]
+        tasks = [(inst, seed) for inst in instances for seed in seeds
+                 if (os.path.basename(inst), str(seed)) not in hechas]
+        done = total - len(tasks)
 
         def work(task):
             inst, seed = task
@@ -292,8 +311,7 @@ def main():
 
         for row in results:
             done += 1
-            w.writerow(row)
-            f.flush()
+            ed.escribir(row)
             print(f"{row['instance']:<42} {row['seed']:>4} {row['status']:<8} "
                   f"{float(row['cpu_s']):>9.3f} {str(row['conflicts']):>10}"
                   f"   [{done}/{total}]")

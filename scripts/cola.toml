@@ -1,0 +1,124 @@
+# cola.toml — cola de experimentos que ejecuta scripts/orquestador.py (ADR-0008).
+#
+# Reglas:
+#   - un paso a la vez, en este orden (la máquina local tiene 15 GB);
+#   - `hecho` es una comprobación de shell: si devuelve 0, el paso está
+#     terminado y se salta. Se evalúa ANTES de ejecutar y DESPUÉS, para
+#     confirmar que el comando dejó el paso completo;
+#   - `comando` debe ser REANUDABLE: si el equipo se apaga a mitad, volver a
+#     lanzarlo continúa donde iba (--resume en los arneses);
+#   - cada comando es el de su preregistro (docs/experiments/EXP-NNN);
+#   - las funciones filas, lineas_lista y ab vienen de scripts/lib_cola.sh.
+#
+# Añadir un experimento: preregistrarlo y commitearlo, y después añadir aquí
+# su paso. El orquestador relee este fichero al empezar cada paso.
+
+[[paso]]
+id = "exp008"
+descripcion = "EXP-008: Kissat 4.0.4 frente a sc2026 (D-013)"
+hecho = "[ $(filas results/exp008/A.csv) -ge 120 ] && [ $(filas results/exp008/B.csv) -ge 120 ]"
+comando = """
+ab --solver solver/kissat/build/kissat --solver-b tools/kissat-sc2026 \
+   --bench bench/calib bench/calib2 --out-a results/exp008/A.csv --out-b results/exp008/B.csv \
+   --label-a A-kissat404 --label-b B-kissat-sc2026 --timeout 180 --seeds 1,2
+"""
+
+[[paso]]
+id = "exp011-parte1"
+descripcion = "EXP-011 parte 1: satsuma solo, mclique v1 frente a v2"
+requiere = ["tools/satsuma-mclique-v1", "tools/satsuma-mclique", "tools/satsuma"]
+hecho = "[ $(filas results/exp011/satsuma.csv) -ge $(( $(find bench/symm2026 -name '*.cnf*' | wc -l) * 3 )) ]"
+comando = """
+nice -n 5 python3 scripts/compare_satsuma_builds.py --bench bench/symm2026 \
+   --build mit=tools/satsuma --build mclique1=tools/satsuma-mclique-v1 \
+   --build mclique2=tools/satsuma-mclique --out results/exp011/satsuma.csv --resume
+"""
+
+[[paso]]
+id = "exp010-parte2"
+descripcion = "EXP-010 parte 2: kissat con mclique v1 en las instancias que cambian"
+requiere = ["results/exp010/instancias.txt", "tools/satsuma-mclique-v1"]
+hecho = "n=$(( $(lineas_lista results/exp010/instancias.txt) * 2 )); [ $(filas results/exp010/A.csv) -ge $n ] && [ $(filas results/exp010/B.csv) -ge $n ] && [ -f results/exp010/seguridad.csv ]"
+comando = """
+ab --solver solver/labesat --bench bench/symm2026 --instances results/exp010/instancias.txt \
+   --opts-a=--symmetry --opts-b=--symmetry \
+   --env-a "LABESAT_SATSUMA=$PWD/tools/satsuma" --env-b "LABESAT_SATSUMA=$PWD/tools/satsuma-mclique-v1" \
+   --guard solver/kissat/build/kissat --guard tools/satsuma --guard tools/satsuma-mclique-v1 \
+   --out-a results/exp010/A.csv --out-b results/exp010/B.csv \
+   --label-a A-sin-cliques --label-b B-mclique --timeout 180 --seeds 1,2
+[ -f results/exp010/seguridad.csv ] || LABESAT_SATSUMA="$PWD/tools/satsuma-mclique-v1" \
+   python3 scripts/verify_symm_answers.py results/exp010/B.csv --bench bench/symm2026 \
+   --out results/exp010/seguridad.csv
+"""
+
+[[paso]]
+id = "exp011-parte2"
+descripcion = "EXP-011 parte 2: kissat con mclique v2 en las instancias que cambian"
+hecho = "[ -f results/exp011/instancias.txt ] && n=$(( $(lineas_lista results/exp011/instancias.txt) * 2 )) && { [ $n -eq 0 ] || { [ $(filas results/exp011/A.csv) -ge $n ] && [ -f results/exp011/seguridad.csv ]; }; }"
+comando = """
+python3 scripts/analyze_exp011.py --write-list > /dev/null
+n=$(( $(lineas_lista results/exp011/instancias.txt) * 2 ))
+if [ "$n" -gt 0 ]; then
+  ab --solver solver/labesat --bench bench/symm2026 --instances results/exp011/instancias.txt \
+     --opts-a=--symmetry --opts-b=--symmetry \
+     --env-a "LABESAT_SATSUMA=$PWD/tools/satsuma" --env-b "LABESAT_SATSUMA=$PWD/tools/satsuma-mclique" \
+     --guard solver/kissat/build/kissat --guard tools/satsuma --guard tools/satsuma-mclique \
+     --out-a results/exp011/A.csv --out-b results/exp011/B.csv \
+     --label-a A-sin-cliques --label-b B-mclique2 --timeout 180 --seeds 1,2
+  [ -f results/exp011/seguridad.csv ] || LABESAT_SATSUMA="$PWD/tools/satsuma-mclique" \
+     python3 scripts/verify_symm_answers.py results/exp011/B.csv --bench bench/symm2026 \
+     --out results/exp011/seguridad.csv
+fi
+"""
+
+[[paso]]
+id = "exp012"
+descripcion = "EXP-012: equivalencia de kissat --symmetry con la tubería"
+hecho = "[ $(filas results/exp012/equivalencia.csv) -ge $(find bench/symm2026 -name '*.cnf*' | wc -l) ]"
+comando = """
+[ -x solver/kissat/build-symm/kissat ] || ./scripts/build.sh --dir=build-symm --symmetry --clean
+python3 scripts/compare_integrada.py --bench bench/symm2026 \
+   --integrado solver/kissat/build-symm/kissat --kissat solver/kissat/build/kissat \
+   --conflicts 100000 --out results/exp012/equivalencia.csv --resume
+"""
+
+[[paso]]
+id = "exp013"
+descripcion = "EXP-013: calibración frente al Kissat de la tesis"
+requiere = ["bench/tesis-calib"]
+hecho = "[ $(filas results/exp013/local.csv) -ge 54 ] && [ -f results/exp013/informe.txt ]"
+comando = """
+python3 scripts/run_experiment.py --solver solver/kissat/build/kissat \
+   --bench bench/tesis-calib --out results/exp013/local.csv \
+   --timeout 800 --seeds 42 --label labesat-defecto --jobs 1 --resume
+python3 scripts/exp013_calibracion.py analizar > results/exp013/informe.txt 2>&1
+"""
+
+[[paso]]
+id = "exp014-parte2"
+descripcion = "EXP-014 parte 2: A/B de --symmetry en la industria"
+requiere = ["results/exp014/satsuma.csv", "bench/tesis-dev"]
+hecho = "[ -f results/exp014/instancias.txt ] && n=$(lineas_lista results/exp014/instancias.txt) && [ $(filas results/exp014/A.csv) -ge $n ] && [ $(filas results/exp014/B.csv) -ge $n ] && [ -f results/exp014/informe.txt ]"
+comando = """
+[ -f results/exp014/instancias.txt ] || python3 scripts/exp014_simetrias.py seleccionar
+ab --solver solver/labesat --bench bench/tesis-dev --instances results/exp014/instancias.txt \
+   --out-a results/exp014/A.csv --out-b results/exp014/B.csv \
+   --label-a A-sin-simetrias --label-b B-simetrias --opts-a=--no-symmetry --opts-b=--symmetry \
+   --guard solver/kissat/build/kissat --guard tools/satsuma --timeout 300 --seeds 42
+python3 scripts/exp014_simetrias.py analizar > results/exp014/informe.txt 2>&1
+"""
+
+[[paso]]
+id = "exp015"
+descripcion = "EXP-015: VSA (vivifyactivity)"
+requiere = ["solver/kissat/build-vsa/kissat", "results/exp015/instancias.txt"]
+hecho = "n=$(( $(lineas_lista results/exp015/instancias.txt) * 2 )); [ $(filas results/exp015/A.csv) -ge $n ] && [ $(filas results/exp015/B.csv) -ge $n ] && [ -f results/exp015/informe.md ]"
+comando = """
+ab --solver solver/kissat/build-vsa/kissat --bench bench/tesis-dev \
+   --instances results/exp015/instancias.txt \
+   --out-a results/exp015/A.csv --out-b results/exp015/B.csv \
+   --label-a A-base --label-b B-vsa --opts-b=--vivifyactivity=1 \
+   --guard solver/kissat/build-vsa/kissat --timeout 300 --seeds 42,123
+python3 scripts/par2.py results/exp015/A.csv results/exp015/B.csv --md > results/exp015/informe.md 2>&1
+python3 scripts/analyze_speedup.py results/exp015/A.csv results/exp015/B.csv >> results/exp015/informe.md 2>&1
+"""

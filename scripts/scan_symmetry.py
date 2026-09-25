@@ -28,7 +28,6 @@ Uso:
 Reanuda: si --out ya existe, salta las instancias ya registradas.
 """
 import argparse
-import csv
 import hashlib
 import os
 import re
@@ -38,6 +37,9 @@ import subprocess
 import sys
 import tempfile
 import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CAMPOS = ["instance", "family", "status", "exit_code", "wall_s", "in_vars", "in_clauses",
@@ -154,16 +156,10 @@ def main():
                 if re.search(r"\.cnf(\.(xz|gz))?$", f):
                     insts.append(os.path.join(d, f))
     insts.sort()
-    hechas = set()
-    if os.path.exists(args.out):
-        hechas = {r["instance"] for r in csv.DictReader(open(args.out))}
-    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    nuevo = not os.path.exists(args.out)
+    previas = filas_completas(args.out, CAMPOS)   # reanuda siempre (ADR-0008)
+    hechas = {r["instance"] for r in previas}
     s1 = sha1(args.satsuma)
-    with open(args.out, "a", newline="") as fo:
-        w = csv.DictWriter(fo, fieldnames=CAMPOS)
-        if nuevo:
-            w.writeheader()
+    with EscritorDuradero(args.out, CAMPOS, previas) as ed:
         for i, cnf in enumerate(insts, 1):
             nombre = os.path.basename(cnf)
             if nombre in hechas:
@@ -179,8 +175,7 @@ def main():
             fila.update(instance=nombre, family=os.path.basename(os.path.dirname(cnf)),
                         satsuma_sha1=s1[:12],
                         started_at=time.strftime("%Y-%m-%dT%H:%M:%S%z"))
-            w.writerow(fila)
-            fo.flush()
+            ed.escribir(fila)
             print(f"[{i}/{len(insts)}] {fila['status']:6} cambia={fila.get('cambia', '')} "
                   f"gens={fila.get('dejavu_gens', '')} {fila.get('wall_s', '')}s {nombre}",
                   flush=True)

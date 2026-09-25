@@ -19,7 +19,6 @@ Uso:
       --out results/satsuma-builds.csv
 """
 import argparse
-import csv
 import hashlib
 import os
 import subprocess
@@ -28,6 +27,7 @@ import tempfile
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 from run_experiment import find_instances  # noqa: E402
 
 ARGS = ["--silent", "--full-skip-limit", "100000000", "--add-reduced-as-unit", "--bsr"]
@@ -49,6 +49,8 @@ def main():
     ap.add_argument("--timeout", type=float, default=60.0,
                     help="el mismo tope que LABESAT_SYMM_TIMEOUT")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--resume", action="store_true",
+                    help="conservar las instancias ya completas (todas sus builds) y seguir (ADR-0008)")
     args = ap.parse_args()
     builds = [b.split("=", 1) for b in args.build]
 
@@ -56,10 +58,20 @@ def main():
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
     campos = ["instance", "family", "build", "exit", "secs", "clauses_in",
               "clauses_out", "proof_bytes", "out_sha1"]
-    with open(args.out, "w", newline="") as fo:
-        w = csv.DictWriter(fo, fieldnames=campos)
-        w.writeheader()
+    previas = filas_completas(args.out, campos) if args.resume else []
+    nombres = {b for b, _ in builds}
+    por_inst = {}
+    for r in previas:
+        por_inst.setdefault(r["instance"], set()).add(r["build"])
+    hechas = {i for i, bs in por_inst.items() if nombres <= bs}
+    previas = [r for r in previas if r["instance"] in hechas]
+    if args.resume:
+        print(f"[reanudar] {len(hechas)} instancias completas se conservan", flush=True)
+    with EscritorDuradero(args.out, campos, previas) as ed:
         for n, inst in enumerate(insts, 1):
+            if os.path.basename(inst) in hechas:
+                continue
+            filas = []
             with tempfile.TemporaryDirectory() as tmp:
                 cnf = inst
                 if inst.endswith(".xz"):
@@ -85,7 +97,7 @@ def main():
                     secs = time.monotonic() - t0
                     ok = code == 0 and os.path.exists(out)
                     sha = hashlib.sha1(open(out, "rb").read()).hexdigest() if ok else ""
-                    w.writerow({"instance": os.path.basename(inst),
+                    filas.append({"instance": os.path.basename(inst),
                                 "family": os.path.basename(os.path.dirname(inst)),
                                 "build": nombre, "exit": code, "secs": f"{secs:.3f}",
                                 "clauses_in": cin,
@@ -94,7 +106,9 @@ def main():
                                 os.path.exists(proof) else "",
                                 "out_sha1": sha})
                     linea.append(f"{nombre}:{code}/{secs:.1f}s/{sha[:8]}")
-                fo.flush()
+                for fila in filas:          # la instancia entera, o nada
+                    ed.w.writerow(fila)
+                ed.persistir()
                 print(f"[{n:>3}/{len(insts)}] {os.path.basename(inst)[:34]:<34} "
                       + "  ".join(linea), flush=True)
 

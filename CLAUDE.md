@@ -115,7 +115,9 @@ enviar correos, registrarse en la competición.
 ./scripts/test_symmetry.sh              # tubería satsuma → kissat con pruebas SR
 ./solver/labesat <cnf> [<proof>]        # LabeSAT completo
 python3 scripts/run_ab_interleaved.py … # A/B (ver docs/experiments/EXP-007 §8)
-./scripts/reanudar_experimentos.sh      # EXP-008/010/011/012 pendientes, en LOCAL (ver nota abajo)
+python3 scripts/orquestador.py estado   # cola de experimentos: qué está hecho y qué corre (ADR-0008)
+./scripts/instalar_servicio.sh          # servicio que ejecuta scripts/cola.toml y sobrevive a apagados
+./scripts/test_reanudacion.sh           # las tandas sobreviven a un kill -9 / apagón
 ```
 
 **Máquina de los experimentos (2026-09-23)**: todos los experimentos se
@@ -123,8 +125,14 @@ ejecutan en el entorno local del director, nunca en el hardware de las
 sesiones de nube. El diseño A/B intercalado (ADR-0003 §4b) exige que las dos
 ramas de una misma tanda se midan en la misma máquina; una tanda cortada a
 mitad **no se reanuda en otra máquina**, se relanza de cero donde vaya a
-correr completa. `scripts/reanudar_experimentos.sh` es idempotente solo
-*dentro* de una misma máquina.
+correr completa. La cola vive en `scripts/cola.toml` y la ejecuta el servicio
+`labesat-experimentos` (ADR-0008): tras un apagado o reinicio, retoma sola
+donde iba, en esta misma máquina.
+
+**Memoria (2026-09-24)**: la máquina tiene 15 GB. Una tanda pesada a la vez
+(la cola lo garantiza con un cerrojo); nada de lanzar tandas a mano en
+paralelo. Para experimentar fuera de la cola: `nice`, tope de memoria
+(`ulimit -v`) y compilar con `taskset` a 2 núcleos.
 
 ## 7. Herramientas del entorno que se usan
 

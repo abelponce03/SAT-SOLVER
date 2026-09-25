@@ -5,6 +5,20 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-09-25): experimentos que sobreviven a apagados (ADR-0008)
+- `scripts/checkpoint.py`: filas íntegras y escritura duradera (fsync).
+  `--resume` en `run_experiment.py`, `compare_satsuma_builds.py` y
+  `compare_integrada.py`; el A/B y el escáner de simetrías pasan a descartar
+  la última línea cortada.
+- `scripts/cola.toml` + `scripts/orquestador.py`: cola declarativa, un paso a
+  la vez, cerrojo, latido, marcas de hecho y `estado`.
+- `scripts/instalar_servicio.sh`: servicio de usuario que relanza la cola al
+  iniciar sesión, bloquea la suspensión y limita la memoria a 12 GB.
+- `scripts/test_reanudacion.sh` (también en CI): simula un apagón y comprueba
+  que la tanda reanudada es idéntica a una sin cortes.
+- Motivo: la cadena murió de madrugada el 2026-09-25 (equipo apagado) y la
+  cola de EXP-013–015 nunca arrancó.
+
 ### Añadido (2026-09-24): VSA, vivificación programada por actividad (P6)
 - Opción `vivifyactivity` (apagada por defecto), de Kissat-VSA (2.º en UNSAT
   de 2025): en modo estable, se vivifican antes las cláusulas cuya variable

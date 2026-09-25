@@ -29,7 +29,6 @@ Ojo: las opciones del solver empiezan por "--", así que van con "=" pegado
 (--opts-b="--x=1"); con espacio, argparse las toma por opciones propias.
 """
 import argparse
-import csv
 import json
 import os
 import platform
@@ -39,6 +38,7 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 from run_experiment import (CSV_FIELDS, family_of, find_instances,  # noqa: E402
                             run_one, sha1_of)
 
@@ -123,7 +123,8 @@ def main():
         if meta_previa["solver_sha1"] != sha or meta_previa.get("solver_b_sha1", sha) != sha_b:
             sys.exit("ABORTADO: --resume con binarios distintos de los de la tanda original")
         for k, out in (("A", args.out_a), ("B", args.out_b)):
-            previas[k] = list(csv.DictReader(open(out)))
+            # solo filas íntegras: tras un apagón, la última puede estar cortada
+            previas[k] = filas_completas(out, CSV_FIELDS)
         claves = {k: {(r["instance"], r["seed"]) for r in previas[k]} for k in previas}
         hechas = claves["A"] & claves["B"]
         for k in previas:
@@ -133,14 +134,10 @@ def main():
                 print(f"[reanudar] se descarta la fila {k} a medias: {r['instance'][:34]} s{r['seed']}")
         print(f"[reanudar] {len(hechas)} parejas completas se conservan")
 
-    ficheros, escritores = {}, {}
-    for k, (_, _, out, _) in ramas.items():
-        os.makedirs(os.path.dirname(os.path.abspath(out)) or ".", exist_ok=True)
-        ficheros[k] = open(out, "w", newline="")
-        escritores[k] = csv.DictWriter(ficheros[k], fieldnames=CSV_FIELDS)
-        escritores[k].writeheader()
-        escritores[k].writerows(previas[k])
-        ficheros[k].flush()
+    # Reescritura atómica de lo conservado y fsync por fila (ADR-0008): un
+    # apagón deja como mucho una línea a medias, que --resume descarta.
+    escritores = {k: EscritorDuradero(out, CSV_FIELDS, previas[k])
+                  for k, (_, _, out, _) in ramas.items()}
 
     # Metadatos de procedencia, como run_experiment.py: el ADR-0003 dice que un
     # resultado sin ellos "no se usa para nada".
@@ -221,7 +218,7 @@ def main():
             status, code, wall, cpu, rss, stats = run_one(
                 args.solver if k == "A" else solver_b, inst, seed, "time",
                 args.timeout, opts, hard_grace=30.0, env=env)
-            escritores[k].writerow({
+            escritores[k].escribir({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,
                 "status": status, "exit_code": code,
@@ -231,14 +228,13 @@ def main():
                 "instance_sha1": "", "started_at": started,
                 "parallel_jobs": 1, **stats,
             })
-            ficheros[k].flush()
             resumen[k] = (status, cpu)
         print(f"[{n:>4}/{len(tareas)}] {os.path.basename(inst)[:34]:<34} s{seed} "
               f"A {resumen['A'][0]:<7} {resumen['A'][1]:7.1f}s | "
               f"B {resumen['B'][0]:<7} {resumen['B'][1]:7.1f}s  ({'-'.join(orden)})")
 
-    for f in ficheros.values():
-        f.close()
+    for e in escritores.values():
+        e.close()
     print(f"\nListo. Analiza con:  python3 scripts/par2.py {args.out_a} {args.out_b}")
 
 
