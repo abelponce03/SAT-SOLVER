@@ -69,8 +69,23 @@ Tres capas:
   mucho 5 veces por hora);
 - **bloquea la suspensión**, también la de cerrar la tapa (`systemd-inhibit`),
   mientras hay experimentos;
-- limita la memoria de toda la tanda (`MemoryHigh` 10 GB, `MemoryMax` 12 GB):
-  si un solver se desboca, lo mata el núcleo, no se cae el escritorio.
+- limita la memoria de toda la tanda (`MemoryHigh` 6 GB, `MemoryMax` 7 GB,
+  swap 512 MB) con `OOMPolicy=continue`: si un proceso se desboca, el núcleo
+  mata **solo a ese proceso**, su corrida sale como error y la cola sigue.
+  El equipo se usa a la vez como escritorio (unos 7 GB), y kissat llegó a
+  5,3 GB en EXP-008.
+
+**Primera versión (12 GB, política por defecto), corregida el mismo día**: a
+los dos minutos de instalarse, satsuma sobre `bbcfd33f` (una CNF de ~500 MB)
+llegó a agotar la memoria **del equipo**, porque la sesión del director
+ocupaba otros ~9 GB. Actuó el OOM del sistema, systemd detuvo toda la unidad
+(`OOMPolicy=stop`) y la relanzó para repetir lo mismo. Es, muy probablemente,
+lo que colgó el portátil a la 01:13. Se corrigió en dos sitios:
+
+- el límite de la unidad, como se describe arriba;
+- `compare_satsuma_builds.py`, que ahora aplica el mismo tope de tamaño que
+  `labesat` (512 MiB, por encima del cual labesat nunca ejecuta satsuma) y un
+  `RLIMIT_AS` de 6 GB por proceso.
 
 Para que arranque en cada encendido sin iniciar sesión hace falta
 `loginctl enable-linger`, una opción del sistema que decide el director.
@@ -84,9 +99,9 @@ Para que arranque en cada encendido sin iniciar sesión hace falta
 - Reanudar tras un reinicio **en la misma máquina** está permitido (CLAUDE.md
   §6). Reanudar en otra máquina, no: la guarda de SHA-1 y el `meta.json` lo
   impiden en los A/B.
-- Cada reanudación queda en el `meta.json` (`reanudacion`, `reanudada`) y en
+- Cada reanudación queda en el `meta.json` (`reanudaciones` en los A/B, `reanudada` en `run_experiment.py`) y en
   la sección de incidencias de su experimento.
-- El tope de 12 GB está por debajo de los 32 GB de la competición. Si un
+- El tope de 7 GB está por debajo de los 32 GB de la competición. Si un
   solver lo alcanza, la corrida sale como error o MEMOUT y se anota; hasta hoy
   ninguna instancia de los bancos lo necesita.
 

@@ -109,6 +109,16 @@ Con eso se aplican **los mismos criterios de EXP-010 §4** a v2:
 
 ## 6. Incidencias de ejecución
 
+- **2026-09-24/25, máquina local.** La parte 1 corrió tras EXP-008 y se cortó
+  en la instancia 81 de 84 (01:13): el equipo se colgó. Al reanudarla con el
+  orquestador (ADR-0008), satsuma sobre `bbcfd33f` (CNF de ~500 MB, estrato X)
+  agotó la memoria del equipo. **Causa**: `compare_satsuma_builds.py` no
+  aplicaba el tope de tamaño de `labesat` (512 MiB). **Cambio**: el guion
+  aplica ahora ese tope (la instancia sale `GRANDE` en las tres builds, igual
+  que en `labesat`, que nunca le pasaría satsuma) y un tope de 6 GB por
+  proceso. Las 80 instancias ya medidas se conservan (`--resume`). No afecta
+  a ninguna instancia que `labesat` le pase a satsuma.
+
 _Ninguna por ahora._
 
 ## 7. Resultados

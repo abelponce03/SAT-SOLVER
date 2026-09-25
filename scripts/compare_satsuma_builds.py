@@ -21,6 +21,7 @@ Uso:
 import argparse
 import hashlib
 import os
+import resource
 import subprocess
 import sys
 import tempfile
@@ -49,10 +50,20 @@ def main():
     ap.add_argument("--timeout", type=float, default=60.0,
                     help="el mismo tope que LABESAT_SYMM_TIMEOUT")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--maxbytes", type=int, default=536870912,
+                    help="el mismo tope de tamaño que LABESAT_SYMM_MAXBYTES: por encima, "
+                         "labesat nunca ejecuta satsuma, y medirlo solo arriesga la máquina")
+    ap.add_argument("--mem-gb", type=float, default=6,
+                    help="tope de memoria virtual de satsuma (RLIMIT_AS); 0 = sin tope")
     ap.add_argument("--resume", action="store_true",
                     help="conservar las instancias ya completas (todas sus builds) y seguir (ADR-0008)")
     args = ap.parse_args()
     builds = [b.split("=", 1) for b in args.build]
+    mem = int(args.mem_gb * (1 << 30))
+
+    def tope():
+        if mem:
+            resource.setrlimit(resource.RLIMIT_AS, (mem, mem))
 
     insts = [i for b in args.bench for i in find_instances(b)]
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)
@@ -80,7 +91,16 @@ def main():
                         subprocess.run(["xz", "-dc", inst], stdout=f, check=True)
                 cin = header_clauses(cnf)
                 linea = []
+                grande = os.path.getsize(cnf) > args.maxbytes
                 for nombre, exe in builds:
+                    if grande:                  # labesat tampoco lo intentaría
+                        filas.append({"instance": os.path.basename(inst),
+                                      "family": os.path.basename(os.path.dirname(inst)),
+                                      "build": nombre, "exit": "GRANDE", "secs": "0.000",
+                                      "clauses_in": cin, "clauses_out": "", "proof_bytes": "",
+                                      "out_sha1": ""})
+                        linea.append(f"{nombre}:GRANDE")
+                        continue
                     out, proof = os.path.join(tmp, "o.cnf"), os.path.join(tmp, "p")
                     for f in (out, proof):
                         if os.path.exists(f):
@@ -91,7 +111,8 @@ def main():
                                                "--out-file", out],
                                               stdout=subprocess.DEVNULL,
                                               stderr=subprocess.DEVNULL,
-                                              timeout=args.timeout).returncode
+                                              timeout=args.timeout,
+                                              preexec_fn=tope).returncode
                     except subprocess.TimeoutExpired:
                         code = "TOPE"
                     secs = time.monotonic() - t0

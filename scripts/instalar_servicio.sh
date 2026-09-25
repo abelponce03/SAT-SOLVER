@@ -13,8 +13,11 @@
 #     portátil se duerma;
 #   - si el orquestador termina con error (p. ej. lo mata el tope de memoria),
 #     se relanza a los 2 minutos, como mucho 5 veces por hora;
-#   - limita la memoria de TODA la tanda (MemoryHigh 10 GB, MemoryMax 12 GB):
-#     si un solver se desboca, el núcleo lo mata a él, no al escritorio.
+#   - limita la memoria de TODA la tanda (MemoryHigh 6 GB, MemoryMax 7 GB, swap
+#     512 MB) y, si un proceso la supera, el núcleo mata SOLO a ese proceso
+#     (OOMPolicy=continue): la corrida sale como error y la cola sigue. El
+#     equipo se usa a la vez como escritorio (~7 GB), así que 7 GB es lo que
+#     cabe; kissat llegó a 5,3 GB en EXP-008.
 #
 # Para que arranque en cada encendido SIN iniciar sesión hace falta
 # «lingering», que es una opción del sistema y la decide el director:
@@ -61,8 +64,10 @@ KillMode=control-group
 KillSignal=SIGTERM
 TimeoutStopSec=60
 Nice=5
-MemoryHigh=10G
-MemoryMax=12G
+MemoryHigh=6G
+MemoryMax=7G
+MemorySwapMax=512M
+OOMPolicy=continue
 
 [Install]
 WantedBy=default.target
