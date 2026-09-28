@@ -69,8 +69,8 @@ Tres capas:
   mucho 5 veces por hora);
 - **bloquea la suspensión**, también la de cerrar la tapa (`systemd-inhibit`),
   mientras hay experimentos;
-- limita la memoria de toda la tanda (`MemoryHigh` 6 GB, `MemoryMax` 7 GB,
-  swap 512 MB) con `OOMPolicy=continue`: si un proceso se desboca, el núcleo
+- limita la memoria de toda la tanda (`MemoryMax` 7 GB, swap 512 MB) con
+  `OOMPolicy=continue`: si un proceso se desboca, el núcleo
   mata **solo a ese proceso**, su corrida sale como error y la cola sigue.
   El equipo se usa a la vez como escritorio (unos 7 GB), y kissat llegó a
   5,3 GB en EXP-008.
@@ -86,6 +86,25 @@ lo que colgó el portátil a la 01:13. Se corrigió en dos sitios:
 - `compare_satsuma_builds.py`, que ahora aplica el mismo tope de tamaño que
   `labesat` (512 MiB, por encima del cual labesat nunca ejecuta satsuma) y un
   `RLIMIT_AS` de 6 GB por proceso.
+
+**Segunda corrección (2026-09-28): sin `MemoryHigh`.** Con `MemoryHigh=6G`,
+los procesos que pasaban de 6 GB (dsr-trim verificando pruebas en EXP-012) no
+morían: el núcleo los **frenaba**. En tres días de equipo encendido (~31 h) la
+cola solo consumió ~8 h de CPU. El contador `memory.events` registró 65 724
+eventos `high`. Un freno silencioso es peor que una muerte con registro: para
+un A/B de tiempos falsea la medida sin dejar rastro. Ahora solo hay límite
+duro.
+
+**Fallos de código que bloquearon pasos** (tres fallos seguidos → revisión
+humana, como estaba previsto): `verify_symm_answers.py` no toleraba bytes no
+UTF-8 de dsr-trim, y `analyze_exp011.py` exigía una build de referencia que
+solo existía en la nube. El diseño funcionó (el paso se paró en vez de
+repetirse sin fin), pero nadie lo vio hasta la siguiente sesión. Para eso
+está `orquestador.py estado`.
+
+**Arranque tras encender**: el primer intento sale con código 1, porque
+`systemd-inhibit` corre antes de que logind esté listo, y el reinicio
+automático lo resuelve a los 2 minutos. Se deja así.
 
 Para que arranque en cada encendido sin iniciar sesión hace falta
 `loginctl enable-linger`, una opción del sistema que decide el director.

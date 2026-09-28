@@ -1,0 +1,105 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_sha1": "f39ca6ec825ddeb238a5aba75cd6cf62363fe28a",
+  "solver_b": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_b_sha1": "f39ca6ec825ddeb238a5aba75cd6cf62363fe28a",
+  "solver_b_version": "4.0.4",
+  "solver_id": "495512fb7d4de4b87009239573429bca4d3b417d",
+  "git_commit": "05be1cebc33ddc0c4e12c20695969a53b1d3fb0a",
+  "solver_id_coincide_con_head": false,
+  "guardas_sha1": {
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build/kissat": "28b587cf6ecfadad73e29de35c363ecbf6c72dd8",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma": "9881df0f988e2d45ad24c54fd4c03f1a0fe84f1b",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma-mclique-v1": "590a1b65f35481b6d6d73f10b3c48dba55f3a7d3"
+  },
+  "git_dirty": true,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/symm2026"
+  ],
+  "n_parejas": 16,
+  "seeds": [
+    1,
+    2
+  ],
+  "timeout": 180.0,
+  "rama_a": {
+    "label": "A-sin-cliques",
+    "opts": "--symmetry",
+    "env": {
+      "LABESAT_SATSUMA": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma"
+    }
+  },
+  "rama_b": {
+    "label": "B-mclique",
+    "opts": "--symmetry",
+    "env": {
+      "LABESAT_SATSUMA": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma-mclique-v1"
+    }
+  },
+  "instances_filter": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/results/exp010/instancias.txt",
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    14.77587890625,
+    51.9462890625,
+    30.361328125
+  ],
+  "started_at": "2026-09-25T20:59:18+00:00",
+  "reanudaciones": [
+    {
+      "git_commit": "e6f30301b48f881c0d10204eafb10b055d10cb01",
+      "git_dirty": false,
+      "host": "ROCO",
+      "loadavg": [
+        0.4716796875,
+        0.41259765625,
+        0.17138671875
+      ],
+      "started_at": "2026-09-26T00:37:57+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 13
+    },
+    {
+      "git_commit": "e6f30301b48f881c0d10204eafb10b055d10cb01",
+      "git_dirty": false,
+      "host": "ROCO",
+      "loadavg": [
+        0.5947265625,
+        0.7705078125,
+        0.55859375
+      ],
+      "started_at": "2026-09-26T00:48:13+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 16
+    },
+    {
+      "git_commit": "e6f30301b48f881c0d10204eafb10b055d10cb01",
+      "git_dirty": false,
+      "host": "ROCO",
+      "loadavg": [
+        0.265625,
+        0.431640625,
+        0.47119140625
+      ],
+      "started_at": "2026-09-26T00:53:59+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 16
+    },
+    {
+      "git_commit": "e6f30301b48f881c0d10204eafb10b055d10cb01",
+      "git_dirty": true,
+      "host": "ROCO",
+      "loadavg": [
+        2.44775390625,
+        2.60009765625,
+        1.412109375
+      ],
+      "started_at": "2026-09-28T18:56:49+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 16
+    }
+  ]
+}
