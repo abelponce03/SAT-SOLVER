@@ -103,6 +103,11 @@ cd SAT-SOLVER
 \texttt{get\_tools.sh} descarga cada herramienta fijada a un commit concreto,
 para que cualquier resultado sea reproducible. satsuma se compila \emph{sin}
 la biblioteca cliquer (GPL), de modo que todo lo que se distribuye es MIT.
+Desde el experimento EXP-011, \texttt{solver/labesat} usa por defecto
+\texttt{tools/satsuma-mclique}: el mismo satsuma, pero con la clique máxima
+calculada por \emph{mclique}, una reimplementación propia con licencia MIT.
+Recupera lo que aportaba cliquer sin salir de la licencia MIT. Con
+\texttt{LABESAT\_SATSUMA} se puede elegir otro binario.
 
 \subsection{Ruptura de simetrías dentro del binario}
 Con \texttt{./scripts/build.sh --dir=build-symm --symmetry}, satsuma (incluido

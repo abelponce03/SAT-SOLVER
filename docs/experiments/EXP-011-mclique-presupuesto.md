@@ -1,8 +1,8 @@
 # EXP-011 — mclique v2: presupuesto de trabajo determinista (preregistrado)
 
-- **Estado**: **preregistrado**. Se escribe **antes** de mirar ningún
-  resultado de mclique v2 sobre el banco (ADR-0003 §6); ver §5 sobre la traza
-  de diagnóstico.
+- **Estado**: **cerrado (2026-09-30)**: se **adopta mclique v2** (D-005).
+  Preregistrado antes de mirar ningún resultado de mclique v2 sobre el banco
+  (ADR-0003 §6); ver §5 sobre la traza de diagnóstico.
 - **Fecha**: 2026-09-23
 - **Origen**: EXP-010, parte 1 (§6 de EXP-010).
 - **Decide**: la adopción de mclique (D-005, opción c; issue #9), junto con los
@@ -123,4 +123,51 @@ _Ninguna por ahora._
 
 ## 7. Resultados
 
-_Pendiente._
+`python3 scripts/analyze_exp011.py`, en la máquina local.
+
+### Parte 1 (satsuma solo, 2026-09-24 a 25)
+
+- **Banco**: las **74** instancias del banco efectivo de EXP-007, como dice
+  §2. `bench/symm2026` tiene 84 ficheros: las 10 restantes se apartaron por
+  tamaño (> 5 M cláusulas) en EXP-007 antes de medir nada, y el análisis las
+  excluye. Esta restricción se añadió al guion el 2026-09-28, porque la versión
+  commiteada contaba las 84, sin mirar resultados de v2 (§6).
+- **Build de referencia con cliquer**: no disponible en la máquina local (solo
+  existía en la nube). No entra en ningún criterio de §4.
+
+| build | topes o fallos (de 74) |
+|---|---:|
+| `mit` | 0 |
+| `mclique1` (v1) | 1 (`9ba8145e`, tope de 60 s) |
+| **`mclique2` (v2)** | **0** |
+
+- **H1** (v2 sin topes ni fallos en las 74): **✅ sí**.
+- **H2**: v2 da la misma CNF que v1 en **73 de 74**; solo difiere en
+  `9ba8145e`, justo donde v1 agotaba el tope.
+
+### Parte 2 (kissat, 2026-09-28)
+
+Solo `9ba8145e` (regla de §3). T = 180 s, semillas 1 y 2:
+
+| | A: sin cliques | B: mclique v2 |
+|---|---|---|
+| semilla 1 | UNSAT | UNSAT (30,0 s) |
+| semilla 2 | UNSAT | UNSAT (28,7 s) |
+
+Seguridad: las 2 pruebas UNSAT de B, verificadas con los dos dsr-trim.
+
+### Resultado combinado para v2 (criterio de §4 con los datos de EXP-010)
+
+- R6 recuperadas en las dos semillas: **6 de 6** (criterio ≥ 5). ✅
+- Pérdidas: **0** (criterio 0). ✅ La de v1 (`9ba8145e`) desaparece.
+- Fallos de seguridad: **0**. ✅
+
+### Veredicto según §4: **se adopta mclique v2**
+
+- `solver/labesat` usa `tools/satsuma-mclique` como satsuma por defecto de
+  `--symmetry` (con respaldo a `tools/satsuma` si no existe).
+- Actualizados ADR-0004, `THIRD_PARTY_NOTICES.md`, la declaración de IA y el
+  manual; D-005 cerrada.
+- **Pendiente**: el binario integrado (ADR-0007) sigue con `CLIQUES=0`. Llevarlo
+  a mclique exige su propia prueba de equivalencia (como EXP-012) antes de
+  cambiar su comportamiento por defecto.

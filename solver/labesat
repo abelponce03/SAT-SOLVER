@@ -26,7 +26,9 @@
 #
 # Parámetros (variables de entorno; los valores por defecto se fijan en EXP-007):
 #   LABESAT_KISSAT            binario de kissat   (defecto: junto a este script)
-#   LABESAT_SATSUMA           binario de satsuma  (defecto: junto a este script)
+#   LABESAT_SATSUMA           binario de satsuma  (defecto: junto a este script;
+#                             si no, tools/satsuma-mclique —clique máxima MIT,
+#                             adoptado en EXP-011— y, en su falta, tools/satsuma)
 #   LABESAT_SYMM_TIMEOUT      segundos máximos para satsuma            (60)
 #   LABESAT_SYMM_MAXBYTES     tamaño máximo de CNF sin comprimir       (536870912)
 #   LABESAT_KISSAT_ARGS       argumentos extra para kissat             ("")
@@ -38,7 +40,7 @@ ROOT="$(cd "$HERE/.." && pwd)"
 # -f además de -x: un directorio también es "ejecutable" (solver/kissat lo es)
 first_exe() { for f in "$@"; do [ -f "$f" ] && [ -x "$f" ] && { echo "$f"; return; }; done; }
 KISSAT="${LABESAT_KISSAT:-$(first_exe "$HERE/kissat" "$HERE/kissat/build/kissat")}"
-SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma")}"
+SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma-mclique" "$ROOT/tools/satsuma")}"
 SYMM_TIMEOUT="${LABESAT_SYMM_TIMEOUT:-60}"
 SYMM_MAXBYTES="${LABESAT_SYMM_MAXBYTES:-536870912}"
 read -r -a KARGS <<< "${LABESAT_KISSAT_ARGS:-}"

@@ -19,7 +19,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-002 | ¿Subcategoría IA o categoría regular? | ⏸️ correo aplazado hasta definir las mejoras (límite recomendado: 1-feb-2027) | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
 | D-003 | ¿Se admite la composición satsuma + kissat? | ⏸️ mismo correo que D-002 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
-| D-005 | ¿MIT o cliques (GPL)? | ✅ **opción c** (2026-09-23): reimplementar la clique máxima en MIT | Director | [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 · EXP-010 |
+| D-005 | ¿MIT o cliques (GPL)? | ✅ **opción c** (2026-09-23): reimplementar la clique máxima en MIT · **mclique v2 adoptada** (2026-09-30, EXP-011) | Director | [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 · EXP-010 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
 | D-007 | Nombre del solver | ✅ LabeSAT (2026-09-22) | Director | CHANGELOG |
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |
@@ -154,6 +154,12 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   en la validación final (H8).
 
 ## D-005 — Resolución
+
+- **Cierre (2026-09-30)**: mclique v1 no se adoptó (EXP-010: un tope nuevo de
+  60 s en `9ba8145e`); **mclique v2** (presupuesto de trabajo determinista)
+  cumple el criterio de EXP-011: recupera las 6 de R6 en las dos semillas, sin
+  pérdidas y sin fallos de seguridad. `solver/labesat` la usa por defecto. El
+  binario integrado queda pendiente de su propia prueba de equivalencia.
 
 - **Decisión del director (2026-09-23): opción c**. La búsqueda de clique
   máxima que satsuma toma de cliquer (GPLv2) se reimplementa en MIT.

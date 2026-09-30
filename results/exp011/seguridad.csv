@@ -1,0 +1,3 @@
+instance,status,cpu_s,verificacion
+bench/symm2026/H/9ba8145e0d02318dea5507fc3ba03472.cnf.xz,UNSAT,29.986,OK
+bench/symm2026/H/9ba8145e0d02318dea5507fc3ba03472.cnf.xz,UNSAT,28.744,OK
