@@ -1,0 +1,45 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build-vsa/kissat",
+  "solver_sha1": "6cd7466b73bd88618eea88c913c024ca8cb1938b",
+  "solver_b": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build-vsa/kissat",
+  "solver_b_sha1": "6cd7466b73bd88618eea88c913c024ca8cb1938b",
+  "solver_b_version": "4.0.4",
+  "solver_id": "237c42621406c38522ab2e97372c1f7713fe1b80",
+  "git_commit": "5481ee934900fa954959b7100c1139506997e10a",
+  "solver_id_coincide_con_head": false,
+  "guardas_sha1": {
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build-vsa/kissat": "6cd7466b73bd88618eea88c913c024ca8cb1938b"
+  },
+  "git_dirty": true,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/tesis-dev"
+  ],
+  "n_parejas": 120,
+  "seeds": [
+    42,
+    123
+  ],
+  "timeout": 300.0,
+  "rama_a": {
+    "label": "A-base",
+    "opts": "",
+    "env": {}
+  },
+  "rama_b": {
+    "label": "B-vsa",
+    "opts": "--vivifyactivity=1",
+    "env": {}
+  },
+  "instances_filter": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/results/exp015/instancias.txt",
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    1.03271484375,
+    1.494140625,
+    1.64501953125
+  ],
+  "started_at": "2026-09-29T03:40:24+00:00"
+}
