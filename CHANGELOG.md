@@ -5,6 +5,19 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): research/10, distancia a los ganadores de 2026
+- `scripts/distancia_2026.py`: contrafactual con los tiempos oficiales.
+  - LabeSAT por defecto sería 16.º (+964 s de PAR-2).
+  - Con B3 + X1 + PGO/LTO, 1.º con −75 s (278 resueltas frente a 276), con
+    dos *lights-out* UNSAT que nadie resolvió.
+- Hallazgos:
+  - la ventaja del ganador es casi toda UNSAT;
+  - la cartera secuencial con la variante MAB no compensa con ningún
+    reparto;
+  - las *linear-equations* de 2026 no son XOR;
+  - el tope de satsuma de 60 s es el mayor riesgo sin medir (hasta +270 s).
+- Plan priorizado en research/10 §5.
+
 ### Cerrado (2026-10-01): EXP-018, resultado negativo
 - K1 (precarga de cláusulas en la propagación) conserva la trayectoria
   (85/85), pero es **un 7 % más lenta** (×0,931, IC95 % [0,906; 0,953]).

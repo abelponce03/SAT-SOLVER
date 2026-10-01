@@ -615,3 +615,31 @@ al cerrar cada sesión.
   condición teórica. Sí indica que su efecto práctico es raro, y lo
   correcto es informarlo tal cual, como preveía el preregistro.
 
+### 2026-10-01 (tarde) — Distancia a los ganadores de 2026 (research/10)
+
+- **Se pidió**: mientras corren los experimentos, seguir buscando mejoras y,
+  para empezar, analizar lo lejos que está LabeSAT de los ganadores de 2026
+  y qué podemos integrar de ellos.
+- **Se hizo**:
+  - contrafactual por instancia con los tiempos oficiales: hoy, 16.º; con
+    B3 + X1 + PGO, 1.º con −75 s;
+  - tabla técnica por técnica de los diez primeros;
+  - el hueco de 56 instancias, agrupado;
+  - comprobación con los rasgos de GBD de que *linear-equations* no son XOR;
+  - simulación de la cartera con MAB: no compensa;
+  - cuantificación del riesgo del tope de satsuma.
+- Se cerró también EXP-018 (K1): un 7 % más lenta; no se adopta.
+- **Salió mal**:
+  - El preregistro de la ampliación de EXP-019 decía que nadie resolvió
+    *ordering-principle-xor* y *xor-shifting* en 2026. La columna
+    «no-resuelta» de `dev.list.csv` es de la base Kissat, no del campo. Se
+    detectó al cruzar con los datos oficiales y se corrigió antes de
+    ejecutar.
+  - Una edición por guion se cortó a mitad (no encontró un texto) y el
+    commit de research/10 salió sin el índice, el CHANGELOG ni la bitácora.
+    Se completó en el commit siguiente.
+- **Aprendido**: un contrafactual que pone a LabeSAT 1.º en el banco con el
+  que se diseñaron sus técnicas no es una ventaja asegurada. El margen
+  (2 %) es menor que la incertidumbre de los topes de satsuma, que se puede
+  medir.
+

@@ -155,6 +155,15 @@ muestra en `results/exp019/muestra-dev.csv`, la salida en
   `exp019.py` y se regeneró la muestra. Las instancias son las mismas; solo
   cambia la columna `known`, que H0 usa para comprobar que X1 no refuta
   instancias SAT.
+- **2026-10-01, antes de ejecutar la ampliación: tabla de §3b corregida.**
+  - La primera versión decía que «nadie resolvió en 2026»
+    *ordering-principle-xor* y *xor-shifting*, porque leía la columna
+    «no-resuelta» de `bench/dev.list.csv`. Esa columna se refiere a la base
+    Kissat, no al campo.
+  - Con los datos oficiales: *ordering-principle-xor* la resolvieron 24
+    solvers y *xor-shifting* solo `kissat-sup`, del track experimental.
+    *xor-chain* y *tseitin-formulas* no las resolvió ninguno.
+  - Las predicciones no cambian.
 
 ## 7. Resultados
 
