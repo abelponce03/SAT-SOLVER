@@ -5,6 +5,15 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cerrado (2026-10-01): EXP-019, se adopta X1
+- **H0**: 0 refutaciones de instancias SAT, de 221 conocidas; 5 refutaciones
+  con prueba verificada por los dos `dsr-trim`.
+- **H1**: 321/321 parejas con los contadores idénticos.
+- **H2**: X1 cuesta 0,02 s de mediana (p95 0,37 s, máximo 1,83 s).
+- *xor-chain* y *tseitin-formulas* de 2026 codifican la paridad con
+  contadores unarios: X1 no las ve (límite documentado).
+- La activación por defecto espera a EXP-021 (X1 v2).
+
 ### Añadido (2026-10-01): X1 v2, Gauss por componentes conexas
 - `gauss.c` parte el sistema XOR en componentes conexas (unión-búsqueda) y
   elimina cada una por separado (research/09 §3.4, **Lema 6**: el sistema es

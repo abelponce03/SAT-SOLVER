@@ -1,6 +1,7 @@
 # EXP-019 — X1: refutación de sistemas XOR por Gauss con prueba (preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con:
+- **Estado**: **cerrado (2026-10-01): se adopta X1.** H0, H1 y H2 se
+  cumplen; resultados en §7. Se commiteó antes de ejecutar, junto con:
   - la implementación (`solver/kissat/src/gauss.c`, detrás de
     `configure --gauss`, y la opción `--gauss`, apagada);
   - `scripts/exp019.py`, `scripts/test_gauss.sh` y `scripts/gen_paridad.py`;
@@ -149,6 +150,11 @@ muestra en `results/exp019/muestra-dev.csv`, la salida en
 
 ## 6. Incidencias de ejecución
 
+- **La *miter* `e85fb114` (82 millones de cláusulas) aborta con el código −6**
+  por el tope de 6 GB por proceso del arnés. No lo causa X1: el binario base,
+  sin X1, aborta igual en EXP-016. En la competición la memoria es mucho
+  mayor.
+
 - **2026-10-01, antes de ejecutar.** La primera versión de la muestra
   (commit `71da9ae`) daba «unknown» a las 450 de `tesis-dev`: la lista de la
   tesis escribe el resultado en mayúsculas (`SAT`, `UNSAT`). Se corrigió
@@ -167,4 +173,59 @@ muestra en `results/exp019/muestra-dev.csv`, la salida en
 
 ## 7. Resultados
 
-(pendiente)
+Informe: `results/exp019/informe.md` (`exp019.py analizar`). Binario:
+`build-x1`, compilado por la cola desde el commit de
+`results/exp019/commit.txt`.
+
+**Resultado de X1 en las 577 instancias** (más las 5 de la ampliación):
+
+| Resultado | Instancias |
+|---|---|
+| sin XOR | 267 |
+| sistema consistente | 199 |
+| saltada por los topes de memoria o trabajo | 103 |
+| **refutada** | **5** |
+| sin medida | 3 |
+
+- **H0 (seguridad): se cumple.**
+  - 0 refutaciones de instancias SAT, de 219 SAT conocidas más las 2 de la
+    ampliación.
+  - Las 5 refutaciones (4 sintéticas y `667341ee`) tienen prueba verificada
+    por los dos `dsr-trim`, en 0,04–1,33 s.
+- **H1 (equivalencia): se cumple.** 321 de 321 parejas con los contadores
+  idénticos con y sin X1.
+- **H2 (coste): se cumple.** Mediana 0,020 s, p95 0,370 s, máximo 1,83 s y
+  media 0,085 s, frente a los topes de 1 s y 10 s.
+- **Sin medida (3)**:
+  - una es la *miter* `e85fb114`, de 82 millones de cláusulas: aborta por el
+    tope de 6 GB del arnés, igual que **sin** X1 en EXP-016 (§6);
+  - las otras dos terminan con UNSAT detectado al leer la CNF, antes de que
+    X1 llegue a ejecutarse.
+
+**Ampliación (§3b)**:
+
+| Instancia | Resultado conocido | X1 | Predicción |
+|---|---|---|---|
+| *lights-out* `01d6fa8e` | SAT | consistente (625 filas) | acierta |
+| *xor-shifting* `a60a1383` | SAT | consistente (1611 filas) | acierta |
+| *ordering-principle-xor* `22c8d6aa` | UNSAT | sin XOR | acierta: no refuta |
+| *xor-chain* `3a840939` | desconocido | **sin XOR** | falla: no la refuta |
+| *tseitin-formulas* `7e218509` | desconocido | **sin XOR** | falla: no la refuta |
+
+*xor-chain* y *tseitin-formulas* no escriben la paridad como cláusulas XOR.
+
+- Usan cadenas de implicaciones binarias y ternarias, por ejemplo
+  `(-2 316)`, `(-191 316)` y `(-2 -191 317)`, con 124 unitarias. Es la forma
+  de un **contador unario**: la paridad pasa por una cuenta.
+- La extracción del Lema 0 no las ve, y recuperar la paridad desde un
+  contador exige razonar con cardinalidad (research/09 C1). Es un límite de
+  X1, no un fallo.
+
+**Decisión (§4)**: H0, H1 y H2 → **se adopta X1**.
+
+- EXP-019 midió la versión v1. La v2 (componentes conexas, research/09
+  §3.4) se valida en **EXP-021**, con el mismo arnés.
+- El cambio por defecto (`build.sh` con `--gauss` y la opción a 1) se aplica
+  cuando EXP-021 termine. Si la v2 no pasa, se aplica con el
+  comportamiento de la v1.
+- `build/` no se recompila mientras corre EXP-009.

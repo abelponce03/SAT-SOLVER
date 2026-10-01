@@ -1,0 +1,6 @@
+instance,bank,known,exit_code,wall_s,outcome,x1_s,rows,vars,cert_rows,ext_vars,proof_bytes,dsr_sc2026,dsr_sc2026_s,dsr_actual,dsr_actual_s
+01d6fa8efd18ebfecd06af408958477b.cnf.xz,dev,sat,0,0.02,consistente,0.00,625,625,,,,,,,
+22c8d6aa86d51e15ef5ab37479eda22b.cnf.xz,dev,unsat,0,0.41,sin_xor,0.13,0,0,,,,,,,
+7e21850936d6127540157afaaf912c02.cnf.xz,dev,unknown,0,0.03,sin_xor,0.01,0,0,,,,,,,
+3a8409393cc1ebae1444a079d216f221.cnf.xz,dev,unknown,0,0.06,sin_xor,0.01,0,0,,,,,,,
+a60a138325ac9c88ab293ec0c801a95c.cnf.xz,dev,sat,0,0.02,consistente,0.01,1611,1859,,,,,,,

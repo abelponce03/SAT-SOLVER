@@ -612,7 +612,7 @@ arriba. ∎
 |---|---|---|
 | 1 | Prototipo X1 validado con los tres verificadores (este documento) | **Hecho** |
 | 2 | X1 dentro de Kissat, en C, detrás de `configure --gauss` y `--gauss` (apagada): extracción en la raíz antes de la búsqueda, Gauss con bits, prueba sin borrados con índices de variable por encima del máximo externo | **Hecho**: `test_gauss.sh` en verde con los tres verificadores; contadores idénticos donde no refuta; objetos idénticos sin la macro |
-| 3 | **EXP-019**, preregistrado: X1 sobre `calib`, `calib2`, `symm2026`, `tesis-dev` y sintéticas (no `bench/test`) | Seguridad (H0), equivalencia (H1), coste (H2) |
+| 3 | **EXP-019**: X1 sobre `calib`, `calib2`, `symm2026`, `tesis-dev` y sintéticas (no `bench/test`) | **Cerrado, se adopta**: 0 errores en 221 SAT, 321/321 equivalentes, p95 0,37 s |
 | 4 | X1b, si el paso 3 sale bien | Clase S: A/B de PAR-2 |
 
 ## Referencias

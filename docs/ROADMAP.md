@@ -186,8 +186,8 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
         de X1.
   - [x] X1 en Kissat detrás de `configure --gauss`; `test_gauss.sh` en
         verde con los tres verificadores.
-  - [ ] **EXP-019**: seguridad, equivalencia y coste de X1; decide si se
-        activa por defecto.
+  - [x] **EXP-019**: se adopta X1 (0 errores, 321/321 equivalentes, p95
+        0,37 s). Se activa por defecto tras EXP-021 (v2, por componentes).
   - [ ] X1b (unidades y equivalencias del sistema XOR), si EXP-019 sale bien.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027

@@ -181,7 +181,7 @@ margen por donde el ganador es débil.
 | # | Acción | Valor esperado | Estado |
 |---|---|---|---|
 | 1 | **EXP-009 (B3)**: decide si la ruptura de simetrías se activa y cómo. Es la diferencia entre el puesto 16 y el 1 | −964 s frente a la configuración por defecto de hoy | En la cola, tras EXP-019 |
-| 2 | **Activar X1** (EXP-019) | −56 s; +2 que nadie resolvió | EXP-019 en curso. Paso 1: 5 refutaciones, todas UNSAT y verificadas; coste p95 0,37 s |
+| 2 | **Activar X1** (EXP-019) | −56 s; +2 que nadie resolvió | **EXP-019 cerrado: se adopta.** *xor-chain* y *tseitin-formulas* van codificadas con contadores unarios, sin XOR: X1 no las alcanza (EXP-019 §7) |
 | 3 | **PGO + LTO** en el paquete | −15 s | Adoptado (EXP-017) |
 | 4 | **Topes de satsuma (P5)**: medir el tiempo de satsuma en las instancias simétricas de 2026 que tengamos y decidir el tope con datos. El de 60 s ayuda en las 3 medidas; el riesgo está en las 11 que no podemos medir | Proteger el margen (hasta +270 s de riesgo) | Proponer EXP-020: tope 60 s frente a 300 s, con B3 |
 | 5 | **Cobertura de X1**: en EXP-019, 103 sistemas XOR se saltan por los topes de memoria. Partirlos en componentes conexas (Gauss por componente) no cambia nada cuando no refuta (clase E con salida temprana) | Más refutaciones posibles a coste casi nulo | **Hecho** (research/09 §3.4, X1 v2); su cobertura la mide EXP-021 |
