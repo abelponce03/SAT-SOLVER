@@ -17,6 +17,13 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   - **Teorema 5**: cuándo dos compilaciones hacen la misma búsqueda. Entre
     otras condiciones, `-ffp-contract=off` si el `-march` tiene FMA
     (`smooth.c:34-35`).
+- **research/08 §6**: marco para optimizar el código sin cambiar la búsqueda.
+  - **Lemas 1-3**: los ticks, el orden de la arena y de las listas, y los
+    empates al ordenar forman parte del estado que decide la búsqueda.
+  - **Teorema 6**: refinamiento de datos (Hoare, 1972).
+  - **Proposición 3**: cota inferior del análisis 1UIP.
+  - Auditoría del núcleo: no queda mejora asintótica; las candidatas son de
+    latencia de memoria (K1-K3).
 - **ADR-0009**: clases E (equivalente), P (tubería) y S (búsqueda), y qué
   prueba exige cada una.
 - **EXP-016** (perfil de costes) y **EXP-017** (PGO, LTO y `-march`, con un

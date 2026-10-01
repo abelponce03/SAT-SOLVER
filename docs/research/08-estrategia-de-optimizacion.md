@@ -39,6 +39,15 @@
      algorítmica con prueba;
    - en paralelo, las palancas que sí cambian el orden de crecimiento (B3 y
      X1), que son las de más valor esperado.
+5. **Qué cuenta como «misma búsqueda» al tocar el código** (§6). Los
+   *ticks* de Kissat deciden el cambio de modo y los presupuestos de
+   inproceso, y el orden de la arena decide qué cláusulas se borran. Una
+   optimización que obtiene el mismo resultado visitando menos razones
+   **cambia la búsqueda**. El Teorema 6 (refinamiento) dice qué hay que
+   demostrar. La auditoría del núcleo concluye que cada componente ya es
+   lineal en lo que cualquier algoritmo correcto tiene que leer
+   (Proposición 3). El margen está en la latencia de memoria: precarga en la
+   propagación (K1-K2), pendiente de lo que mida EXP-016.
 
 ---
 
@@ -277,11 +286,217 @@ Clases (ADR-0009):
 |---|---|---|
 | O1 | EXP-016 (perfil) y research/08 | Fracciones p_c por fase, con sobrecoste medido |
 | O2 | C1: `build.sh --pgo --lto` (+ `--march` con `-ffp-contract=off`); EXP-017 | Contadores idénticos en el banco de equivalencia **y** velocidad con IC95 % > 1 en el A/B |
-| O3 | Análisis de los K\* con p_c ≥ 5 %: algoritmo, cota, prueba de corrección o equivalencia, antes de implementar | Demostración escrita en research/08 §6 (se añadirá) |
+| O3 | Análisis de los K\* con p_c ≥ 5 %: algoritmo, cota, prueba de corrección o equivalencia, antes de implementar | Demostración escrita en §6 (marco y auditoría del núcleo: hechos; candidatas K1-K3 a la espera de EXP-016 Q4) |
 | O4 | Palancas de sistema de pruebas: B3 (EXP-009) y X1 | Criterios de sus preregistros |
 
 Prioridad de cómputo: un paso de la cola a la vez (ADR-0008). C1 necesita
 una tanda de tiempo propia.
+
+## 6. Optimizar el código sin cambiar la búsqueda: marco de demostración
+
+El Teorema 5 cubre el compilador. Esta sección cubre los cambios **en el
+código fuente** que pretenden ser clase E (ADR-0009): qué hay que demostrar y
+qué partes del estado de Kissat no se pueden tocar.
+
+### 6.1 El estado que decide el futuro de una corrida
+
+**Definición (estado observable).** Llamamos σ a la tupla formada por:
+
+- la pila de asignación, con razón y nivel de cada literal, y los valores;
+- cada lista de vigilancia **como secuencia** (importa el orden);
+- la *arena* de cláusulas **como secuencia** (importa el orden de las
+  cláusulas, no su dirección);
+- la cola VMTF (enlaces y sellos) y el montículo de puntuaciones;
+- las fases guardadas y las medias exponenciales;
+- los límites y **todos los contadores estadísticos que se leen para decidir
+  algo**, incluidos los *ticks*;
+- el estado del generador aleatorio y los valores de las opciones.
+
+No forman parte de σ las direcciones, la capacidad reservada de los vectores,
+el estado de las cachés ni el tiempo (Teorema 5, (c) y (d)).
+
+**Lema 1 (los ticks son estado).** El contador `search_ticks` decide:
+
+- el cambio entre modo *focused* y *stable*: en las fases impares se cambia
+  cuando `search_ticks ≥ limits.mode.ticks` (`mode.c:336-337`);
+- el presupuesto de cada inproceso: `SET_EFFORT_LIMIT` calcula
+  `esfuerzo × (search_ticks − último)` (`kimits.h:135-170`), y de él viven
+  sondeo, vivificación, barrido, etc.
+
+Y lo incrementan, además de la propagación (`propsearch.c:24`):
+
+- el análisis de conflictos (`analyze.c:158`, una unidad por razón grande
+  visitada);
+- la minimización (`minimize.c:52`) y el encogimiento (`shrink.c:180`), con
+  `minimizeticks=1`, que es el valor por defecto.
+
+*Consecuencia.* Un cambio que produce **la misma cláusula aprendida**
+visitando **menos razones** (por ejemplo, otra memoización en la
+minimización) **cambia** `search_ticks`, y con ello el instante del cambio de
+modo y los presupuestos de inproceso. **No es clase E**: es clase S, aunque
+sea «solo» una optimización. Para que sea clase E tiene que conservar la
+cuenta de ticks del original. Una forma es un contador fantasma que sume lo
+que el original habría sumado, si ese número se puede calcular de forma
+barata.
+
+**Lema 2 (el orden de la arena y de las listas es estado).**
+
+- `reduce.c:63-99` recoge las cláusulas candidatas en el orden de la arena y
+  las ordena por (glue, tamaño) con una ordenación por base (*radix*), que es
+  estable. Los empates son frecuentes y se resuelven por el orden de la
+  arena. Por tanto, el orden de la arena decide **qué cláusulas se borran**.
+- `proplit.h` recorre la lista de vigilancia en orden y se detiene en el
+  **primer** conflicto: el orden de la lista decide qué conflicto se
+  analiza.
+
+*Consecuencia.* Cambiar dónde se colocan las cláusulas al compactar
+(`collect.c`), al crearlas o al reordenar las listas de vigilancia es clase
+S.
+
+**Lema 3 (sustituir una ordenación).** Sea < un orden estricto débil sobre
+los elementos que se ordenan. Si dos algoritmos de ordenación correctos A y B
+reciben la misma secuencia, sus salidas coinciden en todas las entradas si:
+
+- (i) no hay dos elementos distintos equivalentes (< es total sobre esa
+  entrada), **o**
+- (ii) A y B son estables.
+
+Si hay elementos equivalentes y alguno de los dos no es estable, la
+coincidencia no está garantizada.
+
+*Demostración.* Una salida ordenada está determinada salvo permutaciones
+dentro de cada clase de equivalencia de <.
+
+- Con (i), las clases tienen un solo elemento y la salida es única.
+- Con (ii), las dos conservan el orden de entrada dentro de cada clase, así
+  que coinciden.
+- Si A no es estable, existe una entrada con dos equivalentes x ≠ y que A
+  invierte. Si B es estable, en esa entrada B no los invierte y las salidas
+  difieren. Si B tampoco es estable, la igualdad depende de los detalles de
+  cada uno. ∎
+
+*Aplicación a Kissat.* `QUICK_SORT` (`sort.h:41`) no es estable.
+
+- Es seguro sustituirlo donde la clave no tiene empates:
+  - en `bump.c:17-24` (sellos VMTF, únicos por variable);
+  - en `analyze.c:219-225` (niveles de decisión, distintos por
+    construcción).
+- Donde hay empates, solo con una ordenación estable que replique el orden de
+  entrada. Es el caso de `reduce.c`, que ya usa *radix*.
+
+**Teorema 6 (refinamiento).** Sea K el programa original, con estados Σ y un
+paso F: Σ → Σ, y K' el optimizado, con estados Σ' y paso F'. Supongamos que
+existe una función de abstracción α: Σ' → Σ tal que:
+
+- **(i)** α(σ'₀) = σ₀ para los estados iniciales de la misma entrada y
+  semilla;
+- **(ii)** para todo σ' alcanzable, α(F'(σ')) = F(α(σ'));
+- **(iii)** las salidas (respuesta, modelo, bytes de la prueba y contadores)
+  se calculan solo a partir de la abstracción: out'(σ') = out(α(σ'));
+- **(iv)** la comprobación de terminación (`TERMINATED`) se hace en los
+  mismos puntos del paso abstracto.
+
+Entonces K y K' conservan la trayectoria (§3.3).
+
+*Demostración.* Por inducción sobre n, α(F'ⁿ(σ'₀)) = Fⁿ(σ₀).
+
+- El caso base es (i).
+- Paso inductivo: α(F'ⁿ⁺¹(σ'₀)) = α(F'(F'ⁿ(σ'₀))) = F(α(F'ⁿ(σ'₀)))
+  = F(Fⁿ(σ₀)), por (ii) y la hipótesis de inducción.
+- Las salidas coinciden por (iii).
+- Por (iv), una terminación por tiempo corta las dos corridas en estados
+  abstractos del mismo tipo. ∎
+
+Es el método de Hoare (1972) para probar representaciones de datos, en la
+forma de simulación hacia delante de de Roever y Engelhardt (1998). En la
+práctica, F es un **macropaso**:
+
+- la propagación de un literal;
+- un análisis de conflicto;
+- un `reduce`;
+- una ronda de un inproceso.
+
+Basta con que el diagrama conmute en sus fronteras, porque nada fuera del
+macropaso lee su estado interno.
+
+**Corolario 4 (pistas sin semántica).** Estos cambios son clase E con
+α = identidad:
+
+- `__builtin_prefetch` sobre una dirección cuyo cálculo es válido;
+- `__builtin_expect`;
+- atributos de alineación, `inline` y `noinline`;
+- reordenar lecturas independientes.
+
+*Demostración.* Ninguno cambia el valor de ningún objeto de la máquina
+abstracta de C11, así que F' = F. Para el *prefetch*, el manual de GCC
+garantiza que no provoca fallos aunque la dirección no sea válida, siempre
+que la **expresión** que la calcula sí lo sea. Por eso solo se precarga
+`arena + ref` cuando `ref` es una referencia leída de un vigilante grande,
+que el invariante de Kissat sitúa dentro de la arena
+(`assert (ref < SIZE_STACK (solver->arena))`). ∎
+
+### 6.2 Auditoría del núcleo de búsqueda (Kissat 4.0.4, lectura del código)
+
+Notación:
+
+- k: variables analizadas en un conflicto;
+- R: suma de los tamaños de las razones visitadas;
+- g: glue de la cláusula aprendida;
+- n: número de variables;
+- w: tamaño de la lista de vigilancia.
+
+| Componente | Código | Algoritmo | Coste | ¿Mejorable en O? |
+|---|---|---|---|---|
+| Propagación | `proplit.h` | Vigilantes con búsqueda circular, literal bloqueante y binarias en línea | O(w + reemplazos) por literal; óptimo amortizado (Teorema 4) | No |
+| Análisis 1UIP | `analyze.c` | Recorrido hacia atrás del grafo de implicación | O(R) | No (Proposición 3) |
+| Minimización | `minimize.c` | Recursiva con memo (*removable*/*poisoned*), profundidad ≤ `minimizedepth` | Lineal en las razones alcanzadas: cada variable se resuelve una vez (Sörensson y Biere, 2009) | No |
+| Encogimiento | `shrink.c` | *All-UIP* por bloques de nivel | Lineal en el grafo de implicación (Fleury y Biere, 2021) | No |
+| Orden por niveles | `analyze.c:219` | Inserción/*quick* si g < 32; *radix* si no | O(g log g) u O(g) | Despreciable |
+| Puntuación (*bump*) | `bump.c` | *Focused*: *radix* por sello y al frente de la cola VMTF. *Stable*: montículo binario | O(k) en *focused*; O(k log n) en *stable* | No en *focused*; en *stable*, el log n es el del montículo |
+| Decisión | `decide.c` | VMTF con puntero de búsqueda (Biere y Fröhlich, 2015) o montículo | O(1) amortizado; O(log n) por extracción | No |
+| Retroceso | `backtrack.c` | Desasigna y reinserta | O(literales desasignados), × log n en *stable* | No |
+| `reduce` | `reduce.c` | Recorrido de la parte redundante de la arena + *radix* | O(\|arena redundante\|) por llamada | No (hay que leer cada candidata) |
+| Recolección | `collect.c` | Compactación de la arena y vaciado de vigilantes | O(\|arena\| + Σ w) | No |
+
+**Proposición 3 (cota inferior del análisis).** Todo algoritmo que calcule
+exactamente la cláusula 1UIP a partir del grafo de implicación tiene que leer
+Ω(R) literales en el peor caso.
+
+*Demostración (adversario).* Supongamos que un algoritmo no lee el literal ℓ
+de una razón visitada en el recorrido del original. El adversario cambia ℓ
+por un literal falso de un nivel inferior que no esté en la cláusula
+aprendida. La 1UIP correcta de la nueva instancia contiene ese literal. El
+algoritmo, que no ha leído ℓ, devuelve la misma salida que antes, sin él:
+error. Por tanto debe leer los R literales. ∎
+
+**Conclusión de la auditoría.** En el núcleo de búsqueda **no queda mejora
+asintótica**: cada componente es lineal, o casi, en la información que
+cualquier algoritmo correcto tiene que leer. Lo que queda es el factor
+constante, y en un CDCL ese factor lo domina la **latencia de memoria**:
+
+- cada vigilante grande cuya cláusula no está en caché cuesta un fallo de
+  caché (`arena + ref` en `proplit.h`);
+- Chu, Harwood y Stuckey (2009) midieron que los fallos de caché dominan el
+  tiempo de los resolvedores CDCL y propusieron, entre otras cosas, guardar
+  un literal en el propio vigilante, que es el literal bloqueante que Kissat
+  ya usa.
+
+Candidatas de clase E que se derivan de esto (para después de EXP-016 Q4 y
+solo si `propagate` pesa lo suficiente):
+
+| # | Candidata | Clase | Prueba | Riesgo |
+|---|---|---|---|---|
+| K1 | Precarga (*prefetch*) de la cabecera de la cláusula del siguiente vigilante grande en `proplit.h` | E (Corolario 4) | α = identidad; ticks intactos, porque no se toca ningún `ticks++` | Puede **ralentizar** si la cláusula ya estaba en caché: se mide |
+| K2 | Precarga de `values[blocking]` del siguiente vigilante | E (Corolario 4) | Ídem | Ídem; `values` cabe en caché en instancias pequeñas |
+| K3 | Inserción de vigilantes diferida (`delayed`) sin la pila intermedia | E solo si el orden final de cada lista es el mismo (Lema 2) | Teorema 6 con α = identidad sobre las listas | Si cambia el orden de una sola lista, es S |
+
+Lo que **no** se hará como «optimización» (sería clase S por los Lemas 1-3):
+
+- otra memoización en la minimización (cambia ticks);
+- otro orden de compactación de la arena (cambia qué se borra);
+- sustituir la ordenación de `reduce` por una inestable.
+
+Cualquiera de estas, si se quisiera, necesitaría un A/B de PAR-2.
 
 ## Referencias
 
@@ -290,10 +505,21 @@ una tanda de tiempo propia.
   Conference*, 483–485.
 - Beame, P., Kautz, H., y Sabharwal, A. (2004). Towards understanding and
   harnessing the potential of clause learning. *JAIR* 22, 319–351.
+- Biere, A., y Fröhlich, A. (2015). Evaluating CDCL variable scoring
+  schemes. *SAT 2015*, LNCS 9340, 405–422.
+  https://doi.org/10.1007/978-3-319-24318-4_29
+- Chu, G., Harwood, A., y Stuckey, P. J. (2009). Cache conscious data
+  structures for Boolean satisfiability solvers. *JSAT* 6(1-3), 99–120.
 - Cook, S. A. (1976). A short proof of the pigeon hole principle using
   extended resolution. *SIGACT News* 8(4), 28–32.
 - Cook, W., Coullard, C. R., y Turán, G. (1987). On the complexity of
   cutting-plane proofs. *Discrete Applied Mathematics* 18(1), 25–38.
+- de Roever, W.-P., y Engelhardt, K. (1998). *Data Refinement:
+  Model-Oriented Proof Methods and their Comparison*. Cambridge University
+  Press.
+- Fleury, M., y Biere, A. (2021). Efficient all-UIP learned clause
+  minimization. *SAT 2021*, LNCS 12831.
+  https://doi.org/10.1007/978-3-030-80223-3_12
 - Gent, I. P. (2013). Optimal implementation of watched literals and more
   general techniques. *JAIR* 48, 231–252. https://doi.org/10.1613/jair.4016
 - Haken, A. (1985). The intractability of resolution. *Theoretical Computer
@@ -301,14 +527,19 @@ una tanda de tiempo propia.
 - Heule, M. J. H., Kiesl, B., y Biere, A. (2017). Short proofs without new
   variables. *CADE-26*, LNCS 10395, 130–147.
   https://link.springer.com/chapter/10.1007/978-3-319-63046-5_9
+- Hoare, C. A. R. (1972). Proof of correctness of data representations.
+  *Acta Informatica* 1(4), 271–281.
 - IEEE (2008). *IEEE Standard for Floating-Point Arithmetic*, IEEE 754-2008.
 - ISO/IEC 9899:2011 (C11), §5.1.2.3 (ejecución del programa) y §6.5.8
   (operadores relacionales sobre punteros).
 - GCC Manual, opción `-ffp-contract` (valor por defecto `fast` en los modos
-  GNU).
+  GNU) y `__builtin_prefetch` (no provoca fallos aunque la dirección no sea
+  válida, si la expresión que la calcula lo es).
 - Pettis, K., y Hansen, R. C. (1990). Profile guided code positioning.
   *PLDI '90*, 16–27.
 - Pipatsrisawat, K., y Darwiche, A. (2011). On the power of clause-learning
   SAT solvers as resolution engines. *Artificial Intelligence* 175(2),
   512–525.
+- Sörensson, N., y Biere, A. (2009). Minimizing learned clauses. *SAT
+  2009*, LNCS 5584, 237–243. https://doi.org/10.1007/978-3-642-02777-2_23
 - Urquhart, A. (1987). Hard examples for resolution. *JACM* 34(1), 209–219.
