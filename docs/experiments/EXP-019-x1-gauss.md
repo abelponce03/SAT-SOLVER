@@ -130,7 +130,12 @@ de decisión.
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **2026-10-01, antes de ejecutar.** La primera versión de la muestra
+  (commit `71da9ae`) daba «unknown» a las 450 de `tesis-dev`: la lista de la
+  tesis escribe el resultado en mayúsculas (`SAT`, `UNSAT`). Se corrigió
+  `exp019.py` y se regeneró la muestra. Las instancias son las mismas; solo
+  cambia la columna `known`, que H0 usa para comprobar que X1 no refuta
+  instancias SAT.
 
 ## 7. Resultados
 

@@ -75,8 +75,9 @@ def conocidos():
             if r.get("resultado") in ("sat", "unsat"):
                 res[r["hash"]] = r["resultado"]
     for r in csv.DictReader(open(os.path.join(ROOT, "bench", "tesis.list.csv"))):
-        if r.get("k_resultado") in ("sat", "unsat"):
-            res.setdefault(r["hash"], r["k_resultado"])
+        k = (r.get("k_resultado") or "").lower()  # en la tesis: «SAT» / «UNSAT»
+        if k in ("sat", "unsat"):
+            res.setdefault(r["hash"], k)
     return res
 
 
