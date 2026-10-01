@@ -1,6 +1,8 @@
 # EXP-014 — Ruptura de simetrías en el banco industrial de la tesis (preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea **antes** de ejecutar las dos
+- **Estado**: **cerrado (2026-09-30)**: `--symmetry` sigue apagado; el daño en
+  la industria es sobre todo coste fijo en instancias triviales (§8.3).
+  Preregistrado: se commiteó **antes** de ejecutar las dos
   partes, junto con `scripts/scan_symmetry.py` (parte 1) y
   `scripts/exp014_simetrias.py` (selección y análisis de la parte 2).
   Única ejecución previa: satsuma sobre **una** instancia de station-repacking
@@ -164,3 +166,87 @@ Datos: `results/exp014/satsuma.csv` (450 instancias, satsuma `9881df0f…`).
   Por eso la estimación del §5 («fuera de S, solo el coste de satsuma») **no
   está cubierta** para esas 222. Se informará con esa salvedad, y no se
   cambia el diseño.
+
+### 8.2 Parte 2 (2026-09-28 a 29): A/B intercalado
+
+`python3 scripts/exp014_simetrias.py analizar` (`results/exp014/informe.txt`).
+80 instancias de S (estratificadas sobre las 193) y 10 controles, T = 300 s,
+semilla 42, `solver/labesat --symmetry` (B) frente a `--no-symmetry` (A),
+con satsuma sin cliques (`tools/satsuma`, como fija §3.2).
+
+| estrato S (80) | A: sin ruptura | B: con ruptura |
+|---|---:|---:|
+| Resueltas | 61 | 62 |
+| PAR-2 | 156,5 s | 159,4 s |
+
+- ΔPAR-2 = **+2,9 s**, IC95 % [−9,0; +10,7]. Wilcoxon p = 0,0002: B es peor
+  en la mayoría de instancias, pero por poco.
+- **H3** (McNemar): solo B resuelve 1, solo A 0, p = 1. Sin diferencia en
+  resueltas, como se predijo.
+- **H2** (factor de tiempo B/A en las 61 resueltas por ambas): **4,52×**,
+  IC95 % [3,02; 6,92]. **No se cumple** (criterio: superior ≤ 1,10), como se
+  predijo: la ruptura cuesta tiempo en la industria.
+
+**Control (vinculante).** Tal como estaba fijado, **falla**: propagaciones
+idénticas en 6 de 10. Lo que se investigó, como manda §4:
+
+- 3 de los 4 que difieren terminan en **TIMEOUT** en las dos ramas. Con
+  presupuesto de tiempo, las propagaciones hasta el corte dependen del reloj,
+  así que no son comparables entre dos corridas. El control solo tiene
+  sentido en las resueltas, y eso no se previó en el preregistro.
+- El cuarto, `f65e6b35`, sí resuelve, pero satsuma escribió 320 bytes de
+  prueba: **no fue una reescritura nula**. Pertenece a las 222 instancias que
+  satsuma reescribe sin romper simetrías (§8.1).
+- En los **6 controles resueltos en los que satsuma no tocó nada**, las
+  propagaciones son **idénticas (6 de 6)**.
+
+Conclusión: cuando satsuma no hace nada, la búsqueda no cambia. Cuando
+reescribe aunque no rompa simetrías, la búsqueda **sí** puede cambiar. Los
+datos de S valen para B3, con esa salvedad para las 222 instancias
+reescritas.
+
+**Veredicto según §4**:
+
+- H2 no se cumple: confirma el daño de EXP-007 en otro dominio;
+- `results/exp014/b3-industrial.csv` (80 filas) son los ejemplos industriales
+  para entrenar B3;
+- **`--symmetry` sigue apagado por defecto**.
+
+### 8.3 De dónde sale el 4,5× (exploratorio, no preregistrado)
+
+| instancias resueltas por ambas | n | factor B/A |
+|---|---:|---:|
+| A tarda < 10 s | 48 | 6,86× |
+| **A tarda ≥ 10 s** | **13** | **0,97×** |
+
+- El factor lo dominan instancias **triviales**: el coste fijo de satsuma
+  (mediana 1,8 s, hasta 35 s en station-repacking) se suma a corridas de
+  menos de un segundo. En las no triviales, la ruptura **no ralentiza** la
+  búsqueda de kissat.
+- Por familia, el peor caso es station-repacking (28×), donde satsuma
+  gasta ~35 s en la fase de Schreier sobre instancias que kissat resuelve
+  enseguida.
+- **Idea para B3, sin probar**: aplicar la ruptura **con retraso**. Kissat
+  corre solo unos segundos y, si no resuelve, se lanza satsuma y se sigue
+  sobre la fórmula con predicados. El coste en las instancias de H de EXP-007
+  sería esos segundos de espera; el ahorro, todo el coste fijo en las
+  triviales. Se propone para el diseño de EXP-009.
+
+### 8.4 Estimación para todo tesis-dev (§5, no es un contraste)
+
+- En S, ponderado por familia a las 193 instancias: +535 s en total.
+- Fuera de S, como cota superior, el tiempo de satsuma en las 257: +748 s.
+- **ΔPAR-2 medio de tesis-dev a T = 300 s: entre +1,2 y +2,9 s.** Es un daño
+  pequeño, casi todo coste fijo.
+
+### Incidencias de la parte 2
+
+- Una pareja (`ed2af4dc`, bitvector) salió **ERROR en las dos ramas**:
+  kissat murió por la señal 16 a los 268 s en A y a los 13 s en B. No hubo
+  reinicio ni falta de memoria (30 y 78 MB). Repetida a mano el 2026-09-30,
+  termina con normalidad por tiempo, igual que en la tesis (TIMEOUT en las 3
+  semillas). Causa sin identificar. Las dos ramas cuentan como no resueltas,
+  así que no afecta a la comparación.
+- Carga ajena durante la tanda: servicios Docker del director, con un
+  arranque de contenedor por minuto aproximadamente. El orden intercalado
+  reparte ese ruido entre las dos ramas.

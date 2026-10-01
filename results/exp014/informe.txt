@@ -1,0 +1,24 @@
+== EXP-014 parte 2: 90 parejas (T = 300 s)
+
+Controles (cambia = 0): propagaciones idénticas en 6/10
+
+Estrato S (80): resueltas A 61 / B 62; PAR-2 A 156.5 / B 159.4
+   ΔPAR-2 = +2.9 s; Wilcoxon p = 0.000219
+   IC95 % del ΔPAR-2 [-9.0, +10.7]
+H3 McNemar: solo B 1, solo A 0, p = 1
+H2 factor B/A en las 61 resueltas por ambas: 4.520 [IC95 3.015, 6.921] -> daña o no concluyente (criterio: sup ≤ 1.10)
+
+Por familia:
+                        n   A   B  par2_A  par2_B
+family                                           
+argumentation           1   1   1    47.5    27.5
+bitvector               1   0   0   600.0   600.0
+cryptography            1   1   1     1.5     5.2
+hardware-verification  12   9   9   181.0   184.2
+miter                  12  10  10   101.2   101.2
+planning               10  10  10     2.6     1.7
+scheduling             13   8   8   253.4   257.6
+software-verification   7   6   6    92.6    96.9
+station-repacking      23  16  17   196.3   202.1
+
+Conjunto de datos para B3: /home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/results/exp014/b3-industrial.csv (80 filas)
