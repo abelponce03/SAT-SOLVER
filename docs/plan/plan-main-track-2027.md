@@ -98,7 +98,7 @@ respalde. **No se presenta nada sin medir.**
 | **H2 · Base decidida** (EXP-008) | ✅ **2026-09-25**: se mantiene 4.0.4 (p = 0,60) | A/B de Kissat 4.0.4 frente a sc2026, preregistrado, en calib + calib2 | H1 (máquina libre) |
 | **H3 · Cliques decididos** (D-005) | nov 2026 | Coste de mantener MIT medido en PAR-2; si hay coste, reimplementación MIT validada | H1 |
 | **H3b · Un solo binario** (D-016) | oct 2026 | `kissat --symmetry` equivalente a la tubería (EXP-012), en CI y en la configuración de competición; la entrega deja de depender de `solver/labesat` | — |
-| **H3c · Compilación decidida** (EXP-017) | ✅ **2026-10-01**: PGO + LTO (×1,030); `-march` en D-019 | PGO/LTO/`-march` adoptados o descartados por su criterio preregistrado (equivalencia exacta y IC de la aceleración > 1) | EXP-016 |
+| **H3c · Compilación decidida** (EXP-017) | ✅ **2026-10-01**: PGO + LTO (×1,030); sin `-march` (D-019) | PGO/LTO/`-march` adoptados o descartados por su criterio preregistrado (equivalencia exacta y IC de la aceleración > 1) | EXP-016 |
 | **H4 · B3 validado** (EXP-009) | dic 2026 – ene 2027 | Criterio de activación entrenado sin `bench/test` y validado preregistrado | H1, H2 |
 | **H5 · Mejoras definidas** | **≤ 25 ene 2027** | Contenido de V1–V4 congelado | H2–H4 |
 | **H6 · Correo a los organizadores** | **≤ 1 feb 2027** | Enviado con las cifras de H5 | H5 |

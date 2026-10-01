@@ -25,14 +25,14 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |
 | D-009 | Autoría: solo el desarrollador en git | ✅ (2026-09-23) | Director | [ADR-0005](../adr/0005-gobernanza-autoria-y-decisiones.md) |
 | D-010 | Documentación continua y multiformato, con LaTeX para los PDF | ✅ (2026-09-23) | Director | [ADR-0006](../adr/0006-documentacion-multiformato.md) |
-| D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 · issue #10 |
+| D-011 | Instalar el plugin «engineering» del catálogo | ✅ **autorizado** (2026-10-01): el director autoriza los conectores, plugins y skills que hagan falta; las skills de `engineering` ya están disponibles en la sesión | Director | §D-011 · issue #10 |
 | D-012 | Insignia «via Claude» en las acciones de GitHub hechas desde la sesión | 🟡 | Director | §D-012 · issue #11 |
 | D-013 | Base de Kissat: 4.0.4 o sc2026 | ✅ **4.0.4** (2026-09-25), por el criterio preregistrado de EXP-008: p = 0,60, sin diferencia detectable | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
 | D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | ✅ **opción b** (2026-09-30): EXP-013 calibra ambos grupos (0,26 y 0,47, IC ±8 %); las features se deciden con A/B local | Director | §D-017 · EXP-013 · issue #28 |
-| D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | 🟡 provisional: sin `-march` (solo PGO + LTO) | Director | §D-019 · issue #33 · EXP-017 §7 |
+| D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | ✅ **opción a** (2026-10-01): sin `-march` ni en la competición ni en los experimentos; solo PGO + LTO | Director | §D-019 · issue #33 · EXP-017 §7 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
@@ -85,6 +85,13 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   cubren lo esencial. Aportaría plantillas para ADR y documentación.
 - **Coste**: ninguno. Es una decisión de configuración de la cuenta del
   director.
+- **Resolución (2026-10-01)**: el director autoriza «todos los conectores
+  necesarios, plugins y skills» para trabajar.
+  - Las skills del plugin `engineering` ya aparecen en la sesión.
+  - Los conectores que piden OAuth (GitHub, Slack, Notion…) los tiene que
+    autorizar el director en la configuración de conectores de claude.ai;
+    una sesión no interactiva no puede hacerlo.
+  - Para GitHub se sigue usando `gh`, que ya funciona.
 
 ## D-012 — Insignia «via Claude» en las acciones de GitHub
 
@@ -286,4 +293,9 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   hardware. c no compensa por ≈ 1 %.
 - **Mientras tanto**: los experimentos locales sí usan `-march`, porque el
   i5-1135G7 lo admite.
+- **Resolución (2026-10-01)**: el director decide **no usar `-march`**.
+  - Opción a para la competición, y también en los experimentos: así lo que
+    se mide es lo que se entrega.
+  - La compilación adoptada es `build.sh --pgo --lto` (EXP-017, ×1,030).
+  - `--march` sigue en `build.sh` solo para reproducir EXP-017.
 

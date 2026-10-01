@@ -102,6 +102,30 @@ que el ruido entre semillas.
   ~100 parejas de equivalencia y las verificaciones de las refutadas,
   unas 2 h.
 
+## 3b. Ampliación: instancias de paridad de 2026 (preregistrada el 2026-10-01)
+
+El director autorizó descargar de GBD (`scripts/fetch_gbd.py`) las cinco
+instancias de paridad de `bench/dev.list.csv`. Se guardan en `bench/dev/`,
+fuera de git; son 0,9 MB en total. Se miden con el mismo arnés, con la
+muestra en `results/exp019/muestra-dev.csv`, la salida en
+`results/exp019/x1-dev.csv` y el paso `exp019-ampliacion` de la cola.
+
+| Instancia | Familia | Resultado conocido | 2026 | Variables / cláusulas | Predicción |
+|---|---|---|---|---|---|
+| `3a840939` | *xor-chain* | desconocido | nadie la resolvió en 5000 s | 23 815 / 47 691 | X1 la refuta si es una paridad inconsistente en cadena de XOR cortas, que es lo que sugiere el nombre. Incierto |
+| `7e218509` | *tseitin-formulas* | desconocido | nadie la resolvió | 18 601 / 37 462 | La refuta si es una Tseitin con carga impar y vértices de grado ≤ 6. Incierto |
+| `22c8d6aa` | *ordering-principle-xor* | UNSAT | nadie la resolvió | 3 120 / 477 680 | **No** la refuta: la contradicción viene del principio de orden, no del álgebra lineal, y las XOR son la sustitución que la endurece. El sistema XOR solo es consistente |
+| `a60a1383` | *xor-shifting* | SAT | nadie la resolvió | 2 651 / 9 500 | No la refuta (es SAT) |
+| `01d6fa8e` | *lights-out* | SAT | 600 s (Kissat 2026) | 625 / 9 216 | No la refuta (es SAT; X1 no busca modelos) |
+
+- **No cambia el criterio de decisión** (§4).
+- La seguridad sí cuenta: una refutación de las dos SAT, o una prueba que
+  no verifique, es un fallo de H0. Ese tipo de fallo no se tolera en ningún
+  banco.
+- Las tres de resultado desconocido o UNSAT son descriptivas. Si X1 refuta
+  una desconocida con prueba verificada por los dos `dsr-trim`, su resultado
+  pasa a ser **UNSAT demostrado**.
+
 ## 4. Criterio de decisión
 
 | resultado | decisión |
@@ -110,12 +134,7 @@ que el ruido entre semillas.
 | H0 y H1, pero no H2 | Se ajustan los límites (`gaussops`, `gaussbits` y un tope de cláusulas candidatas) y se repite el paso 1 en un experimento nuevo |
 | H0 o H1 fallan | **No se adopta.** Contradice el Teorema 1 o el diseño: se busca el fallo antes de nada |
 
-**Fuera de este experimento**: las instancias de paridad de `bench/dev.list.csv`
-(*xor-chain*, *tseitin-formulas* y *ordering-principle-xor*, que nadie
-resolvió en 2026, y una *lights-out*) no están en disco. Descargarlas de GBD
-(`scripts/fetch_gbd.py`) requiere el visto bueno del director. Si lo da, se
-miden aparte con este mismo arnés como ampliación, y no cambian el criterio
-de decisión.
+**Ampliación**: §3b.
 
 ## 5. Amenazas a la validez
 

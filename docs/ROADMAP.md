@@ -175,7 +175,7 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
 - [x] **EXP-016**: la propagación es ~57 % del tiempo; análisis 14–19 %;
       sondeo 15–19 %.
 - [x] **EXP-017**: PGO + LTO adoptado (×1,030, trayectorias idénticas);
-      `-march` ×1,040, pendiente de D-019 para la competición.
+      `-march` ×1,040, descartado por el director (D-019): no se usa.
 - [ ] **EXP-018**: K1, precarga de cláusulas en la propagación (clase E;
       contadores idénticos en 5/5 de `calib2` antes de medir).
 - [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y

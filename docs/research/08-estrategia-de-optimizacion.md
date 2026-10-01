@@ -258,7 +258,7 @@ Clases (ADR-0009):
 | # | Candidata | Clase | Valor esperado | Coste | Prueba que exige | Estado |
 |---|---|---|---|---|---|---|
 | **B3** | Ruptura con retraso (`--symmetry-delay`) | S | Alto en lo simétrico (cambio de sistema de pruebas, §1) sin pagar el coste fijo | Hecho | A/B preregistrado | **EXP-009, en curso** |
-| **C1** | Compilación guiada por perfil + LTO (+ `-march` con `-ffp-contract=off`) | E | **Medido (EXP-017)**: ×1,030 con PGO + LTO y ×1,040 con `-march`; 85/85 trayectorias idénticas; ≈ −0,4 a −0,6 % de PAR-2 | Bajo | Teorema 5 + contadores idénticos + A/B de tiempo | **Adoptada** (PGO + LTO); `-march` en D-019 |
+| **C1** | Compilación guiada por perfil + LTO (+ `-march` con `-ffp-contract=off`) | E | **Medido (EXP-017)**: ×1,030 con PGO + LTO y ×1,040 con `-march`; 85/85 trayectorias idénticas; ≈ −0,4 a −0,6 % de PAR-2 | Bajo | Teorema 5 + contadores idénticos + A/B de tiempo | **Adoptada** (PGO + LTO); `-march` descartado por el director (D-019) |
 | **X1** | Refutación en la raíz de sistemas XOR inconsistentes | S | Exponencial en familias de paridad: +4 resueltas y ~−112 s en 2026 (research/06) | Medio | Pruebas aceptadas por dsr-trim, A/B | Aparcada (ADR-0007, fase 2) |
 | **K\*** | Puntos calientes de Kissat con p_c ≥ 5 % | E o S | ≤ el techo de Amdahl de cada componente | Por ver | Complejidad + equivalencia | **EXP-016**: propagación ≈ 57 % (techo ×2,3), análisis 14–19 % (solo clase E, por los ticks), sondeo y vivificación 15–19 % |
 | **K1** | Precarga de cláusulas en la propagación (§6.2), `configure --prefetch=8` | E | Hasta +12 % medido en otro resolvedor; aquí, menos (literal bloqueante) | Hecho | Corolario 4 + contadores idénticos (5/5 en `calib2`) + A/B de tiempo | **EXP-018, preregistrado** |

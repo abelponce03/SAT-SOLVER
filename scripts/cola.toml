@@ -275,6 +275,16 @@ python3 scripts/exp019.py analizar > results/exp019/informe.md 2>&1
 """
 
 [[paso]]
+id = "exp019-ampliacion"
+descripcion = "EXP-019 §3b: X1 en las 5 instancias de paridad de bench/dev (GBD) e informe final"
+requiere = ["results/exp019/muestra-dev.csv", "results/exp019/equivalencia.hecho"]
+hecho = "[ $(filas results/exp019/x1-dev.csv) -ge $(filas results/exp019/muestra-dev.csv) ] && grep -q 'Ampliación' results/exp019/informe.md 2>/dev/null"
+comando = """
+python3 scripts/exp019.py correr --muestra results/exp019/muestra-dev.csv --out results/exp019/x1-dev.csv
+python3 scripts/exp019.py analizar > results/exp019/informe.md 2>&1
+"""
+
+[[paso]]
 id = "exp009-principal"
 descripcion = "EXP-009 principal: ruptura con retraso de 2 s frente a nunca, tesis-dev fresco"
 requiere = ["results/exp009/principal.txt", "tools/satsuma-mclique", "bench/tesis-dev"]

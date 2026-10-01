@@ -1,7 +1,7 @@
 # EXP-017 — C1: compilación guiada por perfil, LTO y `-march` (clase E, preregistrado)
 
 - **Estado**: **cerrado (2026-10-01)**: **se adopta PGO + LTO**; `-march`
-  queda pendiente de D-019 para la competición. Resultados en §7 y datos en
+  no se usa (D-019, resuelta por el director). Resultados en §7 y datos en
   `results/exp017/`. Se commiteó antes de ejecutar, junto con
   `scripts/build.sh` (`--pgo`, `--lto`, `--march`, `--control-fma`),
   `scripts/pgo_entrenamiento.txt`, `scripts/exp017.py`,
@@ -185,6 +185,6 @@ Lectura:
 - **`-march=x86-64-v3`**: la tabla de §4 lo condiciona a confirmar el
   entorno de la competición. Ganancia sobre PGO + LTO ≈ +1 % (≈ −0,15 % de
   PAR-2). Riesgo si la máquina no tuviera AVX2/FMA: SIGILL en todas las
-  instancias. Se registra como **D-019**. Mientras tanto, la opción
-  conservadora: competición con PGO + LTO sin `-march`; experimentos
-  locales con `-march`, porque el i5-1135G7 lo admite.
+  instancias. Se registró como **D-019**.
+- **Resuelto por el director (2026-10-01)**: sin `-march`, ni en la
+  competición ni en los experimentos. La compilación de LabeSAT es PGO + LTO.

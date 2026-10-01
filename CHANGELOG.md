@@ -5,6 +5,17 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): ampliación de EXP-019 con 5 instancias de paridad de 2026
+- Descargadas de GBD, con autorización del director: *xor-chain*,
+  *tseitin-formulas* y *ordering-principle-xor* (ninguna resuelta por nadie
+  en 2026), *xor-shifting* y *lights-out*. Están en `bench/dev/`, fuera de
+  git.
+- EXP-019 §3b las preregistra con su predicción; las mide el paso
+  `exp019-ampliacion`. Con el resultado conocido, cuentan para la seguridad
+  (H0).
+- `exp019.py`: `muestra-dev` y `correr --muestra/--out`.
+- D-011 resuelta: plugins, conectores y skills autorizados.
+
 ### Cerrado (2026-10-01): EXP-016 y EXP-017
 - **EXP-016**: la propagación se lleva ≈ 57 % del tiempo (nivel 4, mismo
   trabajo), el análisis 14–19 % y el sondeo 15–19 %. La lectura y la
@@ -12,7 +23,8 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   (Q4 perdía `propagate` y `decide`).
 - **EXP-017**: **se adopta PGO + LTO** (×1,030, IC95 % [1,023; 1,038],
   85/85 trayectorias idénticas). Con `-march=x86-64-v3 -ffp-contract=off`,
-  ×1,040, pendiente de **D-019** para la competición.
+  ×1,040, pero **D-019** (resuelta por el director): no se usa `-march`, ni
+  en la competición ni en los experimentos.
   - El control con FMA sin `-ffp-contract=off` no cambió ninguna trayectoria
     en 100 000 conflictos, aunque el binario sí llevaba FMA en las medias de
     los reinicios: la condición del Teorema 5 es suficiente, no necesaria.

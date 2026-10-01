@@ -17,9 +17,13 @@ con prueba DRAT (research/09).
                  que X1 no refuta y en las 45 industriales de la muestra de
                  EXP-016.
   analizar       informe de H0 a H3 (docs/experiments/EXP-019 §4).
+  muestra-dev    ampliación (EXP-019 §3b): results/exp019/muestra-dev.csv con
+                 las instancias de paridad de bench/dev (descargadas de GBD) y
+                 su resultado conocido según bench/dev.list.csv.
 
-Uso: python3 scripts/exp019.py {muestra|correr|equivalencia|analizar}
+Uso: python3 scripts/exp019.py {muestra|muestra-dev|correr|equivalencia|analizar}
      [--kissat solver/kissat/build-x1/kissat] [--tools tools]
+     [--muestra CSV --out CSV]   (correr: otra muestra y otra salida)
 """
 import argparse
 import csv
@@ -38,6 +42,8 @@ from run_experiment import find_instances  # noqa: E402
 D = os.path.join(ROOT, "results", "exp019")
 MUESTRA = os.path.join(D, "muestra.csv")
 X1CSV = os.path.join(D, "x1.csv")
+MUESTRA_DEV = os.path.join(D, "muestra-dev.csv")
+X1DEV = os.path.join(D, "x1-dev.csv")
 EQCSV = os.path.join(D, "equivalencia.csv")
 BANCOS = ["calib", "calib2", "symm2026", "tesis-dev"]
 SINTETICAS = [  # (familia y parámetros, semilla, ¿satisfacible?)
@@ -119,6 +125,21 @@ def muestra():
     print(f"muestra: {len(filas)} instancias ({len(SINTETICAS)} sintéticas)")
 
 
+def muestra_dev():
+    k = {r["hash"]: r["resultado"] for r in csv.DictReader(open(os.path.join(ROOT, "bench", "dev.list.csv")))}
+    filas = []
+    for p in find_instances(os.path.join(ROOT, "bench", "dev")):
+        n = os.path.basename(p)
+        h = n.split(".")[0]
+        filas.append({"instance": n, "bank": "dev", "path": os.path.relpath(p, ROOT),
+                      "known": k.get(h, "unknown") if k.get(h) in ("sat", "unsat") else "unknown"})
+    with open(MUESTRA_DEV, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["instance", "bank", "path", "known"])
+        w.writeheader()
+        w.writerows(filas)
+    print(f"muestra-dev: {len(filas)} instancias")
+
+
 def ejecutar(cmd, timeout):
     t0 = time.time()
     try:
@@ -137,12 +158,13 @@ def verificar(tool, cnf, proof):
 
 def correr(a):
     sinteticas()  # no se versionan: se regeneran, idénticas, si faltan
-    hechas = filas_completas(X1CSV, CAMPOS)
+    salida, muestra_csv = a.out or X1CSV, a.muestra or MUESTRA
+    hechas = filas_completas(salida, CAMPOS)
     listas = {r["instance"] for r in hechas}
     tmp = os.path.join(D, "tmp")
     os.makedirs(tmp, exist_ok=True)
-    with EscritorDuradero(X1CSV, CAMPOS, hechas) as ed:
-        for m in csv.DictReader(open(MUESTRA)):
+    with EscritorDuradero(salida, CAMPOS, hechas) as ed:
+        for m in csv.DictReader(open(muestra_csv)):
             if m["instance"] in listas:
                 continue
             path = os.path.join(ROOT, m["path"])
@@ -263,6 +285,18 @@ def analizar(a):
     for r in ref:
         print(f"| {r['instance'][:16]} | {r['bank']} | {r['known']} | {r['rows']} | {r['cert_rows']} | {r['x1_s']} | "
               f"{r['proof_bytes']} | {r['dsr_sc2026']} {r['dsr_sc2026_s']} | {r['dsr_actual']} {r['dsr_actual_s']} |")
+    dev = filas_completas(X1DEV, CAMPOS)
+    if dev:
+        print("\n### Ampliación (§3b): instancias de paridad de bench/dev\n")
+        print("| instancia | conocido | resultado de X1 | filas | X1 (s) | prueba (bytes) | dsr SC2026 (s) | dsr actual (s) |")
+        print("|---|---|---|---|---|---|---|---|")
+        for r in dev:
+            print(f"| {r['instance'][:16]} | {r['known']} | {r['outcome']} | {r['rows']} | {r['x1_s']} | "
+                  f"{r['proof_bytes']} | {r['dsr_sc2026']} {r['dsr_sc2026_s']} | {r['dsr_actual']} {r['dsr_actual_s']} |")
+        malas_dev = [r for r in dev if r["outcome"] == "refutada" and
+                     (r["known"] == "sat" or r["dsr_sc2026"] != "VERIFIED" or r["dsr_actual"] != "VERIFIED")]
+        print(f"\n- Seguridad en la ampliación (cuenta para H0): {len(malas_dev)} fallos.")
+        h0 = h0 and not malas_dev
     veredicto = "ADOPTAR" if (h0 and h1 and h2) else "no se adopta"
     print(f"\n**Veredicto (§4)**: {veredicto} (H0 {'sí' if h0 else 'NO'}, H1 {'sí' if h1 else 'NO'}, "
           f"H2 {'sí' if h2 else 'NO'})")
@@ -270,9 +304,12 @@ def analizar(a):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("paso", choices=["muestra", "correr", "equivalencia", "analizar"])
+    ap.add_argument("paso", choices=["muestra", "muestra-dev", "correr", "equivalencia", "analizar"])
+    ap.add_argument("--muestra", help="correr: muestra alternativa (CSV)")
+    ap.add_argument("--out", help="correr: salida alternativa (CSV)")
     ap.add_argument("--kissat", default=os.path.join(ROOT, "solver", "kissat", "build-x1", "kissat"))
     ap.add_argument("--tools", default=os.path.join(ROOT, "tools"))
     a = ap.parse_args()
-    {"muestra": lambda a: muestra(), "correr": correr, "equivalencia": equivalencia,
+    {"muestra": lambda a: muestra(), "muestra-dev": lambda a: muestra_dev(), "correr": correr,
+     "equivalencia": equivalencia,
      "analizar": analizar}[a.paso](a)
