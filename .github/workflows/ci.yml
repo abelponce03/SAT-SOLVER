@@ -26,6 +26,24 @@ jobs:
       - name: Tubería de simetrías con satsuma-mclique
         run: LABESAT_SATSUMA="$PWD/tools/satsuma-mclique" ./scripts/test_symmetry.sh
 
+  x1-gauss:
+    name: X1, refutación de sistemas XOR por Gauss con prueba (research/09)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Herramientas externas (dsr-trim actual y de SC2026, drat-trim)
+        run: ./scripts/get_tools.sh --jobs 4
+      - name: Compilar con --gauss
+        run: ./scripts/build.sh --dir=build-gauss --gauss
+      - name: Refutaciones verificadas, satisfacibles intactas, apagada por defecto
+        run: ./scripts/test_gauss.sh solver/kissat/build-gauss/kissat
+      - name: Lo mismo bajo ASan/UBSan (research/08, Teorema 5 (a))
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: |
+          ./scripts/build.sh --dir=build-gauss-san --gauss --sanitize
+          ./scripts/test_gauss.sh solver/kissat/build-gauss-san/kissat
+
   simetrias-integradas:
     name: Ruptura de simetrías integrada en Kissat (D-016)
     runs-on: ubuntu-latest

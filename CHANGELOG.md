@@ -33,6 +33,9 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   en satisfacibles y contadores idénticos.
 - **EXP-019** preregistrado (seguridad, equivalencia y coste), en la cola
   tras EXP-018.
+- CI: trabajo `x1-gauss`, que compila con `--gauss` y ejecuta
+  `test_gauss.sh`, también bajo ASan/UBSan con UBSan fatal. En local pasa
+  sin avisos.
 
 ### Añadido (2026-10-01): K1, precarga de cláusulas en la propagación (EXP-018)
 - `proplit.h`, detrás de `LABESAT_PREFETCH` (apagado por defecto): un
