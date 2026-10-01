@@ -108,7 +108,15 @@ valor combinado, se mide aparte.
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **2026-10-01, commit posterior al preregistro.** La cola compiló
+  `build-base18` y `build-k1` desde `ae7457e`, que ya incluye X1
+  (research/09). X1 está detrás de `LABESAT_GAUSS`, que estos binarios no
+  definen.
+  - Se comprobó, con los 94 objetos de Kissat compilados sin la macro, que
+    son idénticos byte a byte (`objdump -s`) a los de antes de X1, salvo
+    `build.o`. Ver el commit de X1.
+  - Lo único que cambia frente al preregistro son ficheros de documentación
+    y guiones que no entran en el binario.
 
 ## 7. Resultados
 
