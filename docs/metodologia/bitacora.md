@@ -595,3 +595,23 @@ al cerrar cada sesión.
   - Un error de aritmética en la cota de la malla 30×30 (603 000 en lugar de
     642 602), corregido antes de commitear.
 
+### 2026-10-01 (tarde, tras el reinicio) — Cierre de EXP-016 y EXP-017
+
+- **Se hizo**:
+  - **EXP-016** cerrado: propagación ≈ 57 %, análisis 14–19 %, sondeo
+    15–19 %.
+  - **EXP-017** cerrado: PGO + LTO adoptado (×1,030), `-march` ×1,040.
+    El control con FMA no cambió ninguna trayectoria aunque el binario
+    llevaba FMA en código que decide.
+  - D-019 registrada y agendada (issue #33).
+- **Salió mal**:
+  - El guion de EXP-016 perdía `propagate` y `decide` en Q4, por
+    `join(lsuffix, rsuffix)`.
+  - La muestra de EXP-019 marcaba como «unknown» las 450 de `tesis-dev`,
+    porque la tesis escribe `SAT`/`UNSAT` en mayúsculas.
+  - Los dos se detectaron leyendo la salida antes de usarla, y se
+    corrigieron con su incidencia anotada.
+- **Aprendido**: un control negativo que no se manifiesta no refuta la
+  condición teórica. Sí indica que su efecto práctico es raro, y lo
+  correcto es informarlo tal cual, como preveía el preregistro.
+
