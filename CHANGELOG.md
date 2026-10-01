@@ -5,6 +5,12 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cerrado (2026-10-01): EXP-018, resultado negativo
+- K1 (precarga de cláusulas en la propagación) conserva la trayectoria
+  (85/85), pero es **un 7 % más lenta** (×0,931, IC95 % [0,906; 0,953]).
+  **No se adopta**; queda tras su macro, sin efecto en el binario. K2 y K4
+  se aparcan.
+
 ### Añadido (2026-10-01): ampliación de EXP-019 con 5 instancias de paridad de 2026
 - Descargadas de GBD, con autorización del director: *xor-chain*,
   *tseitin-formulas* y *ordering-principle-xor* (ninguna resuelta por nadie

@@ -1,6 +1,8 @@
 # EXP-018 — K1: precarga de cláusulas en la propagación (clase E, preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con la
+- **Estado**: **cerrado (2026-10-01): no se adopta.** K1 conserva la
+  trayectoria (85/85) pero **ralentiza un 7 %**. Resultados en §7. Se
+  commiteó antes de ejecutar, junto con la
   implementación (`proplit.h`, detrás de `LABESAT_PREFETCH`), la opción
   `--prefetch[=d]` del `configure` de Kissat y `scripts/exp018.py`.
   - Única ejecución previa: la comprobación de equivalencia del ADR-0009,
@@ -120,4 +122,40 @@ valor combinado, se mide aparte.
 
 ## 7. Resultados
 
-(pendiente)
+| | Valor |
+|---|---|
+| Equivalencia (H0) | **85/85 parejas idénticas** (estado, conflictos, decisiones, propagaciones) |
+| Aceleración geométrica (H1), n = 80 | **×0,931**, IC95 % [0,906; 0,953], Wilcoxon p = 4,3·10⁻⁹ |
+| CPU total | A 2238 s, B 2389 s (cociente 0,937) |
+| Por grupo (descriptivo) | 2026: ×0,931 (n = 34); industria: ×0,930 (n = 46) |
+
+El informe (`results/exp018/informe-k1.md`) lleva la cabecera «EXP-017 —
+k1» porque `exp018.py` reutiliza el análisis de `exp017.py`. Los datos son
+los de EXP-018.
+
+**Lectura.**
+
+- H0 se cumple, como exige el Corolario 4: la precarga no cambia la
+  búsqueda.
+- H1 falla, y no por poco: K1 es un 7 % **más lento**, con el intervalo
+  entero por debajo de 1, en los dos grupos.
+- La predicción preveía «entre 0 y +5 %, con riesgo de < 1 en instancias
+  pequeñas». Se equivocó de signo.
+- Explicación más probable:
+  - el literal bloqueante y la precarga por hardware de las líneas
+    contiguas ya ocultan buena parte de la latencia;
+  - el puntero adelantado añade, por cada vigilante, una lectura de
+    `values[]`, una comparación y un salto;
+  - esas instrucciones se pagan en todos los vigilantes, y la precarga solo
+    ahorra en los que fallan en caché.
+
+  Sin contadores de hardware (`perf` está bloqueado) no se puede separar
+  más.
+
+**Decisión (§4)**: H0 sí, H1 no → **no se adopta**.
+
+- El código queda en el árbol, detrás de la macro `LABESAT_PREFETCH` y sin
+  efecto en el binario.
+- K2 (precargar `values[blocking]`) y K4 (precargar la lista de vigilancia
+  al asignar) comparten el mecanismo de coste. Se aparcan con este
+  resultado como evidencia.

@@ -176,8 +176,8 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
       sondeo 15–19 %.
 - [x] **EXP-017**: PGO + LTO adoptado (×1,030, trayectorias idénticas);
       `-march` ×1,040, descartado por el director (D-019): no se usa.
-- [ ] **EXP-018**: K1, precarga de cláusulas en la propagación (clase E;
-      contadores idénticos en 5/5 de `calib2` antes de medir).
+- [x] **EXP-018**: K1 conserva la trayectoria (85/85), pero es un 7 % más
+      lenta (×0,931): no se adopta.
 - [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
       prueba escrita antes de implementar.
 - [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):
