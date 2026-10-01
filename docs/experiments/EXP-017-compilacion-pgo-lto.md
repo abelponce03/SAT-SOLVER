@@ -126,7 +126,15 @@ gratis.
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **2026-10-01, commit posterior al preregistro.** Antes de que la cola
+  compilara los binarios de este experimento se fusionó K1 (EXP-018):
+  `proplit.h` y `configure`, con el código nuevo detrás de
+  `LABESAT_PREFETCH`, que estos binarios no definen. Se comprobó que no cambia
+  nada: se compiló Kissat con `-O3` desde el commit anterior y desde el de K1
+  sin `--prefetch`, y se compararon los 95 objetos sección a sección
+  (`objdump -s`). Son idénticos byte a byte salvo `build.o`, que solo guarda
+  el commit y la fecha de compilación. `results/exp017/commit.txt` registra
+  el commit real con el que se compiló.
 
 ## 7. Resultados
 
