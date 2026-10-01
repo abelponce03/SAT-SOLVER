@@ -472,11 +472,23 @@ void kissat_add (kissat *solver, int elit) {
   }
 }
 
+/* [SOLVER] X1 (research/09).  Va aquí, después de la última macro que usa
+   __LINE__ (COVER, más arriba), para que sin 'configure --gauss' el código
+   máquina de este fichero no cambie ni en una constante. */
+#ifdef LABESAT_GAUSS
+#include "gauss.h"
+#endif
+
 int kissat_solve (kissat *solver) {
   kissat_require_initialized (solver);
   kissat_require (EMPTY_STACK (solver->clause),
                   "incomplete clause (terminating zero not added)");
   kissat_require (!GET (searches), "incremental solving not supported");
+#ifdef LABESAT_GAUSS
+  // Si refuta, deja 'inconsistent' y la búsqueda devuelve 20 sin más.
+  if (GET_OPTION (gauss))
+    (void) kissat_gauss (solver);
+#endif
   return kissat_search (solver);
 }
 

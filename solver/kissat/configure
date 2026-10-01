@@ -34,6 +34,7 @@ statistics=unknown
 symbols=unknown
 symmetry=no # [SOLVER]
 prefetch=no # [SOLVER] K1 (research/08 §6.2)
+gauss=no # [SOLVER] X1 (research/09)
 testdefault=unknown
 ultimate=no
 unsat=no
@@ -105,6 +106,7 @@ configuration, disable messages, profiling and certain statistics.
   --competition     same as '--no-options --quiet' (competition configuration)
   --symmetry        [LabeSAT] build in satsuma symmetry breaking (needs C++20)
   --prefetch[=<d>]  [LabeSAT] prefetch clauses <d> watches ahead (default 8)
+  --gauss           [LabeSAT] build in XOR refutation by Gaussian elimination
   --extreme         same as '--compact --no-options --quiet'
                    
   --no-proofs       do not include code for proof generation
@@ -238,6 +240,7 @@ do
     --competition) options=no; quiet=yes;;
     --symmetry) symmetry=yes;; # [SOLVER] satsuma integrado (D-016)
     --prefetch) prefetch=8;; # [SOLVER] K1 (research/08 §6.2)
+    --gauss) gauss=yes;; # [SOLVER] X1 (research/09)
     --prefetch=*)
       prefetch="`echo \"$1\"|sed -e 's,^--prefetch=,,'`"
       case "$prefetch" in
@@ -655,6 +658,14 @@ if [ ! $prefetch = no ]
 then
   CFLAGS="$CFLAGS -DLABESAT_PREFETCH=$prefetch"
   msg "clause prefetching $prefetch watches ahead (K1)"
+fi
+
+# [SOLVER] X1: refutación de sistemas XOR (research/09); con ella existe la
+# opción '--gauss' del binario, apagada por defecto.
+if [ $gauss = yes ]
+then
+  CFLAGS="$CFLAGS -DLABESAT_GAUSS"
+  msg "XOR refutation by Gaussian elimination built in (X1)"
 fi
 
 SYMOBJ=""

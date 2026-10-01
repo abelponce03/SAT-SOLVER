@@ -343,6 +343,27 @@ void kissat_add_lits_to_proof (kissat *solver, size_t size,
   print_added_proof_line (proof);
 }
 
+#ifdef LABESAT_GAUSS
+/* [SOLVER] X1 (research/09 §3): añade una línea con literales externos.
+   No pasa por 'print_added_proof_line', que con LOGGING exige literales
+   internos importados. */
+void kissat_add_external_lits_to_proof (kissat *solver, size_t size,
+                                        const int *elits) {
+  proof *proof = solver->proof;
+  assert (proof);
+  assert (EMPTY_STACK (proof->line));
+  if (size)
+    import_external_proof_literals (solver, proof, size, elits);
+  proof->added++;
+#ifndef NDEBUG
+  check_repeated_proof_lines (proof);
+#endif
+  if (proof->binary)
+    write_char (proof, 'a');
+  print_proof_line (proof);
+}
+#endif
+
 void kissat_add_unit_to_proof (kissat *solver, unsigned ilit) {
   proof *proof = solver->proof;
   assert (proof);

@@ -242,6 +242,38 @@ ab --solver solver/kissat/build-base18/kissat --solver-b solver/kissat/build-k1/
 python3 scripts/exp018.py > results/exp018/informe-k1.md 2>&1
 """
 
+# EXP-019 (X1, research/09): refutación de sistemas XOR por Gauss con prueba.
+[[paso]]
+id = "exp019-construir"
+descripcion = "EXP-019: compilar build-x1 (configure --gauss) desde el commit"
+requiere = ["results/exp019/muestra.csv"]
+hecho = "[ -x solver/kissat/build-x1/kissat ] && [ -f results/exp019/commit.txt ]"
+comando = """
+./scripts/build.sh --dir=build-x1 --clean --gauss --jobs=4
+sha1sum solver/kissat/build-x1/kissat > results/exp019/binarios.sha1
+{ git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp019/commit.txt
+"""
+
+[[paso]]
+id = "exp019-x1"
+descripcion = "EXP-019: X1 sobre 2026, tesis-dev y sintéticas; pruebas verificadas por los dos dsr-trim"
+requiere = ["results/exp019/muestra.csv", "solver/kissat/build-x1/kissat"]
+hecho = "[ $(filas results/exp019/x1.csv) -ge $(filas results/exp019/muestra.csv) ]"
+comando = """
+python3 scripts/exp019.py correr
+"""
+
+[[paso]]
+id = "exp019-equivalencia"
+descripcion = "EXP-019: contadores con y sin X1 donde no refuta, e informe"
+requiere = ["results/exp019/x1.csv"]
+hecho = "[ -f results/exp019/equivalencia.hecho ] && [ -f results/exp019/informe.md ]"
+comando = """
+python3 scripts/exp019.py equivalencia
+touch results/exp019/equivalencia.hecho
+python3 scripts/exp019.py analizar > results/exp019/informe.md 2>&1
+"""
+
 [[paso]]
 id = "exp009-principal"
 descripcion = "EXP-009 principal: ruptura con retraso de 2 s frente a nunca, tesis-dev fresco"

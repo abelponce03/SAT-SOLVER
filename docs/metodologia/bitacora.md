@@ -550,3 +550,48 @@ al cerrar cada sesión.
 - **Salió mal**: el primer cambio de `proplit.h` se escribió en el árbol de
   la cola; se detectó antes de compilar nada y se movió a su rama.
 
+### 2026-10-01 (tarde) — Técnicas que cambian el sistema de pruebas: X1
+
+- **Se pidió**: mientras terminan los experimentos, diseñar las técnicas que
+  cambian el tipo de prueba, demostrarlas y documentarlo todo.
+- **Se hizo**:
+  - **research/09**:
+    - qué familias separan resolución, ER y PR/SR;
+    - qué cubre ya LabeSAT (simetrías con SR, BVA con `factor`) y qué no
+      (paridad);
+    - **Teorema 1**: prueba DRAT de tamaño O(Σ 2^k + N log |S|) para un
+      sistema XOR inconsistente, con cadenas ordenadas de variables de
+      extensión, lemas por casos y suma en árbol equilibrado;
+    - corolario de separación sobre Tseitin.
+  - **Prototipo** en Python y **familias sintéticas** (Tseitin, *lights-out*
+    y dos órdenes, en versión UNSAT y SAT).
+  - **Implementación en Kissat** (`gauss.c`), detrás de `configure --gauss`.
+  - `test_gauss.sh`. EXP-019 preregistrado.
+  - Refuta en 0,02 s una *lights-out* UNSAT de 2026 que el mejor solver
+    tardó 346 s en resolver, con prueba verificada por los dos `dsr-trim`.
+- **Decisiones**:
+  - Pruebas de X1 **sin borrados** (§4.3 de research/09).
+  - X1 **detrás de una macro de compilación** además de la opción, para
+    poder fusionarlo sin tocar los binarios de EXP-017 y EXP-018: objetos
+    idénticos byte a byte. El gancho va en `internal.c`, porque en
+    `search.c` cambiaba una constante `__LINE__`.
+  - La descarga de las instancias de paridad de `dev.list.csv` (GBD) queda a
+    la espera del visto bueno del director.
+- **Salió mal**:
+  - **El `dsr-trim` de SC2026 se cuelga** con ciertos borrados. Se tardó
+    varias iteraciones en aislarlo: primero una regla de «no borrar lo que
+    toque variables fijadas», que no bastó; luego definiciones primero, que
+    tampoco; al final, una reducción quitando solo borrados mostró dos
+    disparadores de un único borrado cada uno.
+  - **Un reinicio de la máquina borró `/tmp`**, y con él el worktree de X1
+    con cambios **sin commitear**. `gauss.c` y `gauss.h` se recuperaron; las
+    ediciones de `options.h`, `proof.c/h`, `internal.c` y `configure` se
+    rehicieron de memoria. Regla desde ahora: commitear el trabajo en curso
+    en su rama cada poco, aunque sea provisional.
+  - Tres fallos del guion de prueba, no de X1:
+    - `grep -q` con `pipefail` (SIGPIPE, ya conocido de `test_symmetry.sh`);
+    - el código 10 de Kissat con `set -e`;
+    - el retorno de carro con el que `drat-trim` escribe su veredicto.
+  - Un error de aritmética en la cota de la malla 30×30 (603 000 en lugar de
+    642 602), corregido antes de commitear.
+

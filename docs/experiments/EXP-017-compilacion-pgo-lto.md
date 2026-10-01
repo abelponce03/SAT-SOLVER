@@ -135,6 +135,11 @@ gratis.
   (`objdump -s`). Son idénticos byte a byte salvo `build.o`, que solo guarda
   el commit y la fecha de compilación. `results/exp017/commit.txt` registra
   el commit real con el que se compiló.
+- **2026-10-01, 11:40–12:10, carga concurrente durante `exp017-control`.**
+  Tras un reinicio de la máquina se recompiló X1 (research/09) y se pasó
+  `test_gauss.sh`, en los núcleos 6 y 7 a prioridad mínima. Afecta a los
+  tiempos del control, que es descriptivo (cuenta trayectorias distintas), no
+  a su equivalencia.
 
 ## 7. Resultados
 

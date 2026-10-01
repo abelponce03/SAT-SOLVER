@@ -5,6 +5,35 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): X1, refutación de sistemas XOR por Gauss con prueba (research/09, EXP-019)
+- **research/09**: técnicas que cambian el sistema de pruebas.
+  - **Teorema 1**: refutación DRAT con variables de extensión de un sistema
+    XOR inconsistente, de tamaño O(Σ 2^{k_i} + N log |S|) gracias a la suma
+    en árbol equilibrado.
+  - **Corolario 2**: pruebas polinómicas para Tseitin en expansores, donde la
+    resolución es exponencial.
+- **X1 en Kissat**: `solver/kissat/src/gauss.c`, detrás de
+  `configure --gauss`. Añade las opciones `--gauss` (apagada),
+  `--gaussmaxsize`, `--gaussbits`, `--gaussops` y `--gaussclauses`; las tres
+  últimas son topes de memoria y de trabajo, y al superarlos X1 se retira
+  sin tocar nada.
+  - Extrae las XOR completas, aplica Gauss sobre GF(2) con historial y
+    comprueba el certificado antes de afirmar nada.
+  - Si refuta, escribe la prueba sin borrados.
+  - Sin la macro, los objetos de Kissat son idénticos byte a byte.
+- Refuta en **0,02 s** la *lights-out* UNSAT `667341ee` de 2026 (346 s el
+  mejor solver de 2026). La prueba la verifican los dos `dsr-trim` y
+  `drat-trim`.
+- **Hallazgo**: el `dsr-trim` del commit de SC2026 se cuelga en modo hacia
+  atrás con ciertos borrados (de una definición RAT, o de un lema justo
+  después de usarlo para una unitaria). Las pruebas de X1 no borran nada.
+- `scripts/gen_paridad.py`: familias de paridad UNSAT y su variante `--sat`.
+- `scripts/x1_gauss.py`: el prototipo.
+- `scripts/test_gauss.sh`: refutación verificada, ausencia de refutaciones
+  en satisfacibles y contadores idénticos.
+- **EXP-019** preregistrado (seguridad, equivalencia y coste), en la cola
+  tras EXP-018.
+
 ### Añadido (2026-10-01): K1, precarga de cláusulas en la propagación (EXP-018)
 - `proplit.h`, detrás de `LABESAT_PREFETCH` (apagado por defecto): un
   puntero va 8 vigilantes por delante y precarga la cabecera de cada

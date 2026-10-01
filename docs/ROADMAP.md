@@ -179,7 +179,14 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
 - [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
       prueba escrita antes de implementar.
 - [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):
-      B3 (EXP-009) y, aparcada, la eliminación gaussiana (X1).
+      B3 (EXP-009) y X1.
+  - [x] research/09: familias que separan los sistemas, diseño y Teorema 1
+        de X1.
+  - [x] X1 en Kissat detrás de `configure --gauss`; `test_gauss.sh` en
+        verde con los tres verificadores.
+  - [ ] **EXP-019**: seguridad, equivalencia y coste de X1; decide si se
+        activa por defecto.
+  - [ ] X1b (unidades y equivalencias del sistema XOR), si EXP-019 sale bien.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

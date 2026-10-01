@@ -45,10 +45,11 @@ workflow.
 | [`research/06`](research/06-razonamiento-xor.md) | Razonamiento XOR / Gauss-Jordan (CryptoMiniSat): estructura XOR medida en 161 instancias, estimación sobre 2026 y veredicto |
 | [`research/05`](research/05-enfoques-probabilisticos.md) | Enfoques probabilísticos para SAT: revisión de ~75 trabajos, recomendaciones R1–R3 y descartes por ruido |
 | [`research/04`](research/04-decisiones-pendientes.md) | Investigación de las decisiones pendientes del autor |
+| [`research/09`](research/09-tecnicas-que-cambian-el-sistema-de-pruebas.md) | **Técnicas que cambian el sistema de pruebas**: familias que separan resolución, ER y PR/SR; X1 (Gauss con prueba DRAT, Teorema 1); el fallo del `dsr-trim` de SC2026 con borrados; X1b, cardinalidad, PR y BVA analizadas |
 | [`research/08`](research/08-estrategia-de-optimizacion.md) | **Estrategia de optimización**: límites teóricos (resolución y PR), valor exacto de una aceleración en PAR-2, Amdahl, Teorema 5 (cuándo una compilación conserva la búsqueda) y catálogo de candidatas |
 | [`research/07`](research/07-ganadores-y-banco-tesis.md) | Ganadores 2021–2026 (fuentes primarias), corrección de B2, lo que dice el banco de la tesis y líneas nuevas (VSA, VSIDS/CHB) |
 | [`../bench/README.md`](../bench/README.md) | Bancos de instancias, incluido el banco industrial de la tesis y sus particiones |
-| [`experiments/`](experiments/) | EXP-001 a EXP-018 (EXP-013 a 015, sobre el banco de la tesis; EXP-009 y EXP-016 a EXP-018, preregistrados y en la cola): hipótesis antes de medir, resultados después |
+| [`experiments/`](experiments/) | EXP-001 a EXP-019 (EXP-013 a 015, sobre el banco de la tesis; EXP-009 y EXP-016 a EXP-019, preregistrados y en la cola): hipótesis antes de medir, resultados después |
 
 ## Metodología (desarrollo asistido por IA)
 
