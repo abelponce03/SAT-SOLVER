@@ -124,7 +124,11 @@ def q4():
         print("\n### Q4\n\n(pendiente: faltan nivel3.csv o nivel4.csv)")
         return
     a, b = tabla_ancha(p3), tabla_ancha(p4)
-    m = a.join(b, lsuffix="_3", rsuffix="_4", how="inner")
+    # Sufijo explícito en TODAS las columnas: con join(lsuffix, rsuffix) solo
+    # se renombran las que existen en los dos niveles, y propagate y decide,
+    # que solo aparecen en el nivel 4, se quedaban sin '_4' (y fuera del
+    # informe).
+    m = a.add_suffix("_3").join(b.add_suffix("_4"), how="inner")
     iguales = (m.conflicts_3 == m.conflicts_4) & (m.propagations_3 == m.propagations_4)
     print(f"\n### Q4. Nivel 4 con 200 000 conflictos (n = {len(m)})\n")
     print(f"- Mismo trabajo en las dos corridas (conflictos y propagaciones): {int(iguales.sum())} de {len(m)}.")
