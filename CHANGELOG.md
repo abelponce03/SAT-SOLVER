@@ -5,6 +5,31 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): estrategia de optimización (research/08, ADR-0009)
+- **research/08**:
+  - límites de lo que puede ganar una optimización. Para CDCL que solo
+    deriva por resolución, el palomar exige 2^Ω(n) conflictos con cualquier
+    estructura de datos; las palancas exponenciales son las del sistema de
+    pruebas (simetrías, XOR);
+  - **Proposición 1**: PAR2_T(A_s) = PAR2_{sT}(A)/s, exacta con datos
+    censurados. Un 10 % de velocidad ≈ −1,5 % de PAR-2 (~60 s a T = 5000 s);
+    el doble de velocidad, −10 a −17 % (`scripts/valor_aceleracion.py`);
+  - **Teorema 5**: cuándo dos compilaciones hacen la misma búsqueda. Entre
+    otras condiciones, `-ffp-contract=off` si el `-march` tiene FMA
+    (`smooth.c:34-35`).
+- **ADR-0009**: clases E (equivalente), P (tubería) y S (búsqueda), y qué
+  prueba exige cada una.
+- **EXP-016** (perfil de costes) y **EXP-017** (PGO, LTO y `-march`, con un
+  control negativo de FMA) preregistrados y en cola, delante de EXP-009.
+- `build.sh`: `--pgo` (dos fases, entrenamiento disjunto en
+  `scripts/pgo_entrenamiento.txt`), `--lto`, `--march=X`, `--jobs=N` y
+  `--control-fma=X` (solo para el control).
+- `run_ab_interleaved.py`:
+  - `--conflicts N`, un presupuesto determinista: el mismo trabajo en las dos
+    ramas si conservan la trayectoria;
+  - ya no mide dos veces una instancia que está en dos bancos.
+- `scripts/perfil_costes.py`: perfil por fases de Kissat con reanudación.
+
 ### Añadido (2026-09-30): ruptura con retraso (B3) y preregistro de EXP-009
 - `solver/labesat --symmetry --symmetry-delay=N` (o `LABESAT_SYMM_DELAY`):
   kissat intenta la fórmula original durante N segundos y solo aplica

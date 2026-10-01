@@ -477,3 +477,54 @@ al cerrar cada sesión.
   - Que «siempre» empate con «nunca» en PAR-2 no cierra la línea: puede
     esconder dos efectos opuestos, coste fijo y ganancia de búsqueda, que una
     política sencilla separa.
+
+## 2026-10-01 — Estrategia de optimización con demostración (research/08, ADR-0009)
+
+- **Se pidió**: los próximos pasos, con la idea de optimizar todo el código de
+  LabeSAT para bajar su tiempo. Cada solución, con una demostración rigurosa
+  antes de aplicarla, y todo documentado.
+- **Se hizo**:
+  - **research/08**. Primero, qué se puede ganar:
+    - por la teoría de la complejidad de pruebas (Haken; Beame, Kautz y
+      Sabharwal; Pipatsrisawat y Darwiche), ninguna estructura de datos
+      quita el crecimiento exponencial en conflictos de un CDCL que solo
+      deriva por resolución;
+    - las ganancias exponenciales vienen de cambiar el sistema de pruebas:
+      simetrías (PR), XOR, BVA;
+    - lo demás es un factor constante.
+  - **Proposición 1**: el valor exacto de un factor constante en PAR-2, con
+    datos censurados. Un 10 % de velocidad vale ≈ −1,5 % de PAR-2.
+  - **Teorema 5**: cuándo una compilación no cambia ni una decisión de la
+    búsqueda. Sin comportamiento indefinido, redondeo IEEE por operación
+    (de ahí `-ffp-contract=off` con FMA, por `smooth.c:34-35`), sin
+    decisiones por tiempo y sin depender de direcciones absolutas. Cada
+    condición se comprobó en el código de Kissat.
+  - **ADR-0009**: clases E, P y S de optimización, y qué prueba exige cada
+    una.
+  - **EXP-016** (perfil de costes) preregistrado y en marcha en la cola.
+  - **EXP-017** (PGO, LTO y `-march`) preregistrado con un control
+    negativo: el mismo `-march` sin `-ffp-contract=off`, donde el teorema
+    predice que la trayectoria cambia. Infraestructura:
+    - `build.sh --pgo/--lto/--march`;
+    - `--conflicts` en el A/B, para medir velocidad con el mismo trabajo.
+- **Decisiones**:
+  - No se optimiza nada antes de medir: una parte que pesa < 5 % tiene un
+    techo de ≈ 0,8 % de PAR-2 (Amdahl y Proposición 1).
+  - La compilación va antes que tocar código: es gratis y su equivalencia
+    está demostrada.
+  - Ningún cambio de código de búsqueda sin su prueba escrita en research/08.
+- **Salió mal**:
+  - `configure` de Kissat rechaza `-Wno-missing-profile`; se quitó de
+    `build.sh`.
+  - La compilación de prueba de la PGO (13 min, 2 núcleos, `nice`) coincidió
+    con el perfilado de EXP-016. Se anotó como incidencia en EXP-016 §6.
+  - Una función auxiliar de edición en Python falló por un argumento de más
+    (`TypeError`) y dejó a medias la edición del CHANGELOG. Se rehízo con la
+    herramienta de edición.
+  - El A/B habría medido dos veces las instancias presentes en dos bancos.
+    Se detectó al montar el banco de EXP-017 y se deduplicó por nombre.
+- **Aprendido**: antes de proponer optimizaciones, acotar cuánto pueden
+  valer. Cambia el orden de prioridades: la compilación (gratis) y el sistema
+  de pruebas (exponencial) van por delante de reescribir estructuras de
+  datos que ya son óptimas.
+

@@ -163,6 +163,22 @@ vigente es el del plan.
       validarlo con datos nuevos.
 - [ ] D-018: línea VSIDS/CHB, pendiente del director.
 
+### Fase 3c — Optimización con demostración · desde 2026-10-01
+
+Estrategia en [`research/08`](research/08-estrategia-de-optimizacion.md) y
+reglas en [ADR-0009](adr/0009-optimizaciones-que-conservan-la-trayectoria.md).
+Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
+
+- [x] research/08: límites teóricos, valor exacto de una aceleración en
+      PAR-2 (Proposición 1) y Teorema 5 (compilaciones que conservan la
+      búsqueda).
+- [ ] **EXP-016**: perfil de costes por fases (en la cola).
+- [ ] **EXP-017**: PGO, LTO y `-march` (clase E), con control negativo de FMA.
+- [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
+      prueba escrita antes de implementar.
+- [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):
+      B3 (EXP-009) y, aparcada, la eliminación gaussiana (X1).
+
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 
 - [ ] Elegir una familia de problemas nueva. Candidata natural: los dominios del

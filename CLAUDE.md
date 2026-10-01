@@ -109,6 +109,7 @@ enviar correos, registrarse en la competición.
 ```bash
 ./scripts/build.sh [--competition]      # compila solver/kissat/build/kissat
 ./scripts/build.sh --dir=build-symm --symmetry  # Kissat con satsuma dentro (ADR-0007)
+./scripts/build.sh --dir=D --pgo --lto [--march=X]  # compilación guiada por perfil (EXP-017; --march fuerza -ffp-contract=off)
 ./scripts/test_symmetry_integrada.sh    # kissat --symmetry: equivalencia y pruebas SR
 ./scripts/get_tools.sh                  # drat-trim, satsuma (MIT), dsr-trim (actual y SC2026)
 ./scripts/smoke_test.sh                 # build + tests + modelos + DRAT + determinismo

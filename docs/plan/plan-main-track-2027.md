@@ -51,6 +51,7 @@ partir de las instancias de 2026 (EXP-007 §4), y se dice así en cada informe.
 | **P5** | Topes de satsuma (tiempo y tamaño) | Provisionales, 60 s y 512 MiB. **Más peso desde research/07**: los tres primeros de 2026 llevan satsuma y se separan por su configuración; en station-repacking satsuma gasta 35–50 s | Bajo | EXP-014: solo el 2,2 % agota el tope de 60 s en la industria. Se fijan con EXP-009. Se **declaran** como heurística ajustada con asistencia de IA |
 | **P6** | **VSA**: vivificación programada por actividad (2.º en UNSAT de 2025) | Implementada detrás de `vivifyactivity` (apagada); búsqueda idéntica con 0 y pruebas verificadas con 1 | Hecho (~60 líneas) | **EXP-015: sin efecto** (ΔPAR-2 +13,2 s, p = 0,65). Apagada |
 | **P7** | Bandido VSIDS/CHB (Kissat_MAB; 1.º en 2021, 2022 y 2025) | research/07 §4; research/05 lo había aparcado | Medio | **D-018**: candidata a V3. EXP-008 ya decidió la base (4.0.4); pendiente del director |
+| **P8** | **Optimización con trayectoria conservada** (clase E, ADR-0009): compilación (C1: PGO, LTO, `-march`) y puntos calientes que pesen ≥ 5 % | research/08: un 10 % de velocidad vale ≈ −1,5 % de PAR-2 (Proposición 1); el doble, −10 a −17 %. La propagación de Kissat ya es óptima en su modelo (Gent, 2013) | Bajo (C1) a medio (puntos calientes) | **EXP-016** (dónde se va el tiempo) → **EXP-017** (C1, con control negativo de FMA) → candidatas K* con prueba escrita antes de implementar |
 | — | ~~B2, hiper-resolución binaria~~ | Error de hecho: `kissat-mab-hypre` es satsuma + Kissat_MAB (research/07 §2.1) | — | **Retirada** |
 | — | ~~A4.2 (más brazos)~~ | A4.1 no tuvo efecto (EXP-006) | — | **Descartada**: la fase 3 original desaparece |
 
@@ -96,6 +97,7 @@ respalde. **No se presenta nada sin medir.**
 | **H2 · Base decidida** (EXP-008) | ✅ **2026-09-25**: se mantiene 4.0.4 (p = 0,60) | A/B de Kissat 4.0.4 frente a sc2026, preregistrado, en calib + calib2 | H1 (máquina libre) |
 | **H3 · Cliques decididos** (D-005) | nov 2026 | Coste de mantener MIT medido en PAR-2; si hay coste, reimplementación MIT validada | H1 |
 | **H3b · Un solo binario** (D-016) | oct 2026 | `kissat --symmetry` equivalente a la tubería (EXP-012), en CI y en la configuración de competición; la entrega deja de depender de `solver/labesat` | — |
+| **H3c · Compilación decidida** (EXP-017) | oct 2026 | PGO/LTO/`-march` adoptados o descartados por su criterio preregistrado (equivalencia exacta y IC de la aceleración > 1) | EXP-016 |
 | **H4 · B3 validado** (EXP-009) | dic 2026 – ene 2027 | Criterio de activación entrenado sin `bench/test` y validado preregistrado | H1, H2 |
 | **H5 · Mejoras definidas** | **≤ 25 ene 2027** | Contenido de V1–V4 congelado | H2–H4 |
 | **H6 · Correo a los organizadores** | **≤ 1 feb 2027** | Enviado con las cifras de H5 | H5 |

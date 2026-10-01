@@ -93,7 +93,11 @@ equivale a ~1,5 % de PAR-2. Para decidir qué optimizar hace falta saber
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **2026-10-01, carga concurrente.** Mientras se perfilaban las instancias
+  5–9, se compiló y entrenó un binario de prueba de EXP-017 (PGO+LTO), con
+  `nice -n 19` y fijado a los núcleos 6 y 7: unos 13 min de CPU. Afecta a los
+  tiempos absolutos de esas instancias más que a sus fracciones por fase; se
+  anota por transparencia.
 
 ## 7. Resultados
 

@@ -152,6 +152,60 @@ python3 scripts/perfil_costes.py --lista results/exp016/submuestra.txt \
 touch results/exp016/sobrecoste.hecho
 """
 
+# EXP-017 (C1, clase E): compilación guiada por perfil, LTO y -march.
+[[paso]]
+id = "exp017-construir"
+descripcion = "EXP-017: compilar build-base, build-pgo, build-march y build-fma desde el commit"
+requiere = ["scripts/pgo_entrenamiento.txt", "bench/calib2"]
+hecho = "for d in build-base build-pgo build-march build-fma; do [ -x solver/kissat/$d/kissat ] || exit 1; done"
+comando = """
+./scripts/build.sh --dir=build-base --clean --jobs=4
+./scripts/build.sh --dir=build-pgo --clean --pgo --lto --jobs=4
+./scripts/build.sh --dir=build-march --clean --pgo --lto --march=x86-64-v3 --jobs=4
+./scripts/build.sh --dir=build-fma --clean --control-fma=x86-64-v3 --jobs=4
+sha1sum solver/kissat/build-*/kissat > results/exp017/binarios.sha1
+{ git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp017/commit.txt
+"""
+
+[[paso]]
+id = "exp017-pgo"
+descripcion = "EXP-017: build-pgo frente a build-base, 100 000 conflictos (equivalencia y velocidad)"
+requiere = ["results/exp017/banco.txt", "solver/kissat/build-pgo/kissat"]
+hecho = "n=$(lineas_lista results/exp017/banco.txt); [ $(filas results/exp017/pgo_A.csv) -ge $n ] && [ $(filas results/exp017/pgo_B.csv) -ge $n ] && [ -f results/exp017/informe-pgo.md ]"
+comando = """
+ab --solver solver/kissat/build-base/kissat --solver-b solver/kissat/build-pgo/kissat \
+   --bench bench/calib bench/tesis-dev --instances results/exp017/banco.txt \
+   --out-a results/exp017/pgo_A.csv --out-b results/exp017/pgo_B.csv \
+   --label-a A-base --label-b B-pgo-lto --conflicts 100000 --seeds 1
+python3 scripts/exp017.py analizar pgo > results/exp017/informe-pgo.md 2>&1
+"""
+
+[[paso]]
+id = "exp017-march"
+descripcion = "EXP-017: build-march frente a build-base, 100 000 conflictos"
+requiere = ["results/exp017/banco.txt", "solver/kissat/build-march/kissat"]
+hecho = "n=$(lineas_lista results/exp017/banco.txt); [ $(filas results/exp017/march_A.csv) -ge $n ] && [ $(filas results/exp017/march_B.csv) -ge $n ] && [ -f results/exp017/informe-march.md ]"
+comando = """
+ab --solver solver/kissat/build-base/kissat --solver-b solver/kissat/build-march/kissat \
+   --bench bench/calib bench/tesis-dev --instances results/exp017/banco.txt \
+   --out-a results/exp017/march_A.csv --out-b results/exp017/march_B.csv \
+   --label-a A-base --label-b B-pgo-lto-march --conflicts 100000 --seeds 1
+python3 scripts/exp017.py analizar march > results/exp017/informe-march.md 2>&1
+"""
+
+[[paso]]
+id = "exp017-control"
+descripcion = "EXP-017: control negativo, -march sin -ffp-contract=off frente a build-base"
+requiere = ["results/exp017/banco.txt", "solver/kissat/build-fma/kissat"]
+hecho = "n=$(lineas_lista results/exp017/banco.txt); [ $(filas results/exp017/control_A.csv) -ge $n ] && [ $(filas results/exp017/control_B.csv) -ge $n ] && [ -f results/exp017/informe-control.md ]"
+comando = """
+ab --solver solver/kissat/build-base/kissat --solver-b solver/kissat/build-fma/kissat \
+   --bench bench/calib bench/tesis-dev --instances results/exp017/banco.txt \
+   --out-a results/exp017/control_A.csv --out-b results/exp017/control_B.csv \
+   --label-a A-base --label-b B-fma --conflicts 100000 --seeds 1
+python3 scripts/exp017.py analizar control > results/exp017/informe-control.md 2>&1 || true
+"""
+
 [[paso]]
 id = "exp009-principal"
 descripcion = "EXP-009 principal: ruptura con retraso de 2 s frente a nunca, tesis-dev fresco"

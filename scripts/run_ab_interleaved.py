@@ -68,7 +68,11 @@ def main():
                     help="reanuda una tanda interrumpida: conserva las parejas completas "
                          "(A y B), descarta las filas de parejas a medias y sigue.  Exige "
                          "que los binarios tengan el mismo SHA-1 que en el meta.json")
-    ap.add_argument("--timeout", type=float, required=True)
+    ap.add_argument("--timeout", type=float, default=None,
+                    help="presupuesto de tiempo (s) por corrida")
+    ap.add_argument("--conflicts", type=int, default=None,
+                    help="presupuesto DETERMINISTA de conflictos en vez de tiempo: las dos ramas "
+                         "hacen el mismo trabajo si conservan la trayectoria (ADR-0009, clase E)")
     ap.add_argument("--seeds", default="1")
     ap.add_argument("--guard", action="append", default=[], metavar="FICHERO",
                     help="fichero adicional cuyo SHA-1 no puede cambiar durante la "
@@ -76,17 +80,25 @@ def main():
                          "guion como solver/labesat: hay que vigilar también kissat "
                          "y satsuma")
     args = ap.parse_args()
+    if (args.timeout is None) == (args.conflicts is None):
+        ap.error("hace falta exactamente uno de --timeout o --conflicts")
+    presupuesto = ("conflicts", args.conflicts) if args.conflicts else ("time", args.timeout)
 
     seeds = [int(x) for x in args.seeds.split(",") if x.strip()]
     solo = None
     if args.instances:
         with open(args.instances) as f:
             solo = {ln.strip() for ln in f if ln.strip() and not ln.startswith("#")}
-    tareas = []
+    tareas, vistas = [], set()
     for bench in args.bench:
         for inst in find_instances(bench):
             if solo is not None and os.path.basename(inst) not in solo:
                 continue
+            # Una misma instancia (mismo nombre = mismo hash) puede estar en dos
+            # bancos; se mide una sola vez: la clave de reanudación es el nombre.
+            if os.path.basename(inst) in vistas:
+                continue
+            vistas.add(os.path.basename(inst))
             for seed in seeds:
                 tareas.append((bench, inst, seed))
     if solo is not None:
@@ -171,7 +183,7 @@ def main():
         "solver_version": subprocess.run([args.solver, "--version"],
                                          capture_output=True, text=True).stdout.strip(),
         "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
-        "seeds": seeds, "timeout": args.timeout,
+        "seeds": seeds, "timeout": args.timeout, "conflicts": args.conflicts,
         "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a},
         "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b},
         "instances_filter": os.path.abspath(args.instances) if args.instances else None,
@@ -216,15 +228,15 @@ def main():
             label, opts, _, env = ramas[k]
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
             status, code, wall, cpu, rss, stats = run_one(
-                args.solver if k == "A" else solver_b, inst, seed, "time",
-                args.timeout, opts, hard_grace=30.0, env=env)
+                args.solver if k == "A" else solver_b, inst, seed, presupuesto[0],
+                presupuesto[1], opts, hard_grace=30.0, env=env)
             escritores[k].escribir({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,
                 "status": status, "exit_code": code,
                 "wall_s": f"{wall:.3f}", "cpu_s": f"{cpu:.3f}",
-                "max_rss_mb": f"{rss:.1f}", "budget_kind": "time",
-                "budget_value": args.timeout, "opts": " ".join(opts),
+                "max_rss_mb": f"{rss:.1f}", "budget_kind": presupuesto[0],
+                "budget_value": presupuesto[1], "opts": " ".join(opts),
                 "instance_sha1": "", "started_at": started,
                 "parallel_jobs": 1, **stats,
             })

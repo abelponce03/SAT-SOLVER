@@ -29,7 +29,7 @@ workflow.
 | [`ROADMAP.md`](ROADMAP.md) | Fases hasta la SAT Competition 2027 |
 | [`plan/plan-main-track-2027.md`](plan/plan-main-track-2027.md) | **Plan vigente**: Main Track con declaración honesta; hitos H1–H11 |
 | [`competicion/declaracion-ia.md`](competicion/declaracion-ia.md) | Registro vivo de la declaración de IA (cifras con `scripts/declaracion_ia.sh`) |
-| [`adr/`](adr/) | Decisiones de diseño (ADR-0001 a ADR-0008; la 0007 integra la ruptura de simetrías en Kissat; la 0008 hace los experimentos reanudables) |
+| [`adr/`](adr/) | Decisiones de diseño (ADR-0001 a ADR-0009; la 0007 integra la ruptura de simetrías en Kissat; la 0008 hace los experimentos reanudables; la 0009 fija las clases de optimización y sus pruebas) |
 | [`decisiones/registro.md`](decisiones/registro.md) | Decisiones abiertas y resueltas (D-NNN) |
 | [`../CONTRIBUTING.md`](../CONTRIBUTING.md) | Cómo se trabaja: flujo, ramas, commits, autoría |
 | [`../CHANGELOG.md`](../CHANGELOG.md) | Cambios por hito |
@@ -45,9 +45,10 @@ workflow.
 | [`research/06`](research/06-razonamiento-xor.md) | Razonamiento XOR / Gauss-Jordan (CryptoMiniSat): estructura XOR medida en 161 instancias, estimación sobre 2026 y veredicto |
 | [`research/05`](research/05-enfoques-probabilisticos.md) | Enfoques probabilísticos para SAT: revisión de ~75 trabajos, recomendaciones R1–R3 y descartes por ruido |
 | [`research/04`](research/04-decisiones-pendientes.md) | Investigación de las decisiones pendientes del autor |
+| [`research/08`](research/08-estrategia-de-optimizacion.md) | **Estrategia de optimización**: límites teóricos (resolución y PR), valor exacto de una aceleración en PAR-2, Amdahl, Teorema 5 (cuándo una compilación conserva la búsqueda) y catálogo de candidatas |
 | [`research/07`](research/07-ganadores-y-banco-tesis.md) | Ganadores 2021–2026 (fuentes primarias), corrección de B2, lo que dice el banco de la tesis y líneas nuevas (VSA, VSIDS/CHB) |
 | [`../bench/README.md`](../bench/README.md) | Bancos de instancias, incluido el banco industrial de la tesis y sus particiones |
-| [`experiments/`](experiments/) | EXP-001 a EXP-008 y EXP-010 a EXP-015 (EXP-013 a 015, sobre el banco de la tesis): hipótesis antes de medir, resultados después |
+| [`experiments/`](experiments/) | EXP-001 a EXP-017 (EXP-013 a 015, sobre el banco de la tesis; EXP-009, EXP-016 y EXP-017, preregistrados y en la cola): hipótesis antes de medir, resultados después |
 
 ## Metodología (desarrollo asistido por IA)
 
