@@ -32,7 +32,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
 | D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | ✅ **opción b** (2026-09-30): EXP-013 calibra ambos grupos (0,26 y 0,47, IC ±8 %); las features se deciden con A/B local | Director | §D-017 · EXP-013 · issue #28 |
-| D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | 🟡 provisional: sin `-march` (solo PGO + LTO) | Director | §D-019 · EXP-017 §7 |
+| D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | 🟡 provisional: sin `-march` (solo PGO + LTO) | Director | §D-019 · issue #33 · EXP-017 §7 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
