@@ -123,7 +123,12 @@ python3 scripts/exp009.py analizar
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **2026-10-01, pausa.** El director priorizó la optimización del código
+  (research/08). Con 61 de 153 parejas del contraste principal completas, se
+  detuvo la cola para ejecutar antes EXP-016 (perfil de costes) y se reanuda
+  después con `--resume` en la misma máquina (ADR-0008). La pareja que estaba
+  a medias se descarta y se repite entera. Las dos ramas siguen intercaladas,
+  así que la pausa no introduce sesgo entre A y B.
 
 ## 7. Resultados
 

@@ -123,6 +123,35 @@ python3 scripts/par2.py results/exp015/A.csv results/exp015/B.csv --md > results
 python3 scripts/analyze_speedup.py results/exp015/A.csv results/exp015/B.csv >> results/exp015/informe.md 2>&1
 """
 
+# EXP-016 va DELANTE de EXP-009: el director priorizó la optimización
+# (2026-10-01). EXP-009 se detuvo con parejas completas y sigue después donde
+# iba (--resume).
+[[paso]]
+id = "exp016-perfil"
+descripcion = "EXP-016: perfil de costes por fases (105 instancias, T = 200 s, nivel 3)"
+requiere = ["results/exp016/muestra.txt", "bench/tesis-dev", "bench/calib", "bench/calib2"]
+hecho = "n=$(lineas_lista results/exp016/muestra.txt); [ $(python3 -c 'import sys; sys.path.insert(0,\"scripts\"); from checkpoint import filas_completas as f; print(len({r[\"instance\"] for r in f(\"results/exp016/perfil.csv\")}))' 2>/dev/null || echo 0) -ge $n ]"
+comando = """
+python3 scripts/perfil_costes.py --lista results/exp016/muestra.txt \
+   --bench bench/tesis-dev bench/calib bench/calib2 \
+   --out results/exp016/perfil.csv --timeout 200 --profile 3 --seed 42
+"""
+
+[[paso]]
+id = "exp016-sobrecoste"
+descripcion = "EXP-016: sobrecoste del nivel 4 y fracción de propagate (20 instancias, 200 000 conflictos)"
+requiere = ["results/exp016/submuestra.txt"]
+hecho = "[ -f results/exp016/nivel3.csv ] && [ -f results/exp016/nivel4.csv ] && [ $(grep -c . results/exp016/nivel4.csv) -gt 20 ] && [ -f results/exp016/sobrecoste.hecho ]"
+comando = """
+python3 scripts/perfil_costes.py --lista results/exp016/submuestra.txt \
+   --bench bench/calib bench/calib2 --out results/exp016/nivel3.csv \
+   --conflicts 200000 --profile 3 --seed 1
+python3 scripts/perfil_costes.py --lista results/exp016/submuestra.txt \
+   --bench bench/calib bench/calib2 --out results/exp016/nivel4.csv \
+   --conflicts 200000 --profile 4 --seed 1
+touch results/exp016/sobrecoste.hecho
+"""
+
 [[paso]]
 id = "exp009-principal"
 descripcion = "EXP-009 principal: ruptura con retraso de 2 s frente a nunca, tesis-dev fresco"
