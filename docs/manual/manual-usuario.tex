@@ -149,6 +149,12 @@ solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>
         cuando la activación condicional (B3) esté validada. También se puede
         activar con \texttt{LABESAT\_SYMMETRY=1}.
   \item[\texttt{--no-symmetry}] Desactiva satsuma aunque \texttt{LABESAT\_SYMMETRY=1}.
+  \item[\texttt{--symmetry-delay=N}] \emph{Ruptura con retraso} (experimental,
+        EXP-009). Con \texttt{--symmetry}, kissat intenta primero la fórmula
+        original durante \texttt{N} segundos y solo aplica satsuma si no la
+        resuelve. Evita el coste fijo de satsuma en las instancias fáciles.
+        Por defecto 0 (sin retraso). También con
+        \texttt{LABESAT\_SYMM\_DELAY}.
   \item[\texttt{--time=N}] Límite de \textbf{tiempo total} en segundos. El
         tiempo que consume satsuma se descuenta del de kissat.
   \item[otras opciones] Cualquier opción que empiece por \texttt{-} se pasa a

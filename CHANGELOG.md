@@ -5,6 +5,18 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-09-30): ruptura con retraso (B3) y preregistro de EXP-009
+- `solver/labesat --symmetry --symmetry-delay=N` (o `LABESAT_SYMM_DELAY`):
+  kissat intenta la fórmula original durante N segundos y solo aplica
+  satsuma si no la resuelve. Por defecto 0 (sin retraso, sin cambios).
+  - Si la fase 1 resuelve, la prueba es DRAT pura.
+  - Si no, se descarta y la combinada de satsuma + kissat se verifica con
+    los dos dsr-trim. Tres pruebas nuevas en `test_symmetry.sh`.
+- **EXP-009** preregistrado (dos pasos nuevos en `cola.toml`):
+  - principal: retraso de 2 s frente a «nunca», en 153 instancias de
+    tesis-dev en las que nunca se ha medido ninguna política;
+  - secundario: frente a «siempre», en las 74 de EXP-007.
+
 ### Resultado (2026-09-30): cierre de EXP-010 a EXP-015
 - **EXP-011**: se adopta **mclique v2**; `solver/labesat` usa
   `tools/satsuma-mclique` por defecto (D-005 cerrada). EXP-010 (v1) no pasó
@@ -40,7 +52,7 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 - `scripts/cola.toml` + `scripts/orquestador.py`: cola declarativa, un paso a
   la vez, cerrojo, latido, marcas de hecho y `estado`.
 - `scripts/instalar_servicio.sh`: servicio de usuario que relanza la cola al
-  iniciar sesión, bloquea la suspensión y limita la memoria a 12 GB.
+  iniciar sesión, bloquea la suspensión y limita la memoria a 7 GB (ver ADR-0008).
 - `scripts/test_reanudacion.sh` (también en CI): simula un apagón y comprueba
   que la tanda reanudada es idéntica a una sin cortes.
 - Motivo: la cadena murió de madrugada el 2026-09-25 (equipo apagado) y la

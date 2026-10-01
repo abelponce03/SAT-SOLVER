@@ -122,3 +122,32 @@ ab --solver solver/kissat/build-vsa/kissat --bench bench/tesis-dev \
 python3 scripts/par2.py results/exp015/A.csv results/exp015/B.csv --md > results/exp015/informe.md 2>&1
 python3 scripts/analyze_speedup.py results/exp015/A.csv results/exp015/B.csv >> results/exp015/informe.md 2>&1
 """
+
+[[paso]]
+id = "exp009-principal"
+descripcion = "EXP-009 principal: ruptura con retraso de 2 s frente a nunca, tesis-dev fresco"
+requiere = ["results/exp009/principal.txt", "tools/satsuma-mclique", "bench/tesis-dev"]
+hecho = "n=$(lineas_lista results/exp009/principal.txt); [ $(filas results/exp009/P_A.csv) -ge $n ] && [ $(filas results/exp009/P_B.csv) -ge $n ]"
+comando = """
+ab --solver solver/labesat --bench bench/tesis-dev --instances results/exp009/principal.txt \
+   --out-a results/exp009/P_A.csv --out-b results/exp009/P_B.csv \
+   --label-a A-nunca --label-b B-retraso2 \
+   --opts-a=--no-symmetry --opts-b="--symmetry --symmetry-delay=2" \
+   --guard solver/kissat/build/kissat --guard tools/satsuma-mclique \
+   --timeout 300 --seeds 42
+"""
+
+[[paso]]
+id = "exp009-secundario"
+descripcion = "EXP-009 secundario: ruptura con retraso de 2 s frente a siempre, 74 de EXP-007"
+requiere = ["results/exp009/secundario.txt", "tools/satsuma-mclique", "bench/symm2026"]
+hecho = "n=$(lineas_lista results/exp009/secundario.txt); [ $(filas results/exp009/S_A.csv) -ge $n ] && [ $(filas results/exp009/S_B.csv) -ge $n ] && [ -f results/exp009/informe.txt ]"
+comando = """
+ab --solver solver/labesat --bench bench/symm2026 --instances results/exp009/secundario.txt \
+   --out-a results/exp009/S_A.csv --out-b results/exp009/S_B.csv \
+   --label-a A-siempre --label-b B-retraso2 \
+   --opts-a=--symmetry --opts-b="--symmetry --symmetry-delay=2" \
+   --guard solver/kissat/build/kissat --guard tools/satsuma-mclique \
+   --timeout 180 --seeds 1
+python3 scripts/exp009.py analizar > results/exp009/informe.txt 2>&1
+"""
