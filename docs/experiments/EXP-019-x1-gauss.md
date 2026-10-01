@@ -112,11 +112,11 @@ muestra en `results/exp019/muestra-dev.csv`, la salida en
 
 | Instancia | Familia | Resultado conocido | 2026 | Variables / cláusulas | Predicción |
 |---|---|---|---|---|---|
-| `3a840939` | *xor-chain* | desconocido | nadie la resolvió en 5000 s | 23 815 / 47 691 | X1 la refuta si es una paridad inconsistente en cadena de XOR cortas, que es lo que sugiere el nombre. Incierto |
-| `7e218509` | *tseitin-formulas* | desconocido | nadie la resolvió | 18 601 / 37 462 | La refuta si es una Tseitin con carga impar y vértices de grado ≤ 6. Incierto |
-| `22c8d6aa` | *ordering-principle-xor* | UNSAT | nadie la resolvió | 3 120 / 477 680 | **No** la refuta: la contradicción viene del principio de orden, no del álgebra lineal, y las XOR son la sustitución que la endurece. El sistema XOR solo es consistente |
-| `a60a1383` | *xor-shifting* | SAT | nadie la resolvió | 2 651 / 9 500 | No la refuta (es SAT) |
-| `01d6fa8e` | *lights-out* | SAT | 600 s (Kissat 2026) | 625 / 9 216 | No la refuta (es SAT; X1 no busca modelos) |
+| `3a840939` | *xor-chain* | desconocido | ninguno de los 33 solvers | 23 815 / 47 691 | X1 la refuta si es una paridad inconsistente en cadena de XOR cortas, que es lo que sugiere el nombre. Incierto |
+| `7e218509` | *tseitin-formulas* | desconocido | ninguno de los 33 solvers | 18 601 / 37 462 | La refuta si es una Tseitin con carga impar y vértices de grado ≤ 6. Incierto |
+| `22c8d6aa` | *ordering-principle-xor* | UNSAT | 24 solvers (el ganador, en 141 s); la base Kissat, no | 3 120 / 477 680 | **No** la refuta: la contradicción viene del principio de orden, no del álgebra lineal, y las XOR son la sustitución que la endurece. El sistema XOR solo es consistente |
+| `a60a1383` | *xor-shifting* | SAT | ningún solver de la Main Track; solo `kissat-sup` (track experimental, 1088 s) | 2 651 / 9 500 | No la refuta (es SAT) |
+| `01d6fa8e` | *lights-out* | SAT | 28 solvers; la base Kissat, en 600 s | 625 / 9 216 | No la refuta (es SAT; X1 no busca modelos) |
 
 - **No cambia el criterio de decisión** (§4).
 - La seguridad sí cuenta: una refutación de las dos SAT, o una prueba que
