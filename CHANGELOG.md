@@ -23,7 +23,9 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
   - **Teorema 6**: refinamiento de datos (Hoare, 1972).
   - **Proposición 3**: cota inferior del análisis 1UIP.
   - Auditoría del núcleo: no queda mejora asintótica; las candidatas son de
-    latencia de memoria (K1-K3).
+    latencia de memoria (K1-K4). Hay evidencia previa: precargar las
+    cláusulas de la lista de vigilancia dio +12 % sin cambiar la búsqueda
+    (Manthey y Saptawijaya, 2010), en un resolvedor sin literal bloqueante.
 - **ADR-0009**: clases E (equivalente), P (tubería) y S (búsqueda), y qué
   prueba exige cada una.
 - **EXP-016** (perfil de costes) y **EXP-017** (PGO, LTO y `-march`, con un

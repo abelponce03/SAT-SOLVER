@@ -486,9 +486,26 @@ solo si `propagate` pesa lo suficiente):
 
 | # | Candidata | Clase | Prueba | Riesgo |
 |---|---|---|---|---|
-| K1 | Precarga (*prefetch*) de la cabecera de la cláusula del siguiente vigilante grande en `proplit.h` | E (Corolario 4) | α = identidad; ticks intactos, porque no se toca ningún `ticks++` | Puede **ralentizar** si la cláusula ya estaba en caché: se mide |
+| K1 | Precarga (*prefetch*) de la cabecera de las cláusulas de los vigilantes grandes que vienen a continuación en la lista, con una anticipación fija | E (Corolario 4) | α = identidad; ticks intactos, porque no se toca ningún `ticks++` | Puede **ralentizar** si la cláusula ya estaba en caché o si un conflicto corta la lista: se mide |
 | K2 | Precarga de `values[blocking]` del siguiente vigilante | E (Corolario 4) | Ídem | Ídem; `values` cabe en caché en instancias pequeñas |
+| K4 | Precarga del inicio de la lista de vigilancia de ¬ℓ al asignar ℓ, antes de que le toque propagarse | E (Corolario 4) | Ídem | Si la cola de propagación es larga, la línea puede salir de la caché antes de usarse |
 | K3 | Inserción de vigilantes diferida (`delayed`) sin la pila intermedia | E solo si el orden final de cada lista es el mismo (Lema 2) | Teorema 6 con α = identidad sobre las listas | Si cambia el orden de una sola lista, es S |
+
+**Evidencia previa para K1 y K4.** Manthey y Saptawijaya (2010) midieron,
+en un CDCL propio que pasaba ~90 % del tiempo en la propagación:
+
+- **+12 %** de velocidad precargando las cláusulas de la lista que se está
+  recorriendo (su «primer esquema», que es K1);
+- **+4 %** precargando las de las listas de los 10 literales siguientes de la
+  cola de propagación (su «segundo esquema», pariente de K4);
+- sin cambiar la búsqueda y sin ningún caso de pérdida en su banco.
+
+Su resolvedor no tenía literal bloqueante, que evita muchas visitas a la
+cláusula. En Kissat cabe esperar **menos**. Hölldobler, Manthey y
+Saptawijaya (2010) recogen el conjunto: hasta un 83 % y un 60 % de media
+combinando técnicas de memoria, sin cambiar la búsqueda. Como `proplit.h`
+lo incluyen tanto la propagación de búsqueda como la de sondeo
+(`propsearch.c`, `proprobe.c`), K1 acelera las dos.
 
 Lo que **no** se hará como «optimización» (sería clase S por los Lemas 1-3):
 
@@ -529,12 +546,18 @@ Cualquiera de estas, si se quisiera, necesitaría un A/B de PAR-2.
   https://link.springer.com/chapter/10.1007/978-3-319-63046-5_9
 - Hoare, C. A. R. (1972). Proof of correctness of data representations.
   *Acta Informatica* 1(4), 271–281.
+- Hölldobler, S., Manthey, N., y Saptawijaya, A. (2010). Improving
+  resource-unaware SAT solvers. *LPAR-17*, LNCS 6397, 519–534.
+  https://doi.org/10.1007/978-3-642-16242-8_37
 - IEEE (2008). *IEEE Standard for Floating-Point Arithmetic*, IEEE 754-2008.
 - ISO/IEC 9899:2011 (C11), §5.1.2.3 (ejecución del programa) y §6.5.8
   (operadores relacionales sobre punteros).
 - GCC Manual, opción `-ffp-contract` (valor por defecto `fast` en los modos
   GNU) y `__builtin_prefetch` (no provoca fallos aunque la dirección no sea
   válida, si la expresión que la calcula lo es).
+- Manthey, N., y Saptawijaya, A. (2010). Towards improving the resource
+  usage of SAT solvers. *Pragmatics of SAT (POS-10)*.
+  https://easychair.org/publications/paper/9W
 - Pettis, K., y Hansen, R. C. (1990). Profile guided code positioning.
   *PLDI '90*, 16–27.
 - Pipatsrisawat, K., y Darwiche, A. (2011). On the power of clause-learning
