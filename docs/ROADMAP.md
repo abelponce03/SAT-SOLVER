@@ -188,7 +188,11 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
         verde con los tres verificadores.
   - [x] **EXP-019**: se adopta X1 (0 errores, 321/321 equivalentes, p95
         0,37 s). Se activa por defecto tras EXP-021 (v2, por componentes).
+  - [ ] **EXP-021**: X1 v2 (por componentes) en las 103 instancias saltadas;
+        decide qué versión se activa por defecto.
   - [ ] X1b (unidades y equivalencias del sistema XOR), si EXP-019 sale bien.
+- [ ] **EXP-020**: tope de satsuma, 60 s frente a 300 s (el mayor riesgo sin
+      medir de research/10).
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

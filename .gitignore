@@ -29,6 +29,7 @@ results/.estado/
 # --- Benchmarks descargados (pesados; regenerables con scripts/) ---
 bench/downloaded/
 bench/dev/
+bench/exp020/
 bench/test/
 *.cnf.xz
 !bench/smoke/*.cnf

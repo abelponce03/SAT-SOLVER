@@ -50,7 +50,7 @@ workflow.
 | [`research/08`](research/08-estrategia-de-optimizacion.md) | **Estrategia de optimización**: límites teóricos (resolución y PR), valor exacto de una aceleración en PAR-2, Amdahl, Teorema 5 (cuándo una compilación conserva la búsqueda) y catálogo de candidatas |
 | [`research/07`](research/07-ganadores-y-banco-tesis.md) | Ganadores 2021–2026 (fuentes primarias), corrección de B2, lo que dice el banco de la tesis y líneas nuevas (VSA, VSIDS/CHB) |
 | [`../bench/README.md`](../bench/README.md) | Bancos de instancias, incluido el banco industrial de la tesis y sus particiones |
-| [`experiments/`](experiments/) | EXP-001 a EXP-019 (EXP-013 a 015, sobre el banco de la tesis; EXP-009 y EXP-016 a EXP-019, preregistrados y en la cola): hipótesis antes de medir, resultados después |
+| [`experiments/`](experiments/) | EXP-001 a EXP-021 (EXP-013 a 015, sobre el banco de la tesis; EXP-009, EXP-020 y EXP-021, preregistrados y en la cola): hipótesis antes de medir, resultados después |
 
 ## Metodología (desarrollo asistido por IA)
 

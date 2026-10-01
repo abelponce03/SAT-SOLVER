@@ -312,3 +312,66 @@ ab --solver solver/labesat --bench bench/symm2026 --instances results/exp009/sec
    --timeout 180 --seeds 1
 python3 scripts/exp009.py analizar > results/exp009/informe.txt 2>&1
 """
+
+# EXP-021 (X1 v2, research/09 §3.4): Gauss por componentes conexas, en las
+# 103 instancias en las que X1 v1 se saltó el sistema en EXP-019.
+[[paso]]
+id = "exp021-construir"
+descripcion = "EXP-021: compilar build-x1v2 (configure --gauss) desde el commit"
+requiere = ["results/exp021/muestra.csv"]
+hecho = "[ -x solver/kissat/build-x1v2/kissat ] && [ -f results/exp021/commit.txt ]"
+comando = """
+./scripts/build.sh --dir=build-x1v2 --clean --gauss --jobs=4
+sha1sum solver/kissat/build-x1v2/kissat > results/exp021/binarios.sha1
+{ git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp021/commit.txt
+"""
+
+[[paso]]
+id = "exp021-x1"
+descripcion = "EXP-021: X1 v2 en las 103 instancias saltadas por la v1; pruebas verificadas por los dos dsr-trim"
+requiere = ["results/exp021/muestra.csv", "solver/kissat/build-x1v2/kissat"]
+hecho = "[ $(filas results/exp021/x1.csv) -ge $(filas results/exp021/muestra.csv) ]"
+comando = """
+python3 scripts/exp021.py correr
+"""
+
+[[paso]]
+id = "exp021-equivalencia"
+descripcion = "EXP-021: contadores con y sin X1 v2 donde no refuta, e informe"
+requiere = ["results/exp021/x1.csv"]
+hecho = "[ -f results/exp021/equivalencia.hecho ] && [ -f results/exp021/informe.md ]"
+comando = """
+python3 scripts/exp021.py equivalencia
+touch results/exp021/equivalencia.hecho
+python3 scripts/exp021.py analizar > results/exp021/informe.md 2>&1
+"""
+
+# EXP-020 (P5, research/10 §5): tope de tiempo de satsuma, 60 s frente a 300 s.
+[[paso]]
+id = "exp020-satsuma"
+descripcion = "EXP-020 fase 1: satsuma solo con tope de 300 s en las 13 candidatas"
+requiere = ["results/exp020/candidatas.txt"]
+hecho = "[ $(filas results/exp020/satsuma300.csv) -ge $(lineas_lista results/exp020/candidatas.txt) ]"
+comando = """
+python3 scripts/exp020.py seleccionar
+python3 scripts/compare_satsuma_builds.py --bench bench/exp020 \
+   --build mclique2=tools/satsuma-mclique --timeout 300 \
+   --out results/exp020/satsuma300.csv --resume
+"""
+
+[[paso]]
+id = "exp020-ab"
+descripcion = "EXP-020 fase 2: labesat con B3, tope de satsuma 60 s frente a 300 s, T = 1200 s"
+requiere = ["results/exp020/candidatas.txt", "results/exp020/satsuma300.csv"]
+hecho = "n=$(lineas_lista results/exp020/candidatas.txt); [ $(filas results/exp020/A.csv) -ge $n ] && [ $(filas results/exp020/B.csv) -ge $n ] && [ -f results/exp020/informe.md ]"
+comando = """
+python3 scripts/exp020.py seleccionar
+ab --solver solver/labesat --bench bench/exp020 --instances results/exp020/candidatas.txt \
+   --out-a results/exp020/A.csv --out-b results/exp020/B.csv \
+   --label-a A-tope60 --label-b B-tope300 \
+   --opts-a="--symmetry --symmetry-delay=2" --opts-b="--symmetry --symmetry-delay=2" \
+   --env-a LABESAT_SYMM_TIMEOUT=60 --env-b LABESAT_SYMM_TIMEOUT=300 \
+   --guard solver/kissat/build/kissat --guard tools/satsuma-mclique \
+   --timeout 1200 --seeds 42
+python3 scripts/exp020.py analizar > results/exp020/informe.md 2>&1
+"""

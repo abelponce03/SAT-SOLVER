@@ -5,6 +5,19 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): EXP-020 y EXP-021 preregistrados
+- **EXP-020**: ¿subir el tope de satsuma de 60 s a 300 s?
+  - Fase 1: satsuma solo, en las 13 instancias en las que agotó los 60 s
+    (EXP-014 y EXP-011).
+  - Fase 2: A/B de `labesat` con B3, T = 1200 s.
+  - Regla de dominancia: fuera de las candidatas, los dos topes se
+    comportan igual.
+  - `scripts/exp020.py`; `bench/exp020/` (enlaces, fuera de git).
+- **EXP-021**: X1 v2 sobre las 103 instancias saltadas por la v1, con el
+  arnés de EXP-019 (`scripts/exp021.py`). Decide la versión que se activa
+  por defecto.
+- Cola: EXP-009 → EXP-021 → EXP-020.
+
 ### Cerrado (2026-10-01): EXP-019, se adopta X1
 - **H0**: 0 refutaciones de instancias SAT, de 221 conocidas; 5 refutaciones
   con prueba verificada por los dos `dsr-trim`.

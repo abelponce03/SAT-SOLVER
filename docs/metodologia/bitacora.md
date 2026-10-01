@@ -643,3 +643,23 @@ al cerrar cada sesión.
   (2 %) es menor que la incertidumbre de los topes de satsuma, que se puede
   medir.
 
+### 2026-10-01 (noche) — X1 v2, cierre de EXP-019 y preregistros de EXP-020 y EXP-021
+
+- **Se pidió**: empezar por la mejora 4 (cobertura de X1) y el preregistro
+  de la 3 (tope de satsuma).
+- **Se hizo**:
+  - **X1 v2** (Gauss por componentes conexas, Lema 6 con su demostración),
+    con test construido y paso bajo ASan/UBSan;
+  - **EXP-019 cerrado**: se adopta X1;
+  - **EXP-021** (cobertura de la v2) y **EXP-020** (tope de satsuma)
+    preregistrados y en la cola tras EXP-009.
+- **Decisiones**:
+  - La activación por defecto de X1 espera a EXP-021, porque EXP-019 midió
+    la v1.
+  - EXP-020 decide por dominancia sobre las 13 candidatas: el efecto fuera
+    de ellas es nulo por construcción.
+- **Salió mal**: la predicción de la ampliación de EXP-019 para *xor-chain*
+  y *tseitin-formulas* (que X1 las refutaría) falló. No contienen XOR:
+  codifican la paridad con contadores unarios. Se documenta como límite de
+  X1.
+
