@@ -152,6 +152,15 @@ python3 scripts/perfil_costes.py --lista results/exp016/submuestra.txt \
 touch results/exp016/sobrecoste.hecho
 """
 
+[[paso]]
+id = "exp016-informe"
+descripcion = "EXP-016: informe Q1-Q4 (análisis descriptivo, segundos)"
+requiere = ["results/exp016/perfil.csv", "results/exp016/sobrecoste.hecho"]
+hecho = "grep -q 'Q4. Nivel 4' results/exp016/informe.md 2>/dev/null"
+comando = """
+python3 scripts/exp016_analisis.py > results/exp016/informe.md
+"""
+
 # EXP-017 (C1, clase E): compilación guiada por perfil, LTO y -march.
 [[paso]]
 id = "exp017-construir"

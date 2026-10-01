@@ -98,6 +98,13 @@ equivale a ~1,5 % de PAR-2. Para decidir qué optimizar hace falta saber
   `nice -n 19` y fijado a los núcleos 6 y 7: unos 13 min de CPU. Afecta a los
   tiempos absolutos de esas instancias más que a sus fracciones por fase; se
   anota por transparencia.
+- **2026-10-01, guion de análisis.** `scripts/exp016_analisis.py` se
+  escribió con la tanda en marcha (22 de 105 instancias) y se probó sobre
+  esos datos parciales para depurarlo. El análisis es descriptivo y el único
+  umbral que se usa después (p < 5 %, §4) estaba fijado antes; el guion solo
+  respeta la jerarquía de fases de Kissat (`profile.h`): parse, search y
+  simplify son disjuntas y el resto anida dentro. Lo ejecuta el paso
+  `exp016-informe` de la cola.
 
 ## 7. Resultados
 
