@@ -5,6 +5,20 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): K1, precarga de cláusulas en la propagación (EXP-018)
+- `proplit.h`, detrás de `LABESAT_PREFETCH` (apagado por defecto): un
+  puntero va 8 vigilantes por delante y precarga la cabecera de cada
+  cláusula cuyo literal bloqueante no es verdadero. No escribe nada ni toca
+  los ticks, así que no cambia la búsqueda (research/08, Corolario 4).
+  Afecta a la propagación de búsqueda y a la de sondeo.
+- `configure --prefetch[=d]` en Kissat (`build.sh` lo pasa tal cual).
+- Equivalencia comprobada antes de medir: los 81 contadores de
+  `--statistics`, incluidos `search_ticks`, idénticos al binario actual en 5
+  instancias de `calib2` con 20 000 conflictos (una sexta superó el tope de
+  tiempo de la comprobación).
+- **EXP-018** preregistrado: A/B con 200 000 conflictos en el banco de
+  EXP-017, después de EXP-017 y antes de EXP-009.
+
 ### Añadido (2026-10-01): estrategia de optimización (research/08, ADR-0009)
 - **research/08**:
   - límites de lo que puede ganar una optimización. Para CDCL que solo

@@ -215,6 +215,33 @@ ab --solver solver/kissat/build-base/kissat --solver-b solver/kissat/build-fma/k
 python3 scripts/exp017.py analizar control > results/exp017/informe-control.md 2>&1 || true
 """
 
+# EXP-018 (K1, clase E): precarga de cláusulas en la propagación.
+[[paso]]
+id = "exp018-construir"
+descripcion = "EXP-018: compilar build-base18 y build-k1 (--prefetch=8) desde el commit"
+requiere = ["results/exp017/banco.txt"]
+hecho = "for d in build-base18 build-k1; do [ -x solver/kissat/$d/kissat ] || exit 1; done"
+comando = """
+./scripts/build.sh --dir=build-base18 --clean --jobs=4
+./scripts/build.sh --dir=build-k1 --clean --prefetch=8 --jobs=4
+mkdir -p results/exp018
+sha1sum solver/kissat/build-base18/kissat solver/kissat/build-k1/kissat > results/exp018/binarios.sha1
+{ git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp018/commit.txt
+"""
+
+[[paso]]
+id = "exp018-k1"
+descripcion = "EXP-018: build-k1 frente a build-base18, 200 000 conflictos (equivalencia y velocidad)"
+requiere = ["results/exp017/banco.txt", "solver/kissat/build-k1/kissat"]
+hecho = "n=$(lineas_lista results/exp017/banco.txt); [ $(filas results/exp018/k1_A.csv) -ge $n ] && [ $(filas results/exp018/k1_B.csv) -ge $n ] && [ -f results/exp018/informe-k1.md ]"
+comando = """
+ab --solver solver/kissat/build-base18/kissat --solver-b solver/kissat/build-k1/kissat \
+   --bench bench/calib bench/tesis-dev --instances results/exp017/banco.txt \
+   --out-a results/exp018/k1_A.csv --out-b results/exp018/k1_B.csv \
+   --label-a A-base --label-b B-k1 --conflicts 200000 --seeds 1
+python3 scripts/exp018.py > results/exp018/informe-k1.md 2>&1
+"""
+
 [[paso]]
 id = "exp009-principal"
 descripcion = "EXP-009 principal: ruptura con retraso de 2 s frente a nunca, tesis-dev fresco"

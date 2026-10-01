@@ -33,6 +33,7 @@ static=no
 statistics=unknown
 symbols=unknown
 symmetry=no # [SOLVER]
+prefetch=no # [SOLVER] K1 (research/08 §6.2)
 testdefault=unknown
 ultimate=no
 unsat=no
@@ -103,6 +104,7 @@ configuration, disable messages, profiling and certain statistics.
                    
   --competition     same as '--no-options --quiet' (competition configuration)
   --symmetry        [LabeSAT] build in satsuma symmetry breaking (needs C++20)
+  --prefetch[=<d>]  [LabeSAT] prefetch clauses <d> watches ahead (default 8)
   --extreme         same as '--compact --no-options --quiet'
                    
   --no-proofs       do not include code for proof generation
@@ -235,6 +237,14 @@ do
     --extreme) extreme=yes;;
     --competition) options=no; quiet=yes;;
     --symmetry) symmetry=yes;; # [SOLVER] satsuma integrado (D-016)
+    --prefetch) prefetch=8;; # [SOLVER] K1 (research/08 §6.2)
+    --prefetch=*)
+      prefetch="`echo \"$1\"|sed -e 's,^--prefetch=,,'`"
+      case "$prefetch" in
+        [1-9]|[1-9][0-9]) ;;
+        *) die "invalid prefetch distance in '$1' (expected 1..99)";;
+      esac
+      ;;
 
     --default) default=yes;;
     --sat) sat=yes;;
@@ -639,6 +649,14 @@ fi
 # [SOLVER] Ruptura de simetrías integrada (D-016, ADR-0007): satsuma
 # (solver/satsuma, MIT, sin modificar) se compila con el compilador de C++
 # que corresponde al de C, y el binario se enlaza con él.
+# [SOLVER] K1: precarga en la propagación (research/08 §6.2), apagada por
+# defecto.  Solo añade lecturas y '__builtin_prefetch': clase E.
+if [ ! $prefetch = no ]
+then
+  CFLAGS="$CFLAGS -DLABESAT_PREFETCH=$prefetch"
+  msg "clause prefetching $prefetch watches ahead (K1)"
+fi
+
 SYMOBJ=""
 CXX="false"
 if [ $symmetry = yes ]

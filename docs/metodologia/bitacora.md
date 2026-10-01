@@ -528,3 +528,25 @@ al cerrar cada sesión.
   de pruebas (exponencial) van por delante de reescribir estructuras de
   datos que ya son óptimas.
 
+### 2026-10-01 (continuación) — K1: la primera optimización de código, con su prueba
+
+- **Se hizo**:
+  - Auditoría del núcleo de Kissat (research/08 §6): ningún componente
+    tiene margen asintótico; el factor constante lo domina la latencia de
+    memoria.
+  - Búsqueda bibliográfica: la precarga de cláusulas ya se midió (+12 %,
+    Manthey y Saptawijaya, 2010) en un resolvedor sin literal bloqueante.
+  - Implementación de K1 detrás de una macro apagada por defecto, en una
+    rama y un *worktree* aparte.
+  - Comprobación de equivalencia (81 contadores): idénticos en las 5
+    instancias que terminaron; la sexta superó el tope de 15 min.
+  - EXP-018 preregistrado.
+- **Decisiones**:
+  - K1 se desarrolla **fuera del árbol que usa la cola**. El servicio compila
+    los binarios de EXP-017 desde ese árbol y el preregistro los ata a su
+    commit; un cambio en `proplit.h`, aunque esté desactivado, ensuciaría esa
+    trazabilidad. La rama se fusiona cuando la cola haya compilado EXP-017.
+  - Distancia de precarga fijada a priori (8), sin ajustarla con datos.
+- **Salió mal**: el primer cambio de `proplit.h` se escribió en el árbol de
+  la cola; se detectó antes de compilar nada y se movió a su rama.
+

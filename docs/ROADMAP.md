@@ -174,6 +174,8 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
       búsqueda).
 - [ ] **EXP-016**: perfil de costes por fases (en la cola).
 - [ ] **EXP-017**: PGO, LTO y `-march` (clase E), con control negativo de FMA.
+- [ ] **EXP-018**: K1, precarga de cláusulas en la propagación (clase E;
+      contadores idénticos en 5/5 de `calib2` antes de medir).
 - [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
       prueba escrita antes de implementar.
 - [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):

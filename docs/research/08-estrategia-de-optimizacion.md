@@ -261,6 +261,7 @@ Clases (ADR-0009):
 | **C1** | Compilación guiada por perfil + LTO (+ `-march` con `-ffp-contract=off`) | E | Si da 5–15 % de velocidad, ≈ −0,8 a −2,5 % de PAR-2 (§2) | Bajo | Teorema 5 + contadores idénticos + A/B de tiempo | **Siguiente: EXP-017** |
 | **X1** | Refutación en la raíz de sistemas XOR inconsistentes | S | Exponencial en familias de paridad: +4 resueltas y ~−112 s en 2026 (research/06) | Medio | Pruebas aceptadas por dsr-trim, A/B | Aparcada (ADR-0007, fase 2) |
 | **K\*** | Puntos calientes de Kissat con p_c ≥ 5 % | E o S | ≤ el techo de Amdahl de cada componente | Por ver | Complejidad + equivalencia | **Pendiente de EXP-016** |
+| **K1** | Precarga de cláusulas en la propagación (§6.2), `configure --prefetch=8` | E | Hasta +12 % medido en otro resolvedor; aquí, menos (literal bloqueante) | Hecho | Corolario 4 + contadores idénticos (5/5 en `calib2`) + A/B de tiempo | **EXP-018, preregistrado** |
 | C4 | Coste de la fase de Schreier de satsuma (35–50 s en station-repacking) | P/S | Acotado: con B3, solo lo pagan las instancias que no caen en 2 s | Alto (código de terceros) | Igualdad de CNF, o A/B si cambia la salida | Tras EXP-009 |
 | C5 | Escritura de la prueba (cuenta en el tiempo de la competición) | E | Por medir | Bajo | Prueba idéntica byte a byte | Medir en EXP-016bis |
 | ~~C6~~ | Descomprimir una sola vez | P | **Nulo en competición**: las CNF llegan sin comprimir (los guiones de los dos primeros de 2026 las leen tal cual) | — | — | Solo abarata la máquina local |
@@ -286,7 +287,7 @@ Clases (ADR-0009):
 |---|---|---|
 | O1 | EXP-016 (perfil) y research/08 | Fracciones p_c por fase, con sobrecoste medido |
 | O2 | C1: `build.sh --pgo --lto` (+ `--march` con `-ffp-contract=off`); EXP-017 | Contadores idénticos en el banco de equivalencia **y** velocidad con IC95 % > 1 en el A/B |
-| O3 | Análisis de los K\* con p_c ≥ 5 %: algoritmo, cota, prueba de corrección o equivalencia, antes de implementar | Demostración escrita en §6 (marco y auditoría del núcleo: hechos; candidatas K1-K3 a la espera de EXP-016 Q4) |
+| O3 | Análisis de los K\* con p_c ≥ 5 %: algoritmo, cota, prueba de corrección o equivalencia, antes de implementar | Demostración escrita en §6 (marco y auditoría del núcleo: hechos; K1 implementada y en EXP-018; K2-K4 a la espera de EXP-016 Q4) |
 | O4 | Palancas de sistema de pruebas: B3 (EXP-009) y X1 | Criterios de sus preregistros |
 
 Prioridad de cómputo: un paso de la cola a la vez (ADR-0008). C1 necesita
