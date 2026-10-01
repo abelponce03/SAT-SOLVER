@@ -132,8 +132,9 @@ donde iba, en esta misma máquina.
 
 **Memoria (2026-09-24)**: la máquina tiene 15 GB. Una tanda pesada a la vez
 (la cola lo garantiza con un cerrojo); nada de lanzar tandas a mano en
-paralelo. Para experimentar fuera de la cola: `nice`, tope de memoria
-(`ulimit -v`) y compilar con `taskset` a 2 núcleos.
+paralelo. Para experimentar fuera de la cola: `nice -n 40` (la sesión corre
+con *niceness* −8 y `nice` recorta a 19; con `-n 19` se queda en 11), tope de
+memoria (`ulimit -v`) y compilar con `taskset` a 2 núcleos.
 
 ## 7. Herramientas del entorno que se usan
 

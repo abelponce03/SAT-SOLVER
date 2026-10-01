@@ -105,6 +105,13 @@ equivale a ~1,5 % de PAR-2. Para decidir qué optimizar hace falta saber
   respeta la jerarquía de fases de Kissat (`profile.h`): parse, search y
   simplify son disjuntas y el resto anida dentro. Lo ejecuta el paso
   `exp016-informe` de la cola.
+- **2026-10-01, 02:26–02:45, segunda carga concurrente.** Compilación de K1
+  (11 s, 2 núcleos) y su comprobación de equivalencia: 6 instancias de
+  `calib2` × 2 binarios, 20 000 conflictos, en los núcleos 6 y 7. Coincidió
+  con el perfilado de las instancias 26 a 32 de la muestra. El proceso de la
+  sesión tenía *niceness* −8, así que `nice -n 19` dejó esas corridas en 11:
+  menos prioridad que la tanda (5), pero no la mínima. Como en la primera
+  incidencia, afecta más a los tiempos absolutos que a las fracciones.
 
 ## 7. Resultados
 
