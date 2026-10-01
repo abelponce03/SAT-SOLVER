@@ -317,6 +317,13 @@ static uint64_t emit_proof (kissat *solver, const unsigneds *rows,
   return fresh;
 }
 
+/* Raíz de la unión-búsqueda, con compresión de caminos a la mitad. */
+static inline unsigned gauss_find (unsigned *parent, unsigned x) {
+  while (parent[x] != x)
+    x = parent[x] = parent[parent[x]];
+  return x;
+}
+
 int kissat_gauss (kissat *solver) {
   if (solver->inconsistent || solver->level || !solver->watching)
     return 0;
@@ -422,119 +429,196 @@ int kissat_gauss (kissat *solver) {
   RELEASE_STACK (candidates);
   int res = 0;
   const unsigned num_rows = SIZE_STACK (sizes);
-  unsigned *column = 0;
-  unsigned num_columns = 0;
-  if (num_rows && !trivial_conflict) {
-    column = kissat_nalloc (solver, VARS, sizeof (unsigned));
-    for (unsigned idx = 0; idx != VARS; idx++)
-      column[idx] = INVALID_IDX;
-    for (all_stack (unsigned, idx, rows))
-      if (column[idx] == INVALID_IDX)
-        column[idx] = num_columns++;
-  }
-  const uint64_t row_bits = (uint64_t) num_columns + 1 + num_rows;
-  const uint64_t words = (row_bits + 63) / 64;
-  const uint64_t total_bits = words * 64 * num_rows;
-  // Estimaciones en coma flotante solo para decidir si se intenta: no
-  // cambian ninguna decisión de la búsqueda.
-  const double ops = (double) num_columns * num_rows * words;
-  const uint64_t max_bits = (uint64_t) GET_OPTION (gaussbits) * 1000000u;
-  const double max_ops = 1e6 * GET_OPTION (gaussops);
-  if (!column)
+  if (!num_rows || trivial_conflict) {
     kissat_verbose (solver, "gauss: no XOR rows to eliminate (%.2f seconds)",
                     kissat_process_time () - started);
-  else if (total_bits > max_bits || ops > max_ops)
+    RELEASE_STACK (rows);
+    RELEASE_STACK (starts);
+    RELEASE_STACK (sizes);
+    RELEASE_STACK (parities);
+    return 0;
+  }
+  // Componentes conexas (research/09, Lema 6): dos filas están en la misma
+  // si comparten variable.  El sistema es inconsistente si y solo si lo es
+  // alguna componente, así que cada una se elimina por separado y la
+  // memoria la marca la mayor, no el total.
+  unsigned *parent = kissat_nalloc (solver, VARS, sizeof (unsigned));
+  unsigned *column = kissat_nalloc (solver, VARS, sizeof (unsigned));
+  for (unsigned idx = 0; idx != VARS; idx++)
+    parent[idx] = column[idx] = INVALID_IDX;
+  unsigned num_columns = 0;
+  for (all_stack (unsigned, idx, rows))
+    if (parent[idx] == INVALID_IDX)
+      parent[idx] = idx, num_columns++;
+  for (unsigned r = 0; r != num_rows; r++) {
+    const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, r);
+    const unsigned a = gauss_find (parent, vars[0]);
+    for (unsigned k = 1; k != PEEK_STACK (sizes, r); k++) {
+      const unsigned b = gauss_find (parent, vars[k]);
+      if (a != b)
+        parent[b] = a;
+    }
+  }
+  // Filas agrupadas por componente (orden estable de primera aparición).
+  unsigned *comp_of_root = column; // reutilizado; se restaura más abajo
+  unsigned num_components = 0;
+  unsigned *row_comp = kissat_nalloc (solver, num_rows, sizeof (unsigned));
+  for (unsigned r = 0; r != num_rows; r++) {
+    const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, r);
+    const unsigned root = gauss_find (parent, vars[0]);
+    if (comp_of_root[root] == INVALID_IDX)
+      comp_of_root[root] = num_components++;
+    row_comp[r] = comp_of_root[root];
+  }
+  for (unsigned idx = 0; idx != VARS; idx++)
+    column[idx] = INVALID_IDX;
+  unsigned *comp_start =
+      kissat_calloc (solver, num_components + 1, sizeof (unsigned));
+  for (unsigned r = 0; r != num_rows; r++)
+    comp_start[row_comp[r] + 1]++;
+  for (unsigned c = 0; c != num_components; c++)
+    comp_start[c + 1] += comp_start[c];
+  unsigned *comp_rows = kissat_nalloc (solver, num_rows, sizeof (unsigned));
+  {
+    unsigned *fill = kissat_nalloc (solver, num_components, sizeof (unsigned));
+    memcpy (fill, comp_start, num_components * sizeof (unsigned));
+    for (unsigned r = 0; r != num_rows; r++)
+      comp_rows[fill[row_comp[r]]++] = r;
+    kissat_dealloc (solver, fill, num_components, sizeof (unsigned));
+  }
+  kissat_dealloc (solver, row_comp, num_rows, sizeof (unsigned));
+  // Estimaciones en coma flotante solo para decidir si se intenta: no
+  // cambian ninguna decisión de la búsqueda.  El presupuesto de trabajo es
+  // común a todas las componentes; la memoria se limita por componente.
+  const uint64_t max_bits = (uint64_t) GET_OPTION (gaussbits) * 1000000u;
+  double budget = 1e6 * GET_OPTION (gaussops);
+  unsigned rank_total = 0, skipped = 0, skipped_rows = 0, skipped_columns = 0;
+  unsigned largest = 0;
+  unsigneds certificate;
+  INIT_STACK (certificate);
+  for (unsigned c = 0; c != num_components && EMPTY_STACK (certificate); c++) {
+    const unsigned *crow = comp_rows + comp_start[c];
+    const unsigned n = comp_start[c + 1] - comp_start[c];
+    if (n > largest)
+      largest = n;
+    unsigned m = 0; // columnas locales
+    for (unsigned i = 0; i != n; i++) {
+      const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, crow[i]);
+      for (unsigned k = 0; k != PEEK_STACK (sizes, crow[i]); k++)
+        if (column[vars[k]] == INVALID_IDX)
+          column[vars[k]] = m++;
+    }
+    const uint64_t words = ((uint64_t) m + 1 + n + 63) / 64;
+    const uint64_t bits = words * 64 * n;
+    const double ops = (double) m * n * words;
+    if (bits > max_bits || ops > budget) {
+      skipped++, skipped_rows += n, skipped_columns += m;
+    } else {
+      budget -= ops;
+      uint64_t *matrix = kissat_nalloc (solver, n * words, 8);
+      memset (matrix, 0, n * words * 8);
+      uint64_t **R = kissat_nalloc (solver, n, sizeof (uint64_t *));
+      for (unsigned i = 0; i != n; i++) {
+        const unsigned r = crow[i];
+        uint64_t *row = R[i] = matrix + i * words;
+        const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, r);
+        for (unsigned k = 0; k != PEEK_STACK (sizes, r); k++) {
+          const unsigned col = column[vars[k]];
+          row[col / 64] ^= (uint64_t) 1 << (col % 64);
+        }
+        if (PEEK_STACK (parities, r))
+          row[m / 64] |= (uint64_t) 1 << (m % 64);
+        const uint64_t h = (uint64_t) m + 1 + i;
+        row[h / 64] |= (uint64_t) 1 << (h % 64);
+      }
+      unsigned rank = 0;
+      for (unsigned col = 0; col != m && rank != n; col++) {
+        const unsigned w = col / 64;
+        const uint64_t bit = (uint64_t) 1 << (col % 64);
+        unsigned pivot = rank;
+        while (pivot != n && !(R[pivot][w] & bit))
+          pivot++;
+        if (pivot == n)
+          continue;
+        uint64_t *tmp = R[pivot];
+        R[pivot] = R[rank];
+        R[rank] = tmp;
+        const uint64_t *piv = R[rank];
+        for (unsigned i = rank + 1; i != n; i++) {
+          uint64_t *row = R[i];
+          if (row[w] & bit)
+            for (uint64_t k = w; k != words; k++)
+              row[k] ^= piv[k];
+        }
+        rank++;
+      }
+      rank_total += rank;
+      const uint64_t *inconsistent = 0;
+      for (unsigned i = rank; !inconsistent && i != n; i++)
+        if (R[i][m / 64] & ((uint64_t) 1 << (m % 64)))
+          inconsistent = R[i];
+      if (inconsistent) {
+        for (unsigned i = 0; i != n; i++) {
+          const uint64_t h = (uint64_t) m + 1 + i;
+          if (inconsistent[h / 64] & ((uint64_t) 1 << (h % 64)))
+            PUSH_STACK (certificate, crow[i]);
+        }
+        // Comprobación independiente: la suma de las filas de S es 0 = 1.
+        unsigned char *mark = kissat_calloc (solver, m, 1);
+        unsigned sum_parity = 0, odd = 0;
+        for (all_stack (unsigned, r, certificate)) {
+          sum_parity ^= PEEK_STACK (parities, r);
+          const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, r);
+          for (unsigned k = 0; k != PEEK_STACK (sizes, r); k++)
+            mark[column[vars[k]]] ^= 1;
+        }
+        for (unsigned col = 0; col != m; col++)
+          odd += mark[col];
+        kissat_dealloc (solver, mark, m, 1);
+        if (odd || !sum_parity)
+          kissat_fatal ("gauss: invalid certificate (internal error)");
+      }
+      kissat_dealloc (solver, R, n, sizeof (uint64_t *));
+      kissat_dealloc (solver, matrix, n * words, 8);
+    }
+    for (unsigned i = 0; i != n; i++) { // columnas locales a su estado
+      const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, crow[i]);
+      for (unsigned k = 0; k != PEEK_STACK (sizes, crow[i]); k++)
+        column[vars[k]] = INVALID_IDX;
+    }
+  }
+  kissat_very_verbose (solver,
+                       "gauss: %u components, the largest with %u rows",
+                       num_components, largest);
+  if (!EMPTY_STACK (certificate)) {
+    uint64_t fresh = 0;
+    if (solver->proof)
+      fresh = emit_proof (solver, &rows, &starts, &sizes, &parities,
+                          &certificate);
+    kissat_message (solver,
+                    "gauss: refuted %u XOR rows over %u variables "
+                    "(certificate of %zu rows, %" PRIu64
+                    " extension variables in the proof, %.2f seconds)",
+                    num_rows, num_columns, SIZE_STACK (certificate), fresh,
+                    kissat_process_time () - started);
+    solver->inconsistent = true;
+    res = 20;
+  } else if (skipped)
     kissat_verbose (solver,
                     "gauss: skipping %u rows over %u variables "
-                    "(%" PRIu64 " bits, %.3g operations, %.2f seconds)",
-                    num_rows, num_columns, total_bits, ops,
+                    "(%u of %u components over the limits, %.2f seconds)",
+                    skipped_rows, skipped_columns, skipped, num_components,
                     kissat_process_time () - started);
-  else {
-    uint64_t *matrix = kissat_nalloc (solver, num_rows * words, 8);
-    memset (matrix, 0, num_rows * words * 8);
-    uint64_t **R = kissat_nalloc (solver, num_rows, sizeof (uint64_t *));
-    for (unsigned r = 0; r != num_rows; r++) {
-      uint64_t *row = R[r] = matrix + r * words;
-      const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, r);
-      for (unsigned k = 0; k != PEEK_STACK (sizes, r); k++) {
-        const unsigned col = column[vars[k]];
-        row[col / 64] ^= (uint64_t) 1 << (col % 64);
-      }
-      if (PEEK_STACK (parities, r))
-        row[num_columns / 64] |= (uint64_t) 1 << (num_columns % 64);
-      const uint64_t h = (uint64_t) num_columns + 1 + r;
-      row[h / 64] |= (uint64_t) 1 << (h % 64);
-    }
-    unsigned rank = 0;
-    for (unsigned col = 0; col != num_columns && rank != num_rows; col++) {
-      const unsigned w = col / 64;
-      const uint64_t bit = (uint64_t) 1 << (col % 64);
-      unsigned pivot = rank;
-      while (pivot != num_rows && !(R[pivot][w] & bit))
-        pivot++;
-      if (pivot == num_rows)
-        continue;
-      uint64_t *tmp = R[pivot];
-      R[pivot] = R[rank];
-      R[rank] = tmp;
-      const uint64_t *p = R[rank];
-      for (unsigned r = rank + 1; r != num_rows; r++) {
-        uint64_t *row = R[r];
-        if (row[w] & bit)
-          for (uint64_t k = w; k != words; k++)
-            row[k] ^= p[k];
-      }
-      rank++;
-    }
-    const uint64_t *inconsistent = 0;
-    for (unsigned r = rank; !inconsistent && r != num_rows; r++)
-      if (R[r][num_columns / 64] & ((uint64_t) 1 << (num_columns % 64)))
-        inconsistent = R[r];
-    if (!inconsistent)
-      kissat_verbose (solver,
-                      "gauss: %u XOR rows over %u variables are consistent "
-                      "(rank %u, %.2f seconds)",
-                      num_rows, num_columns, rank,
-                      kissat_process_time () - started);
-    else {
-      unsigneds certificate;
-      INIT_STACK (certificate);
-      for (unsigned r = 0; r != num_rows; r++) {
-        const uint64_t h = (uint64_t) num_columns + 1 + r;
-        if (inconsistent[h / 64] & ((uint64_t) 1 << (h % 64)))
-          PUSH_STACK (certificate, r);
-      }
-      // Comprobación independiente: la suma de las filas de S es 0 = 1.
-      unsigned char *mark = kissat_calloc (solver, num_columns, 1);
-      unsigned sum_parity = 0, odd = 0;
-      for (all_stack (unsigned, r, certificate)) {
-        sum_parity ^= PEEK_STACK (parities, r);
-        const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, r);
-        for (unsigned k = 0; k != PEEK_STACK (sizes, r); k++)
-          mark[column[vars[k]]] ^= 1;
-      }
-      for (unsigned col = 0; col != num_columns; col++)
-        odd += mark[col];
-      kissat_dealloc (solver, mark, num_columns, 1);
-      if (odd || !sum_parity)
-        kissat_fatal ("gauss: invalid certificate (internal error)");
-      uint64_t fresh = 0;
-      if (solver->proof)
-        fresh = emit_proof (solver, &rows, &starts, &sizes, &parities,
-                            &certificate);
-      kissat_message (solver,
-                      "gauss: refuted %u XOR rows over %u variables "
-                      "(certificate of %zu rows, %" PRIu64
-                      " extension variables in the proof, %.2f seconds)",
-                      num_rows, num_columns, SIZE_STACK (certificate),
-                      fresh, kissat_process_time () - started);
-      RELEASE_STACK (certificate);
-      solver->inconsistent = true;
-      res = 20;
-    }
-    kissat_dealloc (solver, R, num_rows, sizeof (uint64_t *));
-    kissat_dealloc (solver, matrix, num_rows * words, 8);
-  }
+  else
+    kissat_verbose (solver,
+                    "gauss: %u XOR rows over %u variables are consistent "
+                    "(rank %u, %.2f seconds)",
+                    num_rows, num_columns, rank_total,
+                    kissat_process_time () - started);
+  RELEASE_STACK (certificate);
+  kissat_dealloc (solver, comp_rows, num_rows, sizeof (unsigned));
+  kissat_dealloc (solver, comp_start, num_components + 1, sizeof (unsigned));
+  kissat_dealloc (solver, parent, VARS, sizeof (unsigned));
   if (column)
     kissat_dealloc (solver, column, VARS, sizeof (unsigned));
   RELEASE_STACK (rows);

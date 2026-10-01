@@ -5,6 +5,17 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): X1 v2, Gauss por componentes conexas
+- `gauss.c` parte el sistema XOR en componentes conexas (unión-búsqueda) y
+  elimina cada una por separado (research/09 §3.4, **Lema 6**: el sistema es
+  inconsistente si y solo si lo es alguna componente).
+  - El tope de memoria pasa a ser por componente; el de trabajo, común.
+  - En EXP-019, X1 v1 se saltó 103 sistemas por memoria; ahora solo se
+    saltarían las componentes que de verdad no caben.
+- `test_gauss.sh`: caso de componentes (un sistema grande consistente que no
+  cabe y uno pequeño inconsistente). Pasa también bajo ASan/UBSan.
+- EXP-019 sigue con su binario (v1), compilado desde su commit.
+
 ### Añadido (2026-10-01): research/10, distancia a los ganadores de 2026
 - `scripts/distancia_2026.py`: contrafactual con los tiempos oficiales.
   - LabeSAT por defecto sería 16.º (+964 s de PAR-2).

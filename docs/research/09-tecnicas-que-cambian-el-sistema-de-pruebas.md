@@ -363,6 +363,54 @@ conexo G de n vértices y grado d con cargas de suma impar.
   La trayectoria es la misma más un coste fijo (research/08 §6, clase E más
   una salida temprana).
 
+### 3.4 Gauss por componentes conexas (X1 v2, 2026-10-01)
+
+En EXP-019, X1 se saltó 103 sistemas porque la matriz entera (filas ×
+(columnas + filas) bits, por el historial) superaba el tope de memoria. La
+mediana era de 16 000 filas y el máximo de 479 000; 41 de esos sistemas son de
+instancias UNSAT.
+
+**Lema 6 (bloques).** Dos filas están en la misma componente si comparten
+una variable, y se cierra por transitividad. Sean (A_c, b_c) los subsistemas
+de las componentes c = 1..p. Entonces Ax = b tiene solución si y solo si cada
+A_c x_c = b_c la tiene. Además, un certificado S_c de una componente
+(Lema 1) es un certificado del sistema entero.
+
+*Demostración.*
+
+- Las componentes no comparten variables: cada variable aparece en una sola
+  y A es diagonal por bloques salvo permutación de filas y columnas.
+- Si cada bloque tiene solución x_c, su concatenación x resuelve Ax = b,
+  porque cada fila solo mira variables de su bloque.
+- Recíprocamente, la restricción de una solución de Ax = b a las variables
+  del bloque c resuelve A_c x_c = b_c.
+- Un S_c con suma (0 | 1) dentro del bloque c es un subconjunto de las filas
+  del sistema con la misma suma: cumple la definición de certificado del
+  §3.2. ∎
+
+**Consecuencias para la implementación** (`gauss.c`):
+
+- Las componentes se calculan con unión-búsqueda sobre las variables
+  (O(N·α(N))) y cada una se elimina por separado.
+- El tope de memoria (`gaussbits`) se aplica **por componente**.
+- El de trabajo (`gaussops`) es un **presupuesto común**, así que el tiempo
+  total sigue acotado.
+- La prueba (Teorema 1) no cambia: recibe un certificado de filas
+  originales, de una sola componente.
+- Si no refuta, X1 sigue sin escribir nada en el solver (clase E con salida
+  temprana).
+- `test_gauss.sh` lo comprueba con un caso construido:
+  - un Tseitin 40×40 satisfacible (~7,8 Mbit, no cabe en un tope de
+    1 Mbit) junto a un Tseitin 4×4 insatisfacible sin variables en común;
+  - la versión de EXP-019 salta el sistema entero, y la de componentes
+    refuta el pequeño con prueba verificada por los tres verificadores;
+  - también pasa bajo ASan/UBSan.
+
+**Qué no resuelve.** Una componente única enorme (las de 479 000 filas)
+sigue sin caber: el historial cuesta O(m²) bits. Para eso haría falta
+eliminar sin historial y reconstruir el certificado después, que queda
+anotado como mejora posible (X1 v3).
+
 ## 4. Validación del diseño (prototipo)
 
 ### 4.1 Herramientas

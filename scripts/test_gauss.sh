@@ -9,7 +9,9 @@
 #   2. No refuta nunca la variante SATISFACIBLE de esas familias, y en ellas la
 #      búsqueda es la misma con --gauss=1 que con --gauss=0 (81 contadores de
 #      --statistics idénticos): clase E con salida temprana.
-#   3. Con --gauss=0 (el valor por defecto) no aparece ningún mensaje de X1.
+#   3. Por componentes conexas, refuta un subsistema pequeño inconsistente
+#      aunque el sistema entero no quepa en el tope de memoria.
+#   4. Con --gauss=0 (el valor por defecto) no aparece ningún mensaje de X1.
 #
 # Uso: [TOOLS=dir] ./scripts/test_gauss.sh [kissat-con-gauss]
 # Sin argumento compila solver/kissat/build-gauss/ si no existe.  TOOLS es el
@@ -73,7 +75,36 @@ for spec in "${FAMILIAS[@]}"; do
     else bad "$spec --sat: la búsqueda cambia con --gauss=1"; fi
 done
 
-# 3. Apagada por defecto.
+# 3. Componentes (research/09, Lema 6): un sistema grande y consistente que
+#    no cabe en el tope de memoria (Tseitin 40×40 satisfacible, ~7,8 Mbit) y,
+#    sin variables en común, uno pequeño e inconsistente (Tseitin 4×4).  Con
+#    --gaussbits=1 (1 Mbit), tratar el sistema entero lo saltaría; por
+#    componentes, X1 refuta el pequeño, con prueba verificada.
+python3 "$ROOT/scripts/gen_paridad.py" tseitin-malla 40 40 --seed 3 --sat > "$TMP/g.cnf"
+python3 "$ROOT/scripts/gen_paridad.py" tseitin-malla 4 4 --seed 3 > "$TMP/p.cnf"
+python3 - "$TMP/g.cnf" "$TMP/p.cnf" > "$TMP/c.cnf" <<'PY'
+import sys
+def leer(f):
+    n, cls = 0, []
+    for l in open(f):
+        if l.startswith("p"): n = int(l.split()[2])
+        elif l[0] not in "c\n": cls.append([int(x) for x in l.split()[:-1]])
+    return n, cls
+n1, c1 = leer(sys.argv[1]); n2, c2 = leer(sys.argv[2])
+c2 = [[(abs(x) + n1) * (1 if x > 0 else -1) for x in c] for c in c2]
+print(f"p cnf {n1 + n2} {len(c1) + len(c2)}")
+for c in c1 + c2: print(" ".join(map(str, c)), 0)
+PY
+code=0; "$K" --gauss=1 --gaussbits=1 "$TMP/c.cnf" "$TMP/c.proof" > "$TMP/c.out" 2>&1 || code=$?
+if [ "$code" = 20 ] && grep -q "gauss: refuted" "$TMP/c.out"; then
+    ok=1
+    for c in "${CHECKERS[@]}"; do
+        verified "$c" "$TMP/c.cnf" "$TMP/c.proof" || { bad "componentes: $(basename "$c") no verificó la prueba"; ok=0; }
+    done
+    if [ $ok = 1 ]; then echo "OK    componentes: refuta la pequeña aunque el sistema entero no quepa (prueba verificada)"; fi
+else bad "componentes: X1 no refutó con --gaussbits=1 (código $code)"; fi
+
+# 4. Apagada por defecto.
 python3 "$ROOT/scripts/gen_paridad.py" lights-out 5 --seed 3 > "$TMP/d.cnf"
 "$K" --verbose=1 "$TMP/d.cnf" > "$TMP/d.out" 2>&1 || true
 if grep -q "gauss:" "$TMP/d.out"; then bad "X1 se ejecuta sin --gauss=1"
