@@ -1,0 +1,8 @@
+332c3e31f067a26890ba0f5763ea89ebcebc4d99  solver/kissat/build-base/kissat
+40ea26ac15f9d030f29773c28d820f4a050b0277  solver/kissat/build-cmp/kissat
+0d37dcfd7558a2eb7d32865802bc538eab0ec53e  solver/kissat/build-fma/kissat
+c06ac0956666cec92cbca56d919c3ebad4c3fa3b  solver/kissat/build-march/kissat
+cefb5c4e86c528c69988f33d98e9169063ce7e42  solver/kissat/build-pgo/kissat
+2aa9f56c0ab790f861d007e4502b9bdcb9daeed4  solver/kissat/build-symm/kissat
+e522c4046dab00146d4cfdc888e925c19d55ced1  solver/kissat/build-vsa-dbg/kissat
+6cd7466b73bd88618eea88c913c024ca8cb1938b  solver/kissat/build-vsa/kissat

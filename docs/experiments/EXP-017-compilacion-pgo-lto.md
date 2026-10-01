@@ -1,6 +1,8 @@
 # EXP-017 — C1: compilación guiada por perfil, LTO y `-march` (clase E, preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con
+- **Estado**: **cerrado (2026-10-01)**: **se adopta PGO + LTO**; `-march`
+  queda pendiente de D-019 para la competición. Resultados en §7 y datos en
+  `results/exp017/`. Se commiteó antes de ejecutar, junto con
   `scripts/build.sh` (`--pgo`, `--lto`, `--march`, `--control-fma`),
   `scripts/pgo_entrenamiento.txt`, `scripts/exp017.py`,
   `results/exp017/banco.txt` y el soporte de `--conflicts` en
@@ -143,4 +145,46 @@ gratis.
 
 ## 7. Resultados
 
-(pendiente)
+Binarios compilados por la cola desde `70d4e3c`. `results/exp017/commit.txt`
+recoge el commit; la fusión de K1 no cambió el código, §6.
+
+| Comparación (85 parejas, 100 000 conflictos, semilla 1) | Trayectoria | Aceleración geométrica | IC95 % | Wilcoxon p | Veredicto |
+|---|---|---|---|---|---|
+| `build-pgo` (PGO + LTO) frente a `build-base` | **85/85 idénticas** | **×1,030** | [1,023; 1,038] | 1,9·10⁻¹¹ | H0 y H1: **adoptar** |
+| `build-march` (+ `-march=x86-64-v3 -ffp-contract=off`) | **85/85 idénticas** | **×1,040** | [1,027; 1,055] | 1,3·10⁻¹⁰ | H0 y H2: s(march) > s(pgo) |
+| `build-fma` (control: `-march` **sin** `-ffp-contract=off`) | **85/85 idénticas** | ×1,003 | [0,993; 1,014] | 0,22 | descriptivo |
+
+**Control negativo.** La predicción era que al menos una trayectoria
+cambiaría. No ha cambiado ninguna.
+
+- `objdump` confirma que el binario de control **sí** lleva FMA:
+  - 15 instrucciones en total;
+  - entre ellas, en `kissat_update_smooth` (medias exponenciales de los
+    reinicios) y en `kissat_scale_delta` (límites).
+- `build-base` y `build-march` no llevan ninguna.
+
+Lectura:
+
+- La FMA redondea una vez donde había dos, y la diferencia en el último bit
+  no ha volteado ninguna comparación en 100 000 conflictos de estas 85
+  instancias.
+- Por tanto, la condición (b) del Teorema 5 es **suficiente pero no
+  necesaria en la práctica**. El riesgo no es cero: una sola comparación
+  volteada cambia toda la trayectoria posterior.
+- Se mantiene `-ffp-contract=off`: no cuesta nada, porque `build-march` ya
+  acelera ×1,040 con ella.
+
+**Decisión (§4).**
+
+- **PGO + LTO se adopta.** Los experimentos posteriores a EXP-009 y el
+  paquete de competición se compilan con `build.sh --pgo --lto`.
+- `build/` no se toca hasta que EXP-009 termine: su tanda se reanuda con ese
+  binario y `--guard` comprueba su SHA-1.
+- Valor esperado por la Proposición 1: ×1,03 de velocidad ≈ −0,4 % a
+  −0,6 % de PAR-2.
+- **`-march=x86-64-v3`**: la tabla de §4 lo condiciona a confirmar el
+  entorno de la competición. Ganancia sobre PGO + LTO ≈ +1 % (≈ −0,15 % de
+  PAR-2). Riesgo si la máquina no tuviera AVX2/FMA: SIGILL en todas las
+  instancias. Se registra como **D-019**. Mientras tanto, la opción
+  conservadora: competición con PGO + LTO sin `-march`; experimentos
+  locales con `-march`, porque el i5-1135G7 lo admite.

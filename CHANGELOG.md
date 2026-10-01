@@ -5,6 +5,18 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cerrado (2026-10-01): EXP-016 y EXP-017
+- **EXP-016**: la propagación se lleva ≈ 57 % del tiempo (nivel 4, mismo
+  trabajo), el análisis 14–19 % y el sondeo 15–19 %. La lectura y la
+  descompresión pesan < 1 % en corridas largas. Se corrige `exp016_analisis.py`
+  (Q4 perdía `propagate` y `decide`).
+- **EXP-017**: **se adopta PGO + LTO** (×1,030, IC95 % [1,023; 1,038],
+  85/85 trayectorias idénticas). Con `-march=x86-64-v3 -ffp-contract=off`,
+  ×1,040, pendiente de **D-019** para la competición.
+  - El control con FMA sin `-ffp-contract=off` no cambió ninguna trayectoria
+    en 100 000 conflictos, aunque el binario sí llevaba FMA en las medias de
+    los reinicios: la condición del Teorema 5 es suficiente, no necesaria.
+
 ### Añadido (2026-10-01): X1, refutación de sistemas XOR por Gauss con prueba (research/09, EXP-019)
 - **research/09**: técnicas que cambian el sistema de pruebas.
   - **Teorema 1**: refutación DRAT con variables de extensión de un sistema

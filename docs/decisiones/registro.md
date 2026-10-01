@@ -32,6 +32,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
 | D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | ✅ **opción b** (2026-09-30): EXP-013 calibra ambos grupos (0,26 y 0,47, IC ±8 %); las features se deciden con A/B local | Director | §D-017 · EXP-013 · issue #28 |
+| D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | 🟡 provisional: sin `-march` (solo PGO + LTO) | Director | §D-019 · EXP-017 §7 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
@@ -260,3 +261,29 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     cambiaría la base sin EXP-008 y mezclaría dos cambios.
 - **Mientras tanto**: nada; no se toca código hasta que EXP-008 decida la
   base (D-013).
+
+## D-019 — ¿`-march=x86-64-v3` en el paquete de competición?
+
+- **Surge**: el 2026-10-01, al cerrar EXP-017.
+- **Contexto**:
+  - PGO + LTO acelera ×1,030 con la trayectoria idéntica, y se adopta.
+  - Añadir `-march=x86-64-v3` (AVX2, BMI2 y FMA, con `-ffp-contract=off`)
+    da ×1,040, también con la trayectoria idéntica. La diferencia con PGO +
+    LTO es ≈ +1 % de velocidad, ≈ −0,15 % de PAR-2.
+  - Si la máquina de la competición no tuviera esas instrucciones, el
+    binario moriría con SIGILL en **todas** las instancias. Las de 2026
+    (Xeon Platinum 8368, Ice Lake) sí las tienen, pero no sabemos cuáles se
+    usarán en 2027 ni dónde se compila.
+- **Opciones**:
+  - **a. (provisional, conservadora)** Competición sin `-march`: solo PGO +
+    LTO.
+  - **b.** Con `-march`, si las reglas de 2027 confirman el hardware y el
+    entorno de compilación.
+  - **c.** Los dos binarios y una elección al arrancar según
+    `/proc/cpuinfo`. Elimina el riesgo, a cambio de complicar el paquete por
+    ≈ 1 %.
+- **Recomendación**: a ahora; b si el anuncio de la competición fija el
+  hardware. c no compensa por ≈ 1 %.
+- **Mientras tanto**: los experimentos locales sí usan `-march`, porque el
+  i5-1135G7 lo admite.
+

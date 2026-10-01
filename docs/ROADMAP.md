@@ -172,8 +172,10 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
 - [x] research/08: límites teóricos, valor exacto de una aceleración en
       PAR-2 (Proposición 1) y Teorema 5 (compilaciones que conservan la
       búsqueda).
-- [ ] **EXP-016**: perfil de costes por fases (en la cola).
-- [ ] **EXP-017**: PGO, LTO y `-march` (clase E), con control negativo de FMA.
+- [x] **EXP-016**: la propagación es ~57 % del tiempo; análisis 14–19 %;
+      sondeo 15–19 %.
+- [x] **EXP-017**: PGO + LTO adoptado (×1,030, trayectorias idénticas);
+      `-march` ×1,040, pendiente de D-019 para la competición.
 - [ ] **EXP-018**: K1, precarga de cláusulas en la propagación (clase E;
       contadores idénticos en 5/5 de `calib2` antes de medir).
 - [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
