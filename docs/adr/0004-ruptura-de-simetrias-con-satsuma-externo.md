@@ -7,7 +7,11 @@
 - **D-005, opción c (2026-09-23)**: la clique máxima que satsuma toma de
   cliquer se reimplementa en MIT (**mclique**, `solver/mclique/`). Se compila
   aparte como `tools/satsuma-mclique`, y pasa a ser el satsuma por defecto solo
-  si EXP-010 lo valida.
+  si EXP-010 lo valida. **Adoptada (2026-09-30)**: v1 no pasó EXP-010 (un tope
+  nuevo); v2, con presupuesto de trabajo, pasó EXP-011 (6 de 6 de R6, 0
+  pérdidas, 0 fallos de seguridad) y es el satsuma por defecto de `labesat`.
+  El binario integrado (ADR-0007) sigue con `CLIQUES=0` hasta que una prueba
+  de equivalencia propia lo valide con mclique.
 - **D-016 (2026-09-23)**: la parte de «programa externo» queda **sustituida
   por ADR-0007**. satsuma pasa a compilarse dentro del binario de Kissat
   (`--symmetry`). Las licencias, el formato de prueba y la verificación de esta

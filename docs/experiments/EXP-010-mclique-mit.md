@@ -1,6 +1,6 @@
 # EXP-010 — ¿Recupera mclique (clique máxima MIT) lo que aportaba cliquer? (preregistrado)
 
-- **Estado**: **parte 1 hecha; parte 2 pendiente**. Preregistrado: se escribió **antes** de ejecutar satsuma con
+- **Estado**: **cerrado (2026-09-28)**: no se adopta mclique v1 (H2 falla por el tope en `9ba8145e`); la adopción pasa a EXP-011 (v2). Preregistrado: se escribió **antes** de ejecutar satsuma con
   mclique sobre el banco (ADR-0003 §6). Las únicas ejecuciones previas son las
   pruebas de corrección: `scripts/test_mclique.sh` y `scripts/test_symmetry.sh`
   sobre `bench/symm` (4 instancias de juguete, que no forman parte del banco).
@@ -145,6 +145,21 @@ antes de que termine la parte 1; `--write-list` escribe la lista de la parte 2.
   sus 42 pruebas se habían comprobado además con los dos en `test_symmetry.sh`
   solo para el banco de juguete, así que conviene reverificarlas (tarea
   anotada, no afecta a este experimento).
+- **2026-09-25, parte 2 en la máquina local.** El binario v1 de la nube
+  (`e13f27f7…`) no existía aquí: se **reconstruyó** desde su commit
+  (`0b4ec1f`, `get_tools.sh`) y su SHA-1 es otro (`590a1b65…`). Comprobación
+  antes de interpretar: sobre las 74 instancias, las salidas del v1 local
+  (EXP-011 parte 1) y del v1 de la nube (parte 1 de aquí) son **idénticas en
+  74 de 74** (mismo código de salida y mismo SHA-1 de la CNF, tope incluido).
+  La parte 2 vale como medición de v1.
+- **Tanda**: 16 parejas intercaladas el 2026-09-25 (16:59–20:37 local); el
+  equipo se apagó después. La verificación de seguridad falló tres veces por
+  un error propio de `verify_symm_answers.py` (dsr-trim escribe bytes no
+  UTF-8) y quedó bloqueada en la cola hasta el 2026-09-28, cuando se corrigió
+  (`errors="replace"`) y se completó.
+- **Límite de memoria del servicio**: la tanda corrió con `MemoryHigh=6G`,
+  que frena sin matar (ADR-0008). Aquí no pudo actuar: el pico de memoria de
+  las 32 corridas fue de 1,1 GB.
 
 ## 7. Resultados
 
@@ -181,6 +196,28 @@ antes de que termine la parte 1; `--write-list` escribe la lista de la parte 2.
 - La causa del tope y el cambio que la corrige (mclique v2, con presupuesto de
   trabajo) se describen en EXP-011, preregistrado antes de ejecutar v2.
 
-### Parte 2
+### Parte 2 (2026-09-25 a 28)
 
-_Pendiente (después de EXP-008)._
+`python3 scripts/analyze_exp010.py`; kissat (T = 180 s, semillas 1 y 2) sobre
+las 8 instancias en las que mclique cambia la CNF:
+
+| instancia | A sin cliques (resueltas/semillas) | B mclique v1 |
+|---|---|---|
+| 043c9100… | 0/2 | 2/2 |
+| 0f1070ba… | 0/2 | 2/2 |
+| 1a3bef9e… | 0/2 | 2/2 |
+| 65bf849f… | 0/2 | 2/2 |
+| 6ddda968… | 0/2 | 2/2 |
+| 9ba8145e… | 2/2 | **0/2** |
+| e5787bb4… | 0/2 | 2/2 |
+| f52a3496… | 2/2 | 2/2 |
+
+- **H1**: recupera las **6 de 6** de R6 en las dos semillas (criterio ≥ 5). ✅
+- **H2**: **1 pérdida**, `9ba8145e` (criterio 0). ❌ Es la instancia en la
+  que satsuma con mclique v1 agota el tope de 60 s: sin tiempo para kissat.
+- **H3**: 14 respuestas verificadas (12 UNSAT con los dos dsr-trim y 2 SAT),
+  0 fallos; 2 `SALTADA` (timeouts, sin respuesta que verificar). ✅
+
+**Veredicto según §4: no se adopta mclique v1.** Lo que falla es solo el
+tope, que es justo lo que corrige v2 (EXP-011, H1 ya confirmada en su parte
+1). La decisión de D-005 queda en manos de EXP-011.

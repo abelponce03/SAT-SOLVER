@@ -76,5 +76,28 @@ if [ $code = 20 ] && grep -q "sin simetrías" "$TMP/out" &&
     echo "OK    respaldo: satsuma falla → prueba DRAT pura verificada"
 else bad "respaldo (código $code)"; fi
 
+# Ruptura con retraso (B3, EXP-009).  (a) Si kissat resuelve en la fase 1, la
+# respuesta y la prueba son las de kissat sobre la CNF original (DRAT pura).
+cnf="$ROOT/bench/smoke/rand3_120_r4.26_s1.cnf"    # UNSAT en < 1 s
+"$W" --symmetry --symmetry-delay=5 "$cnf" "$TMP/d1" > "$TMP/out"; code=$?
+if [ $code = 20 ] && grep -q "resuelto en la fase 1" "$TMP/out" &&
+   [ "$(grep -c '^s ' "$TMP/out")" = 1 ] &&
+   out=$("$DRAT" "$cnf" "$TMP/d1" 2>/dev/null) && grep -q "s VERIFIED" <<< "$out"; then
+    echo "OK    retraso, fase 1: UNSAT sin satsuma, una sola línea s, prueba DRAT verificada"
+else bad "retraso, fase 1 (código $code)"; fi
+# (b) Si la fase 1 no resuelve, su prueba se descarta y la combinada de satsuma
+# + kissat debe verificarse contra la CNF original con los dos dsr-trim.
+cnf="$ROOT/bench/symm/php_12_11.cnf"              # kissat solo no lo resuelve en 1 s
+"$W" --symmetry --symmetry-delay=1 "$cnf" "$TMP/d2" > "$TMP/out"; code=$?
+if [ $code = 20 ] && grep -q "fase 1 sin respuesta" "$TMP/out" &&
+   [ "$(grep -c '^s ' "$TMP/out")" = 1 ] &&
+   verified "$DSR" "$cnf" "$TMP/d2" && verified "$DSR_SC" "$cnf" "$TMP/d2"; then
+    echo "OK    retraso, fase 2: satsuma tras la fase 1, prueba SR verificada (actual y SC2026)"
+else bad "retraso, fase 2 (código $code)"; fi
+# (c) Un presupuesto total que no llega al retraso: kissat solo.
+"$W" --symmetry --symmetry-delay=5 --time=3 "$ROOT/bench/smoke/php_5_4.cnf" > "$TMP/out"; code=$?
+if [ $code = 20 ] && grep -q "presupuesto total" "$TMP/out"; then
+    echo "OK    retraso mayor que --time: kissat solo"
+else bad "retraso mayor que --time (código $code)"; fi
 [ $fail = 0 ] && echo "test_symmetry: todo correcto" || echo "test_symmetry: HAY FALLOS"
 exit $fail

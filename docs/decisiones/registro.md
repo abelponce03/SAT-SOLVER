@@ -19,19 +19,20 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-002 | ¿Subcategoría IA o categoría regular? | ⏸️ correo aplazado hasta definir las mejoras (límite recomendado: 1-feb-2027) | Director (+ organizadores) | [research/04 §1](../research/04-decisiones-pendientes.md) · issue #6 |
 | D-003 | ¿Se admite la composición satsuma + kissat? | ⏸️ mismo correo que D-002 (riesgo bajo) | Organizadores | [research/04 §2](../research/04-decisiones-pendientes.md) · issue #7 |
 | D-004 | Familia de los 20 benchmarks obligatorios | 🟡 | Director | [research/04 §3](../research/04-decisiones-pendientes.md) · issue #8 |
-| D-005 | ¿MIT o cliques (GPL)? | ✅ **opción c** (2026-09-23): reimplementar la clique máxima en MIT | Director | [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 · EXP-010 |
+| D-005 | ¿MIT o cliques (GPL)? | ✅ **opción c** (2026-09-23): reimplementar la clique máxima en MIT · **mclique v2 adoptada** (2026-09-30, EXP-011) | Director | [research/03](../research/03-coste-de-mantener-mit.md) · issue #9 · EXP-010 |
 | D-006 | Acceso a un clúster | ✅ no hay (2026-09-23) | Director | ROADMAP §4 |
 | D-007 | Nombre del solver | ✅ LabeSAT (2026-09-22) | Director | CHANGELOG |
 | D-008 | Ruptura de simetrías como programa externo, en MIT | ✅ (2026-09-23) | Director | [ADR-0004](../adr/0004-ruptura-de-simetrias-con-satsuma-externo.md) |
 | D-009 | Autoría: solo el desarrollador en git | ✅ (2026-09-23) | Director | [ADR-0005](../adr/0005-gobernanza-autoria-y-decisiones.md) |
 | D-010 | Documentación continua y multiformato, con LaTeX para los PDF | ✅ (2026-09-23) | Director | [ADR-0006](../adr/0006-documentacion-multiformato.md) |
-| D-011 | Instalar el plugin «engineering» del catálogo | 🟡 (menor) | Director | §D-011 · issue #10 |
+| D-011 | Instalar el plugin «engineering» del catálogo | ✅ **autorizado** (2026-10-01): el director autoriza los conectores, plugins y skills que hagan falta; las skills de `engineering` ya están disponibles en la sesión | Director | §D-011 · issue #10 |
 | D-012 | Insignia «via Claude» en las acciones de GitHub hechas desde la sesión | 🟡 | Director | §D-012 · issue #11 |
-| D-013 | Base de Kissat: 4.0.4 o sc2026 | 🟡 se decide con EXP-008 | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
+| D-013 | Base de Kissat: 4.0.4 o sc2026 | ✅ **4.0.4** (2026-09-25), por el criterio preregistrado de EXP-008: p = 0,60, sin diferencia detectable | Director (con datos) | [plan](../plan/plan-main-track-2027.md) §3 · issue #18 |
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
-| D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | 🟡 opción conservadora en marcha: calibrar (EXP-013) y decidir features solo con A/B local | Director | §D-017 · EXP-013 · issue #28 |
+| D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | ✅ **opción b** (2026-09-30): EXP-013 calibra ambos grupos (0,26 y 0,47, IC ±8 %); las features se deciden con A/B local | Director | §D-017 · EXP-013 · issue #28 |
+| D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | ✅ **opción a** (2026-10-01): sin `-march` ni en la competición ni en los experimentos; solo PGO + LTO | Director | §D-019 · issue #33 · EXP-017 §7 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
@@ -84,6 +85,13 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   cubren lo esencial. Aportaría plantillas para ADR y documentación.
 - **Coste**: ninguno. Es una decisión de configuración de la cuenta del
   director.
+- **Resolución (2026-10-01)**: el director autoriza «todos los conectores
+  necesarios, plugins y skills» para trabajar.
+  - Las skills del plugin `engineering` ya aparecen en la sesión.
+  - Los conectores que piden OAuth (GitHub, Slack, Notion…) los tiene que
+    autorizar el director en la configuración de conectores de claude.ai;
+    una sesión no interactiva no puede hacerlo.
+  - Para GitHub se sigue usando `gh`, que ya funciona.
 
 ## D-012 — Insignia «via Claude» en las acciones de GitHub
 
@@ -136,6 +144,11 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   intercalado, en calib y calib2.
 - **Coste de cambiar**: portar ~105 líneas activas (más el resto si procede) y
   repetir la validación de las pruebas.
+- **Resolución (2026-09-25)**: EXP-008 da ΔPAR-2 = −4,7 s con IC95 %
+  [−18,7; +9,0] y Wilcoxon p = 0,60. Según la regla fijada antes de medir, **se
+  mantiene 4.0.4**. sc2026 se mostró más estable entre semillas (2 inestables
+  frente a 8), así que queda como posible variante en D-014 si la robustez
+  pesa. El director puede revisarlo en la próxima reunión.
 
 ## D-014 — Variantes a presentar
 
@@ -149,6 +162,12 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   en la validación final (H8).
 
 ## D-005 — Resolución
+
+- **Cierre (2026-09-30)**: mclique v1 no se adoptó (EXP-010: un tope nuevo de
+  60 s en `9ba8145e`); **mclique v2** (presupuesto de trabajo determinista)
+  cumple el criterio de EXP-011: recupera las 6 de R6 en las dos semillas, sin
+  pérdidas y sin fallos de seguridad. `solver/labesat` la usa por defecto. El
+  binario integrado queda pendiente de su propia prueba de equivalencia.
 
 - **Decisión del director (2026-09-23): opción c**. La búsqueda de clique
   máxima que satsuma toma de cliquer (GPLv2) se reimplementa en MIT.
@@ -221,7 +240,10 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 - **Recomendación**: b. LabeSAT por defecto hace hoy la misma búsqueda que
   Kissat 4.0.4, así que la rama A de cada A/B **es** ya el Kissat de esta
   máquina, sin coste añadido.
-- **Preguntas para el director** (cambian el alcance de la calibración):
+- **Resolución (2026-09-30)**: EXP-013 da factores por conflicto estables, con
+  IC estrechos: **0,262** para `pc1` y **0,470** para `pc2`; esta máquina es
+  2–4 veces más rápida. Se aplica la opción b. Las preguntas siguen abiertas,
+  pero ya no bloquean nada:
   1. ¿Qué versión exacta de Kissat usó la tesis (paquete, commit o
      `kissat --version`)?
   2. ¿Qué CPU tenían `pc1` y `pc2`, y cuántas corridas iban en paralelo?
@@ -246,3 +268,34 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     cambiaría la base sin EXP-008 y mezclaría dos cambios.
 - **Mientras tanto**: nada; no se toca código hasta que EXP-008 decida la
   base (D-013).
+
+## D-019 — ¿`-march=x86-64-v3` en el paquete de competición?
+
+- **Surge**: el 2026-10-01, al cerrar EXP-017.
+- **Contexto**:
+  - PGO + LTO acelera ×1,030 con la trayectoria idéntica, y se adopta.
+  - Añadir `-march=x86-64-v3` (AVX2, BMI2 y FMA, con `-ffp-contract=off`)
+    da ×1,040, también con la trayectoria idéntica. La diferencia con PGO +
+    LTO es ≈ +1 % de velocidad, ≈ −0,15 % de PAR-2.
+  - Si la máquina de la competición no tuviera esas instrucciones, el
+    binario moriría con SIGILL en **todas** las instancias. Las de 2026
+    (Xeon Platinum 8368, Ice Lake) sí las tienen, pero no sabemos cuáles se
+    usarán en 2027 ni dónde se compila.
+- **Opciones**:
+  - **a. (provisional, conservadora)** Competición sin `-march`: solo PGO +
+    LTO.
+  - **b.** Con `-march`, si las reglas de 2027 confirman el hardware y el
+    entorno de compilación.
+  - **c.** Los dos binarios y una elección al arrancar según
+    `/proc/cpuinfo`. Elimina el riesgo, a cambio de complicar el paquete por
+    ≈ 1 %.
+- **Recomendación**: a ahora; b si el anuncio de la competición fija el
+  hardware. c no compensa por ≈ 1 %.
+- **Mientras tanto**: los experimentos locales sí usan `-march`, porque el
+  i5-1135G7 lo admite.
+- **Resolución (2026-10-01)**: el director decide **no usar `-march`**.
+  - Opción a para la competición, y también en los experimentos: así lo que
+    se mide es lo que se entrega.
+  - La compilación adoptada es `build.sh --pgo --lto` (EXP-017, ×1,030).
+  - `--march` sigue en `build.sh` solo para reproducir EXP-017.
+

@@ -1,0 +1,27 @@
+{
+  "label": "labesat-defecto",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build/kissat",
+  "solver_version": "4.0.4",
+  "solver_sha1": "28b587cf6ecfadad73e29de35c363ecbf6c72dd8",
+  "git_commit": "5481ee934900fa954959b7100c1139506997e10a",
+  "git_dirty": true,
+  "bench": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/tesis-calib",
+  "n_instances": 54,
+  "seeds": [
+    42
+  ],
+  "budget_kind": "time",
+  "budget_value": 800.0,
+  "opts": "",
+  "parallel_jobs": 1,
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    0.46533203125,
+    0.98046875,
+    1.35205078125
+  ],
+  "cc": "/usr/bin/gcc",
+  "started_at": "2026-09-28T22:30:15+00:00"
+}

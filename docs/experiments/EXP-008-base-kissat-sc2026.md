@@ -1,6 +1,6 @@
 # EXP-008 — ¿Es mejor base Kissat «sc2026» que Kissat 4.0.4? (preregistrado)
 
-- **Estado**: **preregistrado**. Se escribe **antes** de ejecutar (ADR-0003 §6).
+- **Estado**: **cerrado (2026-09-25)**: H1 no se confirma; se mantiene 4.0.4 (D-013). Preregistrado antes de ejecutar (ADR-0003 §6).
 - **Fecha**: 2026-09-23
 - **Decide**: D-013 (issue #18). Hito H2 del plan (`docs/plan/plan-main-track-2027.md`).
 - **Numeración**: EXP-008 era el número reservado para el seguimiento de A4 con
@@ -164,4 +164,49 @@ python3 scripts/analyze_speedup.py results/exp008/A.csv results/exp008/B.csv
 
 ## 9. Resultados
 
-_Pendiente._
+- **Ejecutado**: 2026-09-24 19:17 → 2026-09-25 04:45 UTC, en la máquina
+  local (`ROCO`), con una reanudación en la misma máquina (3 parejas
+  conservadas, §8).
+- **Procedencia**:
+  - rama A: `solver/kissat/build/kissat` (`--id` `495512f`, SHA-1 `28b587cf…`);
+  - rama B: `tools/kissat-sc2026` (SHA-1 `338cc40d…`);
+  - 120 parejas intercaladas;
+  - datos en `results/exp008/`.
+- **Análisis**: los comandos de §7, sin cambios.
+
+### Contraste preregistrado (T = 180 s, CPU)
+
+| métrica | A: 4.0.4 | B: sc2026 | Δ (B − A) |
+|---|---:|---:|---:|
+| PAR-2 (s) | 124,7 | 120,0 | **−4,7 (−3,8 %)** |
+| Resueltas en las 2 semillas | 40 | 44 | +4 |
+| Inestables (1 de 2 semillas) | 8 | 2 | −6 |
+| Razón p90 entre semillas | 2,14× | 1,89× | — |
+
+- ΔPAR-2 = −4,7 s, IC95 % bootstrap **[−18,7; +9,0]** (incluye 0).
+- **Wilcoxon p = 0,60** (n efectivo = 48).
+- McNemar: solo B 6, solo A 2, p = 0,29.
+- Velocidad en las resueltas por ambas (41 instancias, descriptiva): factor
+  1,035× [0,876; 1,222], p = 0,61. Las propagaciones, 1,10× [0,95; 1,28],
+  no son comparables entre binarios distintos (§3).
+
+### Veredicto según §4
+
+**H1 no se confirma (p = 0,60 ≥ 0,05): se mantiene Kissat 4.0.4 como base**
+(D-013). Es la regla fijada para «sin diferencia detectable»: el statu quo, sin
+coste de migración y la base del ganador de 2026.
+
+### Observaciones descriptivas (no preregistradas como contraste)
+
+- **sc2026 es más estable entre semillas**: 2 instancias inestables frente a
+  8, y 4 más resueltas en las dos semillas. Con 60 instancias y 2 semillas no
+  es concluyente, pero es coherente con su cambio de modo guiado por
+  conflictos. Si el proyecto persigue robustez (línea C), sc2026 es candidata
+  a **variante** (D-014), no a base.
+- **sc2026 no respeta el límite de tiempo en una instancia**:
+  `b54b26f3…` (baseball-lineup) termina por HARDKILL a los 255 s con
+  `--time=180` en las dos semillas, mientras la base se detiene a los 181 s.
+  Es el síntoma que B3″ corrigió en LabeSAT (fases *lucky* que no ceden el
+  control, EXP-004). No se ha comprobado que la causa sea la misma. Si sc2026
+  llegara a usarse, habría que portar B3″.
+

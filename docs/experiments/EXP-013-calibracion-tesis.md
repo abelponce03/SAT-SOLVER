@@ -1,6 +1,6 @@
 # EXP-013 — Calibración frente al Kissat de la tesis: misma búsqueda y velocidad de la máquina (preregistrado)
 
-- **Estado**: **preregistrado**. Se escribe y se commitea **antes** de ejecutar
+- **Estado**: **cerrado (2026-09-30)**: ambos grupos de máquinas son calibrables (factor 0,26 en pc1 y 0,47 en pc2). Preregistrado: se escribió y se commiteó **antes** de ejecutar
   (ADR-0003 §6). La selección de instancias y el guion de análisis
   (`scripts/exp013_calibracion.py`) van en el mismo commit.
 - **Fecha**: 2026-09-24
@@ -90,8 +90,52 @@ están apagadas y B3″ solo cambia cuándo se cede el control).
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- Ejecutado por la cola (ADR-0008) el 2026-09-28, de 22:30 a 23:09 UTC, solo
+  en la máquina en cuanto a tandas de experimento. Durante esas horas corrían
+  servicios Docker del director, con un arranque de contenedor por minuto
+  aproximadamente: es carga ajena que puede añadir ruido al tiempo de reloj.
 
 ## 7. Resultados
 
-(pendiente)
+`python3 scripts/exp013_calibracion.py analizar`
+(`results/exp013/informe.txt`, `results/exp013/calibracion.csv`).
+
+- **54 de 54 resueltas**, con la misma respuesta que la tesis en todas.
+
+### H1 — misma búsqueda
+
+Conflictos idénticos a los de la tesis con semilla 42 en **8 de 54 (15 %)**,
+como se predijo (< 50 %). La tesis usó otra Kissat 4.0.x: la trayectoria
+cambia, aunque el número de conflictos sale parecido (razón geométrica
+0,97, IC95 [0,84; 1,13]).
+
+### H2 — velocidad de la máquina
+
+| grupo | n | factor por conflicto (local/tesis) | IC95 % | semiancho | ¿calibrable? |
+|---|---:|---:|---|---:|---|
+| todas | 53 | 0,361 | [0,328; 0,396] | 9 % | sí |
+| `pc1` | 24 | **0,262** | [0,242; 0,283] | 8 % | **sí** |
+| `pc2` | 29 | **0,470** | [0,436; 0,505] | 7 % | **sí** |
+
+- **Esta máquina es entre 2 y 4 veces más rápida por conflicto** que las de
+  la tesis. Es más de lo que sugería el sondeo de 8 instancias cortas
+  (~0,8–0,9), en el que pesaba el coste fijo de leer y descomprimir.
+- El factor es **estable dentro de cada máquina** sea cual sea la duración de
+  la corrida (análisis complementario, no preregistrado): `pc1` ≈ 0,22–0,28 y
+  `pc2` ≈ 0,43–0,56, en tramos de 0–30, 30–100 y 100–400 s. Correlación de
+  Spearman con la duración: ρ = −0,34. Por familia sigue a la máquina:
+  0,23–0,28 en las de `pc1` y 0,41–0,55 en las de `pc2`.
+- Hipótesis, no comprobada: la tesis lanzaba varias corridas en paralelo por
+  máquina. Es la pregunta 2 de D-017.
+
+### Decisión (§4, D-017)
+
+**Los dos grupos son calibrables.** Para comparar con la tesis:
+
+- se multiplica el tiempo de la tesis por el factor de su máquina (0,262 en
+  `pc1` y 0,470 en `pc2`) y se informa siempre del IC;
+- cualquier comparación así se etiqueta como **referencia externa
+  calibrada**, nunca como A/B.
+
+Las decisiones sobre features siguen tomándose con A/B intercalado en esta
+máquina (ADR-0003 §4b).

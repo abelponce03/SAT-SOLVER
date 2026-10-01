@@ -22,6 +22,12 @@ void kissat_add_binary_to_proof (struct kissat *, unsigned, unsigned);
 void kissat_add_clause_to_proof (struct kissat *, const struct clause *c);
 void kissat_add_empty_to_proof (struct kissat *);
 void kissat_add_lits_to_proof (struct kissat *, size_t, const unsigned *);
+#ifdef LABESAT_GAUSS
+/* [SOLVER] X1: líneas con literales externos (variables de extensión que
+   solo existen en la prueba, research/09 §3). */
+void kissat_add_external_lits_to_proof (struct kissat *, size_t,
+                                        const int *);
+#endif
 void kissat_add_unit_to_proof (struct kissat *, unsigned);
 
 void kissat_shrink_clause_in_proof (struct kissat *, const struct clause *,

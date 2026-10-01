@@ -1,0 +1,59 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build/kissat",
+  "solver_sha1": "28b587cf6ecfadad73e29de35c363ecbf6c72dd8",
+  "solver_b": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/kissat-sc2026",
+  "solver_b_sha1": "338cc40d5aa71fe835c1af552bd4f088dfee3c2c",
+  "solver_b_version": "sc2026",
+  "solver_id": "495512fb7d4de4b87009239573429bca4d3b417d",
+  "git_commit": "495512fb7d4de4b87009239573429bca4d3b417d",
+  "solver_id_coincide_con_head": true,
+  "guardas_sha1": {},
+  "git_dirty": true,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/calib",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/calib2"
+  ],
+  "n_parejas": 120,
+  "seeds": [
+    1,
+    2
+  ],
+  "timeout": 180.0,
+  "rama_a": {
+    "label": "A-kissat404",
+    "opts": "",
+    "env": {}
+  },
+  "rama_b": {
+    "label": "B-kissat-sc2026",
+    "opts": "",
+    "env": {}
+  },
+  "instances_filter": null,
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    3.5546875,
+    1.73974609375,
+    1.23828125
+  ],
+  "started_at": "2026-09-24T19:17:12+00:00",
+  "reanudaciones": [
+    {
+      "git_commit": "2738ab60cb27beb074902e1c2da1d7561e54183d",
+      "git_dirty": false,
+      "host": "ROCO",
+      "loadavg": [
+        3.0673828125,
+        2.93310546875,
+        4.5341796875
+      ],
+      "started_at": "2026-09-24T20:31:58+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 3
+    }
+  ]
+}

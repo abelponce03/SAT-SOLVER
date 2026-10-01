@@ -5,6 +5,215 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-01): EXP-020 y EXP-021 preregistrados
+- **EXP-020**: ¿subir el tope de satsuma de 60 s a 300 s?
+  - Fase 1: satsuma solo, en las 13 instancias en las que agotó los 60 s
+    (EXP-014 y EXP-011).
+  - Fase 2: A/B de `labesat` con B3, T = 1200 s.
+  - Regla de dominancia: fuera de las candidatas, los dos topes se
+    comportan igual.
+  - `scripts/exp020.py`; `bench/exp020/` (enlaces, fuera de git).
+- **EXP-021**: X1 v2 sobre las 103 instancias saltadas por la v1, con el
+  arnés de EXP-019 (`scripts/exp021.py`). Decide la versión que se activa
+  por defecto.
+- Cola: EXP-009 → EXP-021 → EXP-020.
+
+### Cerrado (2026-10-01): EXP-019, se adopta X1
+- **H0**: 0 refutaciones de instancias SAT, de 221 conocidas; 5 refutaciones
+  con prueba verificada por los dos `dsr-trim`.
+- **H1**: 321/321 parejas con los contadores idénticos.
+- **H2**: X1 cuesta 0,02 s de mediana (p95 0,37 s, máximo 1,83 s).
+- *xor-chain* y *tseitin-formulas* de 2026 codifican la paridad con
+  contadores unarios: X1 no las ve (límite documentado).
+- La activación por defecto espera a EXP-021 (X1 v2).
+
+### Añadido (2026-10-01): X1 v2, Gauss por componentes conexas
+- `gauss.c` parte el sistema XOR en componentes conexas (unión-búsqueda) y
+  elimina cada una por separado (research/09 §3.4, **Lema 6**: el sistema es
+  inconsistente si y solo si lo es alguna componente).
+  - El tope de memoria pasa a ser por componente; el de trabajo, común.
+  - En EXP-019, X1 v1 se saltó 103 sistemas por memoria; ahora solo se
+    saltarían las componentes que de verdad no caben.
+- `test_gauss.sh`: caso de componentes (un sistema grande consistente que no
+  cabe y uno pequeño inconsistente). Pasa también bajo ASan/UBSan.
+- EXP-019 sigue con su binario (v1), compilado desde su commit.
+
+### Añadido (2026-10-01): research/10, distancia a los ganadores de 2026
+- `scripts/distancia_2026.py`: contrafactual con los tiempos oficiales.
+  - LabeSAT por defecto sería 16.º (+964 s de PAR-2).
+  - Con B3 + X1 + PGO/LTO, 1.º con −75 s (278 resueltas frente a 276), con
+    dos *lights-out* UNSAT que nadie resolvió.
+- Hallazgos:
+  - la ventaja del ganador es casi toda UNSAT;
+  - la cartera secuencial con la variante MAB no compensa con ningún
+    reparto;
+  - las *linear-equations* de 2026 no son XOR;
+  - el tope de satsuma de 60 s es el mayor riesgo sin medir (hasta +270 s).
+- Plan priorizado en research/10 §5.
+
+### Cerrado (2026-10-01): EXP-018, resultado negativo
+- K1 (precarga de cláusulas en la propagación) conserva la trayectoria
+  (85/85), pero es **un 7 % más lenta** (×0,931, IC95 % [0,906; 0,953]).
+  **No se adopta**; queda tras su macro, sin efecto en el binario. K2 y K4
+  se aparcan.
+
+### Añadido (2026-10-01): ampliación de EXP-019 con 5 instancias de paridad de 2026
+- Descargadas de GBD, con autorización del director: *xor-chain*,
+  *tseitin-formulas* y *ordering-principle-xor* (ninguna resuelta por nadie
+  en 2026), *xor-shifting* y *lights-out*. Están en `bench/dev/`, fuera de
+  git.
+- EXP-019 §3b las preregistra con su predicción; las mide el paso
+  `exp019-ampliacion`. Con el resultado conocido, cuentan para la seguridad
+  (H0).
+- `exp019.py`: `muestra-dev` y `correr --muestra/--out`.
+- D-011 resuelta: plugins, conectores y skills autorizados.
+
+### Cerrado (2026-10-01): EXP-016 y EXP-017
+- **EXP-016**: la propagación se lleva ≈ 57 % del tiempo (nivel 4, mismo
+  trabajo), el análisis 14–19 % y el sondeo 15–19 %. La lectura y la
+  descompresión pesan < 1 % en corridas largas. Se corrige `exp016_analisis.py`
+  (Q4 perdía `propagate` y `decide`).
+- **EXP-017**: **se adopta PGO + LTO** (×1,030, IC95 % [1,023; 1,038],
+  85/85 trayectorias idénticas). Con `-march=x86-64-v3 -ffp-contract=off`,
+  ×1,040, pero **D-019** (resuelta por el director): no se usa `-march`, ni
+  en la competición ni en los experimentos.
+  - El control con FMA sin `-ffp-contract=off` no cambió ninguna trayectoria
+    en 100 000 conflictos, aunque el binario sí llevaba FMA en las medias de
+    los reinicios: la condición del Teorema 5 es suficiente, no necesaria.
+
+### Añadido (2026-10-01): X1, refutación de sistemas XOR por Gauss con prueba (research/09, EXP-019)
+- **research/09**: técnicas que cambian el sistema de pruebas.
+  - **Teorema 1**: refutación DRAT con variables de extensión de un sistema
+    XOR inconsistente, de tamaño O(Σ 2^{k_i} + N log |S|) gracias a la suma
+    en árbol equilibrado.
+  - **Corolario 2**: pruebas polinómicas para Tseitin en expansores, donde la
+    resolución es exponencial.
+- **X1 en Kissat**: `solver/kissat/src/gauss.c`, detrás de
+  `configure --gauss`. Añade las opciones `--gauss` (apagada),
+  `--gaussmaxsize`, `--gaussbits`, `--gaussops` y `--gaussclauses`; las tres
+  últimas son topes de memoria y de trabajo, y al superarlos X1 se retira
+  sin tocar nada.
+  - Extrae las XOR completas, aplica Gauss sobre GF(2) con historial y
+    comprueba el certificado antes de afirmar nada.
+  - Si refuta, escribe la prueba sin borrados.
+  - Sin la macro, los objetos de Kissat son idénticos byte a byte.
+- Refuta en **0,02 s** la *lights-out* UNSAT `667341ee` de 2026 (346 s el
+  mejor solver de 2026). La prueba la verifican los dos `dsr-trim` y
+  `drat-trim`.
+- **Hallazgo**: el `dsr-trim` del commit de SC2026 se cuelga en modo hacia
+  atrás con ciertos borrados (de una definición RAT, o de un lema justo
+  después de usarlo para una unitaria). Las pruebas de X1 no borran nada.
+- `scripts/gen_paridad.py`: familias de paridad UNSAT y su variante `--sat`.
+- `scripts/x1_gauss.py`: el prototipo.
+- `scripts/test_gauss.sh`: refutación verificada, ausencia de refutaciones
+  en satisfacibles y contadores idénticos.
+- **EXP-019** preregistrado (seguridad, equivalencia y coste), en la cola
+  tras EXP-018.
+- CI: trabajo `x1-gauss`, que compila con `--gauss` y ejecuta
+  `test_gauss.sh`, también bajo ASan/UBSan con UBSan fatal. En local pasa
+  sin avisos.
+
+### Añadido (2026-10-01): K1, precarga de cláusulas en la propagación (EXP-018)
+- `proplit.h`, detrás de `LABESAT_PREFETCH` (apagado por defecto): un
+  puntero va 8 vigilantes por delante y precarga la cabecera de cada
+  cláusula cuyo literal bloqueante no es verdadero. No escribe nada ni toca
+  los ticks, así que no cambia la búsqueda (research/08, Corolario 4).
+  Afecta a la propagación de búsqueda y a la de sondeo.
+- `configure --prefetch[=d]` en Kissat (`build.sh` lo pasa tal cual).
+- Equivalencia comprobada antes de medir: los 81 contadores de
+  `--statistics`, incluidos `search_ticks`, idénticos al binario actual en 5
+  instancias de `calib2` con 20 000 conflictos (una sexta superó el tope de
+  tiempo de la comprobación).
+- **EXP-018** preregistrado: A/B con 200 000 conflictos en el banco de
+  EXP-017, después de EXP-017 y antes de EXP-009.
+
+### Añadido (2026-10-01): estrategia de optimización (research/08, ADR-0009)
+- **research/08**:
+  - límites de lo que puede ganar una optimización. Para CDCL que solo
+    deriva por resolución, el palomar exige 2^Ω(n) conflictos con cualquier
+    estructura de datos; las palancas exponenciales son las del sistema de
+    pruebas (simetrías, XOR);
+  - **Proposición 1**: PAR2_T(A_s) = PAR2_{sT}(A)/s, exacta con datos
+    censurados. Un 10 % de velocidad ≈ −1,5 % de PAR-2 (~60 s a T = 5000 s);
+    el doble de velocidad, −10 a −17 % (`scripts/valor_aceleracion.py`);
+  - **Teorema 5**: cuándo dos compilaciones hacen la misma búsqueda. Entre
+    otras condiciones, `-ffp-contract=off` si el `-march` tiene FMA
+    (`smooth.c:34-35`).
+- **research/08 §6**: marco para optimizar el código sin cambiar la búsqueda.
+  - **Lemas 1-3**: los ticks, el orden de la arena y de las listas, y los
+    empates al ordenar forman parte del estado que decide la búsqueda.
+  - **Teorema 6**: refinamiento de datos (Hoare, 1972).
+  - **Proposición 3**: cota inferior del análisis 1UIP.
+  - Auditoría del núcleo: no queda mejora asintótica; las candidatas son de
+    latencia de memoria (K1-K4). Hay evidencia previa: precargar las
+    cláusulas de la lista de vigilancia dio +12 % sin cambiar la búsqueda
+    (Manthey y Saptawijaya, 2010), en un resolvedor sin literal bloqueante.
+- **ADR-0009**: clases E (equivalente), P (tubería) y S (búsqueda), y qué
+  prueba exige cada una.
+- **EXP-016** (perfil de costes) y **EXP-017** (PGO, LTO y `-march`, con un
+  control negativo de FMA) preregistrados y en cola, delante de EXP-009.
+- `build.sh`: `--pgo` (dos fases, entrenamiento disjunto en
+  `scripts/pgo_entrenamiento.txt`), `--lto`, `--march=X`, `--jobs=N` y
+  `--control-fma=X` (solo para el control).
+- `run_ab_interleaved.py`:
+  - `--conflicts N`, un presupuesto determinista: el mismo trabajo en las dos
+    ramas si conservan la trayectoria;
+  - ya no mide dos veces una instancia que está en dos bancos.
+- `scripts/perfil_costes.py`: perfil por fases de Kissat con reanudación.
+
+### Añadido (2026-09-30): ruptura con retraso (B3) y preregistro de EXP-009
+- `solver/labesat --symmetry --symmetry-delay=N` (o `LABESAT_SYMM_DELAY`):
+  kissat intenta la fórmula original durante N segundos y solo aplica
+  satsuma si no la resuelve. Por defecto 0 (sin retraso, sin cambios).
+  - Si la fase 1 resuelve, la prueba es DRAT pura.
+  - Si no, se descarta y la combinada de satsuma + kissat se verifica con
+    los dos dsr-trim. Tres pruebas nuevas en `test_symmetry.sh`.
+- **EXP-009** preregistrado (dos pasos nuevos en `cola.toml`):
+  - principal: retraso de 2 s frente a «nunca», en 153 instancias de
+    tesis-dev en las que nunca se ha medido ninguna política;
+  - secundario: frente a «siempre», en las 74 de EXP-007.
+
+### Resultado (2026-09-30): cierre de EXP-010 a EXP-015
+- **EXP-011**: se adopta **mclique v2**; `solver/labesat` usa
+  `tools/satsuma-mclique` por defecto (D-005 cerrada). EXP-010 (v1) no pasó
+  por un tope nuevo.
+- **EXP-012**: `kissat --symmetry` es equivalente a la tubería en las 74
+  instancias (CNF, trayectoria y seguridad).
+- **EXP-013**: la tesis es calibrable; factores por conflicto de 0,26 (pc1) y
+  0,47 (pc2). D-017 resuelta.
+- **EXP-014**: en la industria, la ruptura cuesta sobre todo tiempo fijo en
+  instancias triviales. En las no triviales, el factor es 0,97.
+- **EXP-015**: VSA sin efecto (ΔPAR-2 +13,2 s, p = 0,65); queda apagada.
+- Simulación para B3: la **ruptura con retraso** (X = 2 s) mejora a
+  «siempre» y a «nunca» en los dos bancos. Se propone para EXP-009.
+
+### Arreglado (2026-09-30): `verify_model.py` verifica en flujo
+- Cargaba la fórmula entera en memoria y, con ~40 M de cláusulas, moría por
+  falta de memoria. Eso se registraba como un **modelo incorrecto** (dos falsos
+  fallos en EXP-012). Ahora lee la CNF en flujo, con memoria constante, y un
+  error del verificador sale con su propio código (2).
+
+### Resultado (2026-09-25): EXP-008 cerrado — se mantiene Kissat 4.0.4 (D-013)
+- sc2026 frente a 4.0.4, 120 parejas intercaladas a 180 s: ΔPAR-2 = −4,7 s,
+  IC95 % [−18,7; +9,0], Wilcoxon p = 0,60. Sin diferencia detectable, así que
+  se mantiene la base, como fijaba el preregistro.
+- Descriptivo: sc2026 es más estable entre semillas (2 instancias inestables
+  frente a 8) y **no respeta `--time`** en una instancia (HARDKILL a 255 s).
+
+### Añadido (2026-09-25): experimentos que sobreviven a apagados (ADR-0008)
+- `scripts/checkpoint.py`: filas íntegras y escritura duradera (fsync).
+  `--resume` en `run_experiment.py`, `compare_satsuma_builds.py` y
+  `compare_integrada.py`; el A/B y el escáner de simetrías pasan a descartar
+  la última línea cortada.
+- `scripts/cola.toml` + `scripts/orquestador.py`: cola declarativa, un paso a
+  la vez, cerrojo, latido, marcas de hecho y `estado`.
+- `scripts/instalar_servicio.sh`: servicio de usuario que relanza la cola al
+  iniciar sesión, bloquea la suspensión y limita la memoria a 7 GB (ver ADR-0008).
+- `scripts/test_reanudacion.sh` (también en CI): simula un apagón y comprueba
+  que la tanda reanudada es idéntica a una sin cortes.
+- Motivo: la cadena murió de madrugada el 2026-09-25 (equipo apagado) y la
+  cola de EXP-013–015 nunca arrancó.
+
 ### Añadido (2026-09-24): VSA, vivificación programada por actividad (P6)
 - Opción `vivifyactivity` (apagada por defecto), de Kissat-VSA (2.º en UNSAT
   de 2025): en modo estable, se vivifican antes las cláusulas cuya variable

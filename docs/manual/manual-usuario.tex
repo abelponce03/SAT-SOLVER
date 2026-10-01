@@ -103,6 +103,11 @@ cd SAT-SOLVER
 \texttt{get\_tools.sh} descarga cada herramienta fijada a un commit concreto,
 para que cualquier resultado sea reproducible. satsuma se compila \emph{sin}
 la biblioteca cliquer (GPL), de modo que todo lo que se distribuye es MIT.
+Desde el experimento EXP-011, \texttt{solver/labesat} usa por defecto
+\texttt{tools/satsuma-mclique}: el mismo satsuma, pero con la clique máxima
+calculada por \emph{mclique}, una reimplementación propia con licencia MIT.
+Recupera lo que aportaba cliquer sin salir de la licencia MIT. Con
+\texttt{LABESAT\_SATSUMA} se puede elegir otro binario.
 
 \subsection{Ruptura de simetrías dentro del binario}
 Con \texttt{./scripts/build.sh --dir=build-symm --symmetry}, satsuma (incluido
@@ -144,6 +149,12 @@ solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>
         cuando la activación condicional (B3) esté validada. También se puede
         activar con \texttt{LABESAT\_SYMMETRY=1}.
   \item[\texttt{--no-symmetry}] Desactiva satsuma aunque \texttt{LABESAT\_SYMMETRY=1}.
+  \item[\texttt{--symmetry-delay=N}] \emph{Ruptura con retraso} (experimental,
+        EXP-009). Con \texttt{--symmetry}, kissat intenta primero la fórmula
+        original durante \texttt{N} segundos y solo aplica satsuma si no la
+        resuelve. Evita el coste fijo de satsuma en las instancias fáciles.
+        Por defecto 0 (sin retraso). También con
+        \texttt{LABESAT\_SYMM\_DELAY}.
   \item[\texttt{--time=N}] Límite de \textbf{tiempo total} en segundos. El
         tiempo que consume satsuma se descuenta del de kissat.
   \item[otras opciones] Cualquier opción que empiece por \texttt{-} se pasa a

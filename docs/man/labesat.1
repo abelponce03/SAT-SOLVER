@@ -46,6 +46,14 @@ ralentiza 1.42x las instancias sin ella).
 No ejecuta satsuma aunque
 .B LABESAT_SYMMETRY=1.
 .TP
+.BI \-\-symmetry\-delay= N
+Ruptura con retraso (experimental, EXP-009): con
+.BR \-\-symmetry ,
+kissat intenta primero la fórmula original durante
+.I N
+segundos y solo aplica satsuma si no la resuelve. Por defecto 0. También con
+.BR LABESAT_SYMM_DELAY .
+.TP
 .BI \-\-time= N
 Límite de tiempo \fItotal\fP en segundos. El tiempo de satsuma se descuenta
 del de kissat.
@@ -94,6 +102,8 @@ Binario de kissat (por defecto, el que está junto al guion).
 .TP
 .B LABESAT_SATSUMA
 Binario de satsuma (por defecto,
+.IR tools/satsuma-mclique ,
+con la clique máxima en MIT, adoptado en EXP-011; si no existe,
 .IR tools/satsuma ).
 .TP
 .B LABESAT_SYMM_TIMEOUT

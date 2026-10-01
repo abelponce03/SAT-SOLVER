@@ -27,41 +27,48 @@ def open_cnf(path):
     return open(path)
 
 
-def read_cnf(path):
-    clauses, clause = [], []
+def parse_model(text):
+    """Asignación como bytearray indexado por variable: 0 = sin valor,
+    1 = verdadera, 2 = falsa. Memoria O(nº de variables), no O(fórmula)."""
+    lits = []
+    for line in text.splitlines():
+        if line.startswith("v "):
+            lits.extend(int(t) for t in line[2:].split() if t != "0")
+    n = max((abs(l) for l in lits), default=0)
+    assign = bytearray(n + 1)
+    for lit in lits:
+        assign[abs(lit)] = 1 if lit > 0 else 2
+    return assign, len(lits)
+
+
+def check_stream(path, assign):
+    """Recorre la CNF en flujo y comprueba cada cláusula al cerrarla.
+    Devuelve (nº de cláusulas, None) si todas se satisfacen, o
+    (índice, cláusula) de la primera que no. No guarda la fórmula en memoria:
+    la versión anterior cargaba todas las cláusulas en listas de Python y, con
+    ~40 M de cláusulas, moría por falta de memoria, lo que se registraba como
+    un modelo incorrecto (EXP-012, 2026-09-30)."""
+    n = len(assign)
+    idx, clause, sat = 0, [], False
     with open_cnf(path) as f:
         for line in f:
-            line = line.strip()
-            if not line or line[0] in "cp%":
+            if not line or line[0] in "cp%\n":
                 continue
             for tok in line.split():
                 lit = int(tok)
                 if lit == 0:
-                    clauses.append(clause)
-                    clause = []
-                else:
+                    if not sat:
+                        return idx, clause
+                    idx, clause, sat = idx + 1, [], False
+                    continue
+                if len(clause) < 16:
                     clause.append(lit)
-    if clause:
-        clauses.append(clause)
-    return clauses
-
-
-def parse_model(text):
-    assign = {}
-    for line in text.splitlines():
-        if line.startswith("v "):
-            for tok in line[2:].split():
-                lit = int(tok)
-                if lit != 0:
-                    assign[abs(lit)] = lit > 0
-    return assign
-
-
-def check(clauses, assign):
-    for idx, cl in enumerate(clauses):
-        if not any(assign.get(abs(l), False) == (l > 0) for l in cl):
-            return idx, cl
-    return None, None
+                v = lit if lit > 0 else -lit
+                if not sat and v < n and assign[v] == (1 if lit > 0 else 2):
+                    sat = True
+    if clause and not sat:
+        return idx, clause
+    return idx, None
 
 
 def main():
@@ -88,14 +95,18 @@ def main():
         print(f"{status}  {args.instance}  (nada que verificar)")
         return 0
 
-    clauses = read_cnf(args.instance)
-    assign = parse_model(out)
-    if not assign:
+    assign, nlits = parse_model(out)
+    if not nlits:
         print(f"FALLO  {args.instance}: dijo SAT pero no imprimió modelo")
         return 1
-    idx, cl = check(clauses, assign)
-    if idx is None:
-        print(f"OK     {args.instance}: modelo válido ({len(clauses)} cláusulas, {len(assign)} vars)")
+    try:
+        idx, cl = check_stream(args.instance, assign)
+    except (MemoryError, OSError, EOFError, ValueError) as e:
+        # Un fallo DEL VERIFICADOR no es un modelo incorrecto: código propio.
+        print(f"ERROR  {args.instance}: no se pudo verificar ({type(e).__name__}: {e})")
+        return 2
+    if cl is None:
+        print(f"OK     {args.instance}: modelo válido ({idx} cláusulas, {nlits} literales)")
         return 0
     print(f"FALLO  {args.instance}: la cláusula #{idx} {cl} no se satisface -> MODELO INCORRECTO")
     return 1

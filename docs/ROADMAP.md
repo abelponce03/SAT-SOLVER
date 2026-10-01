@@ -150,10 +150,49 @@ vigente es el del plan.
 - [x] research/07: ganadores 2021–2026. **B2 retirada** (era satsuma + MAB);
       reinicios fríos a ciegas descartados por simulación.
 - [x] VSA (P6) implementada detrás de `vivifyactivity`.
-- [ ] EXP-013 (calibración con la tesis) → D-017.
-- [ ] EXP-014 (simetrías en la industria) → datos para B3 y P5.
-- [ ] EXP-015 (VSA).
-- [ ] D-018: línea VSIDS/CHB, tras EXP-008.
+- [x] EXP-013: la tesis es calibrable (esta máquina es 2–4× más rápida por
+      conflicto); D-017 resuelta.
+- [x] EXP-014: en la industria, la ruptura cuesta tiempo fijo en instancias
+      triviales (+1,2 a +2,9 s de PAR-2); 80 ejemplos para B3.
+- [x] EXP-015: VSA sin efecto (p = 0,65); queda apagada.
+- [x] EXP-008: se mantiene 4.0.4 (D-013). EXP-010/011: **mclique v2
+      adoptada** (D-005). EXP-012: el binario integrado es equivalente a la
+      tubería.
+- [ ] **EXP-009 (B3)**: ruptura con retraso; la simulación con X = 2 s
+      mejora a «siempre» y a «nunca» en los dos bancos. Falta preregistrarlo y
+      validarlo con datos nuevos.
+- [ ] D-018: línea VSIDS/CHB, pendiente del director.
+
+### Fase 3c — Optimización con demostración · desde 2026-10-01
+
+Estrategia en [`research/08`](research/08-estrategia-de-optimizacion.md) y
+reglas en [ADR-0009](adr/0009-optimizaciones-que-conservan-la-trayectoria.md).
+Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
+
+- [x] research/08: límites teóricos, valor exacto de una aceleración en
+      PAR-2 (Proposición 1) y Teorema 5 (compilaciones que conservan la
+      búsqueda).
+- [x] **EXP-016**: la propagación es ~57 % del tiempo; análisis 14–19 %;
+      sondeo 15–19 %.
+- [x] **EXP-017**: PGO + LTO adoptado (×1,030, trayectorias idénticas);
+      `-march` ×1,040, descartado por el director (D-019): no se usa.
+- [x] **EXP-018**: K1 conserva la trayectoria (85/85), pero es un 7 % más
+      lenta (×0,931): no se adopta.
+- [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
+      prueba escrita antes de implementar.
+- [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):
+      B3 (EXP-009) y X1.
+  - [x] research/09: familias que separan los sistemas, diseño y Teorema 1
+        de X1.
+  - [x] X1 en Kissat detrás de `configure --gauss`; `test_gauss.sh` en
+        verde con los tres verificadores.
+  - [x] **EXP-019**: se adopta X1 (0 errores, 321/321 equivalentes, p95
+        0,37 s). Se activa por defecto tras EXP-021 (v2, por componentes).
+  - [ ] **EXP-021**: X1 v2 (por componentes) en las 103 instancias saltadas;
+        decide qué versión se activa por defecto.
+  - [ ] X1b (unidades y equivalencias del sistema XOR), si EXP-019 sale bien.
+- [ ] **EXP-020**: tope de satsuma, 60 s frente a 300 s (el mayor riesgo sin
+      medir de research/10).
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

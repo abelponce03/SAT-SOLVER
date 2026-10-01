@@ -1,0 +1,66 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_sha1": "f39ca6ec825ddeb238a5aba75cd6cf62363fe28a",
+  "solver_b": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_b_sha1": "f39ca6ec825ddeb238a5aba75cd6cf62363fe28a",
+  "solver_b_version": "4.0.4",
+  "solver_id": "495512fb7d4de4b87009239573429bca4d3b417d",
+  "git_commit": "e6f30301b48f881c0d10204eafb10b055d10cb01",
+  "solver_id_coincide_con_head": false,
+  "guardas_sha1": {
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build/kissat": "28b587cf6ecfadad73e29de35c363ecbf6c72dd8",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma": "9881df0f988e2d45ad24c54fd4c03f1a0fe84f1b",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma-mclique": "6156e2426de09a65f95b2008c66aa42d7efbcee8"
+  },
+  "git_dirty": true,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/symm2026"
+  ],
+  "n_parejas": 2,
+  "seeds": [
+    1,
+    2
+  ],
+  "timeout": 180.0,
+  "rama_a": {
+    "label": "A-sin-cliques",
+    "opts": "--symmetry",
+    "env": {
+      "LABESAT_SATSUMA": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma"
+    }
+  },
+  "rama_b": {
+    "label": "B-mclique2",
+    "opts": "--symmetry",
+    "env": {
+      "LABESAT_SATSUMA": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma-mclique"
+    }
+  },
+  "instances_filter": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/results/exp011/instancias.txt",
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    2.53076171875,
+    2.78125,
+    2.09716796875
+  ],
+  "started_at": "2026-09-28T19:06:00+00:00",
+  "reanudaciones": [
+    {
+      "git_commit": "5481ee934900fa954959b7100c1139506997e10a",
+      "git_dirty": true,
+      "host": "ROCO",
+      "loadavg": [
+        1.083984375,
+        0.61572265625,
+        0.24267578125
+      ],
+      "started_at": "2026-09-28T20:35:58+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 2
+    }
+  ]
+}

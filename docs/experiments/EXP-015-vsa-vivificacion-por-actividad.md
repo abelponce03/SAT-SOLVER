@@ -1,6 +1,7 @@
 # EXP-015 — VSA: vivificación programada por actividad (preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con la
+- **Estado**: **cerrado (2026-09-30)**: **sin efecto detectado**; `vivifyactivity`
+  se queda apagada. Preregistrado: se commiteó antes de ejecutar, junto con la
   selección (`scripts/exp015_seleccion.py`, `results/exp015/instancias.txt`).
   Ejecuciones previas: solo pruebas de corrección (12 instancias de calib a
   50 000 conflictos, 7 pruebas DRAT y 4 modelos). Ninguna mide tiempo en el
@@ -88,8 +89,38 @@ Kissat-public. Un resultado nulo es plausible y se documenta igual.
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- Ejecutado por la cola (ADR-0008) el 2026-09-29, de 03:40 a 11:41 UTC, sin
+  cortes. Hubo carga ajena: servicios Docker del director, con un arranque de
+  contenedor por minuto aproximadamente. El orden intercalado la reparte
+  entre las dos ramas.
 
 ## 7. Resultados
 
-(pendiente)
+`results/exp015/informe.md` (`par2.py` y `analyze_speedup.py`, los comandos
+de §3). 60 instancias × 2 semillas, T = 300 s, tiempo de CPU.
+
+| métrica | A: base | B: VSA | Δ (B − A) |
+|---|---:|---:|---:|
+| PAR-2 (s) | 101,8 | 115,0 | +13,2 (+13,0 %) |
+| Resueltas en las dos semillas | 53 | 53 | 0 |
+| Inestables | 6 | 3 | −3 |
+
+- **H1**: ΔPAR-2 = +13,2 s, IC95 % [−5,0; +33,6], Wilcoxon p = 0,65.
+  **No se cumple.**
+- **H2**: factor de velocidad en las resueltas por ambas: 1,008×
+  [0,878; 1,172], p = 0,60. Propagaciones: 1,001× [0,881; 1,148]. **No se
+  cumple.**
+- McNemar: 2 frente a 2, p = 1.
+- **H3** (fijada en el preregistro): ΔPAR-2 en las 31 UNSAT = **0,0 s**; en
+  las 29 SAT = +27,4 s. Se cumple solo en la forma (0,0 < +27,4): VSA no
+  ayuda en UNSAT, y en SAT empeora sin significación. No reproduce la
+  ventaja en UNSAT que tuvo Kissat-VSA en 2025.
+
+**Veredicto según §4: sin efecto detectado.** `vivifyactivity` se queda
+apagada, como A4.1 (EXP-006). Es el segundo cambio de la heurística de
+búsqueda que no mueve el PAR-2 sobre nuestra base, y el primero copiado de un
+envío reciente a la competición. Explicaciones posibles, sin comprobar:
+
+- la base es 4.0.4 y no sc2024;
+- la implementación se hizo a partir de dos párrafos de las actas (§5);
+- el banco es industrial y no el de 2025.

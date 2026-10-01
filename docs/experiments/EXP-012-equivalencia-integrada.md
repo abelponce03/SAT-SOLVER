@@ -1,7 +1,7 @@
 # EXP-012 — ¿Es `kissat --symmetry` equivalente a la tubería de EXP-007? (preregistrado)
 
-- **Estado**: **preregistrado**. Se escribe **antes** de ejecutar sobre el
-  banco (ADR-0003 §6). Las únicas ejecuciones previas son las pruebas de
+- **Estado**: **cerrado (2026-09-30)**: **equivalente** en las 74 instancias
+  (H1, H2 y H3). Preregistrado antes de ejecutar sobre el banco (ADR-0003 §6). Las únicas ejecuciones previas son las pruebas de
   corrección en `bench/symm` (4 instancias de juguete, que no están en el
   banco).
 - **Fecha**: 2026-09-23
@@ -89,4 +89,34 @@ python3 scripts/compare_integrada.py --bench bench/symm2026 \
 
 ## 7. Resultados
 
-_Pendiente._
+`results/exp012/equivalencia.csv` (84 filas: el guion recorre toda la
+carpeta) y `results/exp012/reverificacion.csv`. Ejecutado por la cola
+(ADR-0008) entre el 2026-09-25 y el 28, con reanudaciones tras apagados:
+cada instancia se mide entera o no se mide.
+
+### En las 74 instancias del preregistro (banco efectivo de EXP-007)
+
+| | resultado |
+|---|---|
+| **H1** CNF intermedia idéntica | **74 de 74** ✅ |
+| **H2** misma trayectoria (conflictos, decisiones, propagaciones y estado a 100 000 conflictos) | **74 de 74** ✅ |
+| **H3** seguridad | **0 fallos** ✅: 35 respuestas verificadas; 1 prueba UNSAT agotó el tope de 600 s del verificador (`9ba8145e`); 38 sin respuesta a 100 000 conflictos, así que no hay nada que verificar |
+
+**Veredicto según §4: equivalente.** El binario integrado sustituye a la
+tubería en los experimentos siguientes (EXP-009/B3) y en la entrega. EXP-007
+vale para él. `solver/labesat` queda para reproducir experimentos antiguos.
+
+### En las 10 instancias apartadas por tamaño (fuera del preregistro)
+
+- CNF idéntica en 8 de 10. Difieren `f15a3ce8` y `8db998d5`, que tienen más
+  de 5 M de cláusulas. Es la causa anotada en §1: `-march=native` en el
+  satsuma externo frente al integrado. Aun así, la **trayectoria de kissat es
+  la misma en las 10**.
+- **Dos «FALLO» de seguridad que no lo eran.** En `f15a3ce8` (43,9 M
+  cláusulas) y `ee8c86d3` (36 M), `verify_model.py` cargaba la fórmula entera
+  en listas de Python, se quedó sin memoria y salió con código 1, que el guion
+  lee como modelo incorrecto. El 2026-09-30 se reescribió para leer la CNF en
+  flujo (memoria constante, y un código propio si falla el verificador). Se
+  repitieron las dos corridas: **los dos modelos son válidos**, verificados
+  con 26 MB y 860 MB de memoria. Detalle en `reverificacion.csv`; el CSV
+  original no se toca.

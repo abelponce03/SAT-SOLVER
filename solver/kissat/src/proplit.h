@@ -68,6 +68,31 @@ static inline clause *PROPAGATE_LITERAL (kissat *solver,
   const unsigned level = a->level;
   clause *res = 0;
 
+#ifdef LABESAT_PREFETCH
+  /* [SOLVER] K1 (research/08 §6.2): 'ahead' va LABESAT_PREFETCH vigilantes
+     por delante de 'p' y precarga la cabecera de la cláusula de cada
+     vigilante grande cuyo literal bloqueante no es verdadero.  Solo lee y
+     precarga: no escribe, no cambia el orden de las listas ni los 'ticks'
+     (Corolario 4), así que la búsqueda es idéntica.  'ahead' siempre apunta
+     a una cabecera de vigilante o a 'end_watches', y la zona por delante de
+     'p' no se modifica dentro del bucle ('q' escribe por detrás). */
+  const watch *ahead = p;
+#define LABESAT_PREFETCH_STEP() \
+  do { \
+    const watch AHEAD = *ahead; \
+    if (AHEAD.type.binary) \
+      ahead++; \
+    else { \
+      assert (ahead + 1 != end_watches); \
+      if (values[AHEAD.blocking.lit] <= 0) \
+        __builtin_prefetch (arena + ahead[1].raw); \
+      ahead += 2; \
+    } \
+  } while (0)
+  for (unsigned i = 0; i != LABESAT_PREFETCH && ahead != end_watches; i++)
+    LABESAT_PREFETCH_STEP ();
+#endif
+
   while (p != end_watches) {
     const watch head = *q++ = *p++;
     const unsigned blocking = head.blocking.lit;
@@ -77,6 +102,10 @@ static inline clause *PROPAGATE_LITERAL (kissat *solver,
     watch tail;
     if (!binary)
       tail = *q++ = *p++;
+#ifdef LABESAT_PREFETCH
+    if (ahead != end_watches)
+      LABESAT_PREFETCH_STEP ();
+#endif
     if (blocking_value > 0)
       continue;
     if (binary) {
@@ -176,6 +205,9 @@ static inline clause *PROPAGATE_LITERAL (kissat *solver,
     }
   }
   solver->ticks += ticks;
+#ifdef LABESAT_PREFETCH
+#undef LABESAT_PREFETCH_STEP
+#endif
 
   while (p != end_watches)
     *q++ = *p++;
