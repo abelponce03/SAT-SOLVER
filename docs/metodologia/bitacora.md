@@ -422,3 +422,58 @@ al cerrar cada sesión.
     apagado cuesta la noche entera.
   - Una prueba que puede pasar por vacío no prueba nada: hay que exigir que
     lo comparado exista.
+
+## 2026-09-28 a 30 — Revisión de la cola y cierre de EXP-010 a EXP-015
+
+- **Se pidió**: «revisa el progreso de los experimentos para continuar la
+  investigación» (dos veces, tras días sin sesión).
+- **Se encontró**:
+  - el 28, la cola llevaba tres días avanzando poco: dos pasos bloqueados por
+    fallos de código y el resto frenado por `MemoryHigh`;
+  - el 30, toda la cola había terminado el día 29 a las 07:41.
+- **Se hizo**:
+  - Arreglos de la cola:
+    - `verify_symm_answers.py` toleraba mal los bytes no UTF-8 de dsr-trim;
+    - `analyze_exp011.py` exigía la build con cliquer y contaba 84 instancias
+      en vez de las 74 del preregistro;
+    - se quitó `MemoryHigh`, que frena en vez de matar (65 724 eventos `high`).
+  - **Cierre de seis experimentos**, cada uno con su criterio preregistrado:
+    - EXP-010: v1 no se adopta;
+    - **EXP-011: se adopta mclique v2** (D-005);
+    - **EXP-012: equivalente**;
+    - **EXP-013: calibrable** (D-017);
+    - EXP-014: la ruptura cuesta tiempo fijo en la industria;
+    - EXP-015: VSA nulo.
+  - Investigación de los dos «FALLO» de seguridad de EXP-012: eran del
+    verificador (`MemoryError` con ~40 M de cláusulas). Se reescribió
+    `verify_model.py` en flujo y los dos modelos resultaron válidos.
+  - Simulación de la **ruptura con retraso** con los datos de EXP-007 y
+    EXP-014: con X = 2 s mejora a «siempre» y a «nunca» en los dos bancos.
+    Pasa a ser la propuesta para EXP-009 (B3).
+- **Decisiones**:
+  - D-005, D-013 y D-017 cerradas por sus criterios preregistrados;
+  - el binario integrado sigue con `CLIQUES=0` hasta que una prueba de
+    equivalencia propia valide mclique dentro de él.
+- **Salió mal**:
+  - **Un heredoc sin comillas** (`<<EOF`) en un comando de shell: las
+    palabras entre comillas invertidas del texto de EXP-012 se ejecutaron
+    como órdenes. Se ejecutó `solver/labesat` sin argumentos, que solo
+    imprimió la ayuda; el resto dio «orden no encontrada». Desaparecieron
+    esas palabras del documento commiteado. Se detectó leyendo la salida y se
+    corrigió con `--amend` antes de subir. Regla: para texto con comillas
+    invertidas, heredoc con comillas (`<<'EOF'`) o la herramienta de edición.
+  - Un fallo de un paso de la cola se quedó sin ver hasta la siguiente
+    sesión: el diseño lo paró bien, pero nadie miró el estado.
+  - Un control mal especificado en EXP-014: «propagaciones idénticas» no
+    tiene sentido en corridas que terminan por tiempo. Se investigó y se
+    documentó, sin cambiar el criterio a posteriori.
+  - Una pareja de EXP-014 murió por la señal 16 en las dos ramas; repetida a
+    mano, termina con normalidad. Causa sin identificar.
+- **Aprendido**:
+  - Un fallo de verificación no es un modelo incorrecto hasta que se
+    reproduce. Hay que distinguir el error del verificador del veredicto.
+  - Un límite de recursos que frena es peor que uno que mata: el primero
+    falsea los tiempos sin dejar rastro.
+  - Que «siempre» empate con «nunca» en PAR-2 no cierra la línea: puede
+    esconder dos efectos opuestos, coste fijo y ganancia de búsqueda, que una
+    política sencilla separa.

@@ -5,6 +5,26 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Resultado (2026-09-30): cierre de EXP-010 a EXP-015
+- **EXP-011**: se adopta **mclique v2**; `solver/labesat` usa
+  `tools/satsuma-mclique` por defecto (D-005 cerrada). EXP-010 (v1) no pasó
+  por un tope nuevo.
+- **EXP-012**: `kissat --symmetry` es equivalente a la tubería en las 74
+  instancias (CNF, trayectoria y seguridad).
+- **EXP-013**: la tesis es calibrable; factores por conflicto de 0,26 (pc1) y
+  0,47 (pc2). D-017 resuelta.
+- **EXP-014**: en la industria, la ruptura cuesta sobre todo tiempo fijo en
+  instancias triviales. En las no triviales, el factor es 0,97.
+- **EXP-015**: VSA sin efecto (ΔPAR-2 +13,2 s, p = 0,65); queda apagada.
+- Simulación para B3: la **ruptura con retraso** (X = 2 s) mejora a
+  «siempre» y a «nunca» en los dos bancos. Se propone para EXP-009.
+
+### Arreglado (2026-09-30): `verify_model.py` verifica en flujo
+- Cargaba la fórmula entera en memoria y, con ~40 M de cláusulas, moría por
+  falta de memoria. Eso se registraba como un **modelo incorrecto** (dos falsos
+  fallos en EXP-012). Ahora lee la CNF en flujo, con memoria constante, y un
+  error del verificador sale con su propio código (2).
+
 ### Resultado (2026-09-25): EXP-008 cerrado — se mantiene Kissat 4.0.4 (D-013)
 - sc2026 frente a 4.0.4, 120 parejas intercaladas a 180 s: ΔPAR-2 = −4,7 s,
   IC95 % [−18,7; +9,0], Wilcoxon p = 0,60. Sin diferencia detectable, así que

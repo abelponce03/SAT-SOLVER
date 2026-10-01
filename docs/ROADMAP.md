@@ -150,10 +150,18 @@ vigente es el del plan.
 - [x] research/07: ganadores 2021–2026. **B2 retirada** (era satsuma + MAB);
       reinicios fríos a ciegas descartados por simulación.
 - [x] VSA (P6) implementada detrás de `vivifyactivity`.
-- [ ] EXP-013 (calibración con la tesis) → D-017.
-- [ ] EXP-014 (simetrías en la industria) → datos para B3 y P5.
-- [ ] EXP-015 (VSA).
-- [ ] D-018: línea VSIDS/CHB, tras EXP-008.
+- [x] EXP-013: la tesis es calibrable (esta máquina es 2–4× más rápida por
+      conflicto); D-017 resuelta.
+- [x] EXP-014: en la industria, la ruptura cuesta tiempo fijo en instancias
+      triviales (+1,2 a +2,9 s de PAR-2); 80 ejemplos para B3.
+- [x] EXP-015: VSA sin efecto (p = 0,65); queda apagada.
+- [x] EXP-008: se mantiene 4.0.4 (D-013). EXP-010/011: **mclique v2
+      adoptada** (D-005). EXP-012: el binario integrado es equivalente a la
+      tubería.
+- [ ] **EXP-009 (B3)**: ruptura con retraso; la simulación con X = 2 s
+      mejora a «siempre» y a «nunca» en los dos bancos. Falta preregistrarlo y
+      validarlo con datos nuevos.
+- [ ] D-018: línea VSIDS/CHB, pendiente del director.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 
