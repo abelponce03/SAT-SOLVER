@@ -31,7 +31,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-014 | Variantes a presentar (hasta 4 solvers secuenciales) | 🟡 | Director | [plan](../plan/plan-main-track-2027.md) §4 · issue #19 |
 | D-015 | Caso de planificación: Main Track con declaración honesta de IA | ✅ (2026-09-23) | Director | [plan](../plan/plan-main-track-2027.md) |
 | D-016 | Arquitectura: ruptura de simetrías montada sobre Kissat, no como programa aparte | ✅ **opción c** (2026-09-23): por fases, satsuma dentro del binario primero | Director | §D-016 · [ADR-0007](../adr/0007-simetrias-integradas-en-kissat.md) · EXP-012 |
-| D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | 🟡 opción conservadora en marcha: calibrar (EXP-013) y decidir features solo con A/B local | Director | §D-017 · EXP-013 · issue #28 |
+| D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | ✅ **opción b** (2026-09-30): EXP-013 calibra ambos grupos (0,26 y 0,47, IC ±8 %); las features se deciden con A/B local | Director | §D-017 · EXP-013 · issue #28 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 
 ---
@@ -232,7 +232,10 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 - **Recomendación**: b. LabeSAT por defecto hace hoy la misma búsqueda que
   Kissat 4.0.4, así que la rama A de cada A/B **es** ya el Kissat de esta
   máquina, sin coste añadido.
-- **Preguntas para el director** (cambian el alcance de la calibración):
+- **Resolución (2026-09-30)**: EXP-013 da factores por conflicto estables, con
+  IC estrechos: **0,262** para `pc1` y **0,470** para `pc2`; esta máquina es
+  2–4 veces más rápida. Se aplica la opción b. Las preguntas siguen abiertas,
+  pero ya no bloquean nada:
   1. ¿Qué versión exacta de Kissat usó la tesis (paquete, commit o
      `kissat --version`)?
   2. ¿Qué CPU tenían `pc1` y `pc2`, y cuántas corridas iban en paralelo?
