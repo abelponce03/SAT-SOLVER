@@ -362,5 +362,10 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     descartada** (sería apostarlo todo al tipo de banco), la a sale
     reforzada y la V2 deja de ser solo una cobertura. La d (selector
     estructural, B4) gana valor.
+  - **Matiz (2026-10-04, paquete oficial de 2025)**: aquella entrada usaba
+    Kissat 4.0.2 con prueba **VeriPB** y satsuma sin tope de tiempo. Su
+    15.º no es solo efecto de «siempre». El argumento de las familias se
+    mantiene, y EXP-023 mide nuestra «siempre» sobre las instancias de
+    2025.
 - **Mientras tanto**: no cambia ningún valor por defecto. Los experimentos
   que midan la configuración de V1 la piden con `--symmetry`.

@@ -103,7 +103,7 @@ def parse_stats(text):
 
 
 def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_grace,
-            env=None):
+            env=None, mem_bytes=0):
     """Ejecuta una corrida y devuelve (status, exit_code, wall_s, cpu_s, rss_mb, stats).
 
     El tiempo de CPU se toma de `wait4` sobre ESTE hijo concreto (no de
@@ -111,7 +111,11 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
     cuando hay varias corridas en vuelo (`--jobs > 1`).
 
     `env`: variables de entorno que se AÑADEN a las del proceso (p. ej.
-    LABESAT_SATSUMA para elegir el binario de satsuma de solver/labesat)."""
+    LABESAT_SATSUMA para elegir el binario de satsuma de solver/labesat).
+
+    `mem_bytes` > 0: tope de memoria virtual (RLIMIT_AS) de CADA proceso de la
+    corrida (se hereda: con solver/labesat, satsuma y kissat por separado).
+    0 = sin tope, como en todos los A/B anteriores a EXP-023."""
     cmd = [solver, "-n", "-s", f"--seed={seed}"]
     if budget_kind == "time":
         # Kissat solo acepta segundos enteros en --time.
@@ -128,8 +132,13 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
     with tempfile.TemporaryFile() as fout:
         # Sesión propia: si hay que matar, se mata el GRUPO.  Con un guion como
         # solver/labesat, matar solo al hijo directo dejaría kissat huérfano.
+        limitar = None
+        if mem_bytes:
+            def limitar():
+                import resource
+                resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
         proc = subprocess.Popen(cmd, stdout=fout, stderr=subprocess.DEVNULL,
-                                start_new_session=True,
+                                start_new_session=True, preexec_fn=limitar,
                                 env={**os.environ, **env} if env else None)
         deadline = (t0 + hard_limit) if hard_limit else None
         delay = 0.002

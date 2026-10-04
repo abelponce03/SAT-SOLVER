@@ -32,6 +32,7 @@ results/exp019/sinteticas/
 # --- Benchmarks descargados (pesados; regenerables con scripts/) ---
 bench/downloaded/
 bench/dev/
+bench/sc2025/
 bench/exp020/
 bench/test/
 *.cnf.xz

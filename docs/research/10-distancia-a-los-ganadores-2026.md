@@ -110,10 +110,21 @@ oficiales.
 
 - La entrada de satsuma resolvió 18 menos que `Kissat-sc2025` y 31 menos
   que `Kissat-public`, **también en UNSAT**, donde la ruptura debería ayudar.
-- Las curvas no dicen qué base de Kissat ni qué topes usaba esa entrada, ni
-  por qué falló. Las diapositivas de 2025 hablan de corridas muertas por
-  memoria con 30 GB, y satsuma gasta mucha: en EXP-020 murió a 6 GB en 6
-  instancias de 277–423 MiB, por debajo de nuestro tope de tamaño.
+- **Esa entrada no era nuestra configuración** (paquete oficial
+  `satsuma-kissat-sc.tar.xz`, leído el 2026-10-04 sin ejecutarlo):
+  - **Kissat 4.0.2** modificado para escribir la prueba en **VeriPB**
+    (`rup … >= 1 ;`, `--no-binary`); satsuma 1.2 también la escribía en
+    VeriPB. Nosotros y el ganador de 2026 usamos Kissat 4.0.4 y prueba SR,
+    verificada por `dsr-trim`.
+  - **Satsuma sin tope de tiempo**. Solo se saltaba con 5 millones de
+    variables o más «para no llegar al límite de 32 GB», con topes
+    internos de componentes y modelos.
+  - Las diapositivas de 2025 hablan de problemas al verificar las pruebas
+    grandes, y un UNSAT sin prueba verificada no cuenta.
+  - Las 11 UNSAT de menos frente a Kissat-sc2025 pueden deberse, en parte,
+    a la verificación VeriPB. Las 7 SAT de menos, al tiempo de satsuma sin
+    tope o a la perturbación de la búsqueda. **El 15.º no se puede atribuir
+    solo a «siempre».**
 
 **Por qué 2026 fue distinto.** De las 44 instancias netas que «siempre» ganó
 a «nunca» en 2026, **40 son de familias que no estaban en 2025**:
@@ -124,8 +135,10 @@ a «nunca» en 2026, **40 son de familias que no estaban en 2025**:
 **Lectura**:
 
 - El «1.º» de §0b es un resultado **de 2026**, y depende de unas pocas
-  familias combinatorias simétricas. En el banco de 2025, la misma
-  configuración habría quedado en la mitad baja.
+  familias combinatorias simétricas que en 2025 no estaban. Lo que no
+  sabemos es cuánto habría perdido **nuestra** «siempre» en 2025: el 15.º
+  es de otra configuración. EXP-023 lo mide con nuestra tubería sobre las
+  instancias de 2025.
 - El valor de «siempre» cambia de signo de un año a otro. Eso refuerza la
   opción a de D-020 (dos variantes) y hace la V2 («nunca») mucho más que
   una cobertura.
@@ -290,7 +303,7 @@ margen por donde el ganador es débil.
 | 3 | **PGO + LTO** en el paquete | −15 s | Adoptado (EXP-017) |
 | 4 | **Topes de satsuma (P5)**: medir el tiempo de satsuma en las instancias simétricas de 2026 que tengamos y decidir el tope con datos. El de 60 s ayuda en las 3 medidas; el riesgo está en las 11 que no podemos medir | Proteger el margen (hasta +270 s de riesgo) | **EXP-020 cerrado: se mantienen 60 s** (300 s resuelve las mismas y cuesta +24,6 s). El riesgo de las 11 se declara |
 | 5 | **Cobertura de X1**: en EXP-019, 103 sistemas XOR se saltan por los topes de memoria. Partirlos en componentes conexas (Gauss por componente) no cambia nada cuando no refuta (clase E con salida temprana) | Más refutaciones posibles a coste casi nulo | **EXP-021 cerrado: X1 v2 activa por defecto.** 56 de 103 pasan a «consistente», 0 refutadas; las 47 restantes tienen una componente gigante (X1 v3) |
-| 8 | **Selector entre «siempre» y «nunca» (B4)** | Hasta −395 s (oráculo); real, mucho menos | **research/11** (exploratorio): regla estructural sobre los rasgos de satsuma. Validación propuesta con las 374 instancias de 2025 (EXP-023), a falta del permiso de descarga |
+| 8 | **Selector entre «siempre» y «nunca» (B4)** | Hasta −395 s (oráculo); real, mucho menos | **research/11** (exploratorio): regla estructural sobre los rasgos de satsuma. **EXP-023 preregistrado y en la cola**: las 374 instancias de 2025 |
 | 6 | **X1b y fases de Gauss** para la paridad mezclada | Hasta ~10 instancias del hueco | Tras EXP-019; clase S, con A/B |
 | 7 | **Selector para MAB** (D-018) | Hasta 14 instancias (oráculo); sin selector, nada | Solo si hay un predictor con evidencia |
 | — | ~~K1, precarga~~ | ×0,931: un 7 % **más lento** (EXP-018) | Descartada |

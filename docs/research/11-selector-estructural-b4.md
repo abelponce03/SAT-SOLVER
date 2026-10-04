@@ -14,7 +14,9 @@
 ## 1. Por qué
 
 - **«Siempre» cambia de signo según el año**: 1.º en 2026 y 15.º en 2025
-  (research/10 §0c).
+  (research/10 §0c). La entrada de 2025 usaba otra configuración (Kissat
+  4.0.2, prueba VeriPB, satsuma sin tope), pero el patrón de familias
+  apunta en la misma dirección.
 - **«Nunca»** pierde en 2026 las familias combinatorias simétricas
   (+38 resueltas para el ganador).
 - **B3**, la ruptura con retraso, se descartó en EXP-009: el tiempo no
@@ -88,15 +90,19 @@ tiempo es:
 3. En EXP-009, la rama B es el retraso de 2 s, no «siempre».
 4. El tiempo de satsuma sale de un escaneo aparte, no de la misma corrida.
 
-## 5. Validación propuesta (EXP-023, por preregistrar)
+## 5. Validación: EXP-023 (preregistrado el 2026-10-04, en la cola)
+
+El director autorizó la descarga. El diseño definitivo está en
+`docs/experiments/EXP-023-b4-fuera-de-muestra-2025.md`; lo que sigue es la
+propuesta que lo originó.
 
 **Muestra fresca**: las instancias de la **Main Track de 2025** con CNF de
 como mucho 512 MiB.
 
 - Son **374 de 400**. Las 26 restantes no pasan el tope de tamaño de
   satsuma: ahí las tres políticas son «nunca».
-- **Nunca las hemos medido**, y son justo el año en el que «siempre»
-  fracasó.
+- **Nunca las hemos medido**, y son el año en el que la entrada de satsuma
+  quedó 15.ª.
 - Pesan 16,7 GB sin comprimir y unos 2-3 GB en `.xz`. Hay 22 GB libres.
 - **Hace falta el permiso del director para descargarlas** (GBD,
   `benchmark-database.de`).

@@ -200,8 +200,9 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
   - [ ] X1b (unidades y equivalencias del sistema XOR).
 - [x] **EXP-020**: se mantiene el tope de satsuma de 60 s (300 s resuelve
       las mismas y cuesta +24,6 s). El riesgo de research/10 §2.2 se declara.
-- [ ] B4: selector entre «siempre» y «nunca» (D-020, opción d). Cota de
-      oráculo en 2026: −395 s.
+- [ ] B4: selector estructural entre «siempre» y «nunca» (D-020, opción d;
+      research/11). **EXP-023** preregistrado y en la cola: B4, «siempre» y
+      «nunca» en las 374 instancias de 2025 de ≤ 512 MiB.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

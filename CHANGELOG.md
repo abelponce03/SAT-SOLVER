@@ -5,6 +5,18 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-04): EXP-023 preregistrado; la entrada de satsuma de 2025, leída
+- **EXP-023** (`scripts/exp023.py`): B4, «siempre» y «nunca» en las 374
+  instancias de 2025 de ≤ 512 MiB (`bench/sc2025.list.csv`), con la regla R
+  fijada en research/11. La descarga, el escaneo de satsuma y el A/B (T =
+  300 s) van en la cola.
+- `run_ab_interleaved.py --mem-gb` (y `run_one(mem_bytes=)`): tope de
+  memoria virtual por proceso. Por defecto 0, lo de siempre.
+- **El paquete oficial `satsuma-kissat-sc` de 2025, leído sin ejecutarlo**:
+  Kissat 4.0.2 modificado para escribir la prueba en VeriPB, satsuma 1.2
+  sin tope de tiempo, y satsuma solo con menos de 5 M variables. Su 15.º no
+  se puede atribuir solo a «siempre»: research/10 §0c y D-020 corregidos.
+
 ### Añadido (2026-10-04): research/11, B4 (selector estructural, exploratorio)
 - Paso `b4-rasgos` hecho: rasgos de satsuma de las 84 instancias del banco
   simétrico (`results/b4/`).

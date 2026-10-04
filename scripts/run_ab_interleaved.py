@@ -79,6 +79,10 @@ def main():
                          "tanda (repetible).  Imprescindible cuando --solver es un "
                          "guion como solver/labesat: hay que vigilar también kissat "
                          "y satsuma")
+    ap.add_argument("--mem-gb", type=float, default=0,
+                    help="tope de memoria virtual (RLIMIT_AS) de cada proceso de cada "
+                         "corrida; 0 = sin tope (lo de siempre).  Para bancos con "
+                         "instancias enormes en una máquina de 15 GB (EXP-023)")
     args = ap.parse_args()
     if (args.timeout is None) == (args.conflicts is None):
         ap.error("hace falta exactamente uno de --timeout o --conflicts")
@@ -184,6 +188,7 @@ def main():
                                          capture_output=True, text=True).stdout.strip(),
         "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
         "seeds": seeds, "timeout": args.timeout, "conflicts": args.conflicts,
+        "mem_gb": args.mem_gb,
         "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a},
         "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b},
         "instances_filter": os.path.abspath(args.instances) if args.instances else None,
@@ -229,7 +234,8 @@ def main():
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
             status, code, wall, cpu, rss, stats = run_one(
                 args.solver if k == "A" else solver_b, inst, seed, presupuesto[0],
-                presupuesto[1], opts, hard_grace=30.0, env=env)
+                presupuesto[1], opts, hard_grace=30.0, env=env,
+                mem_bytes=int(args.mem_gb * (1 << 30)))
             escritores[k].escribir({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,

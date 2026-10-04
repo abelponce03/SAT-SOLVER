@@ -427,3 +427,40 @@ python3 scripts/scan_symmetry.py --bench bench/symm2026 --out results/b4/satsuma
 python3 scripts/scan_symmetry.py --bench bench/symm2026 --out results/b4/satsuma-mclique-symm2026.csv \
    --satsuma tools/satsuma-mclique --timeout 60 --mem-gb 6
 """
+
+# EXP-023 (research/11, D-020): B4 fuera de muestra, en las 374 instancias de
+# 2025 de <= 512 MiB.  La descarga es reanudable (salta lo que ya está).
+[[paso]]
+id = "exp023-descarga"
+descripcion = "EXP-023: descargar de GBD las 374 instancias de 2025 (bench/sc2025.list.csv)"
+requiere = ["bench/sc2025.list.csv"]
+hecho = "[ $(find bench/sc2025 -name '*.cnf.xz' 2>/dev/null | wc -l) -ge $(filas bench/sc2025.list.csv) ]"
+comando = """
+python3 -u scripts/fetch_gbd.py --list bench/sc2025.list.csv --out bench/sc2025 --timeout 600
+"""
+
+[[paso]]
+id = "exp023-satsuma"
+descripcion = "EXP-023 paso 1: rasgos de satsuma (mclique v2, 60 s, 6 GB) en las 374 de 2025"
+requiere = ["bench/sc2025", "tools/satsuma-mclique"]
+hecho = "[ $(filas results/exp023/satsuma.csv) -ge $(filas bench/sc2025.list.csv) ]"
+comando = """
+mkdir -p results/exp023
+python3 scripts/scan_symmetry.py --bench bench/sc2025 --out results/exp023/satsuma.csv \
+   --satsuma tools/satsuma-mclique --timeout 60 --mem-gb 6
+"""
+
+[[paso]]
+id = "exp023-ab"
+descripcion = "EXP-023 paso 2: labesat «nunca» frente a «siempre» en 2025 (T = 300 s, 6 GB), e informe con B4"
+requiere = ["results/exp023/satsuma.csv", "solver/kissat/build/kissat"]
+hecho = "n=$(filas bench/sc2025.list.csv); [ $(filas results/exp023/A.csv) -ge $n ] && [ $(filas results/exp023/B.csv) -ge $n ] && [ -f results/exp023/informe.md ]"
+comando = """
+ab --solver solver/labesat --bench bench/sc2025 \
+   --out-a results/exp023/A.csv --out-b results/exp023/B.csv \
+   --label-a A-nunca --label-b B-siempre \
+   --opts-a=--no-symmetry --opts-b=--symmetry \
+   --guard solver/kissat/build/kissat --guard tools/satsuma-mclique --guard solver/labesat \
+   --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/exp023.py analizar > results/exp023/informe.md 2>&1
+"""

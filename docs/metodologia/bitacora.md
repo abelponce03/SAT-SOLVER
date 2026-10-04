@@ -796,3 +796,24 @@ al cerrar cada sesión.
 - **Salió mal**: la primera evaluación no cargaba a B4 el tiempo de satsuma
   cuando no aplica, y salía demasiado buena en la industria (163 frente a
   166). Se corrigió antes de escribir nada.
+
+### 2026-10-04 (tarde) — Descarga de 2025, la entrada de satsuma y EXP-023
+
+- **Se pidió**: descargar las 374 instancias de 2025 y el paquete
+  `satsuma-kissat-sc.tar.xz` para leer qué Kissat y qué topes usaba.
+- **Se hizo**:
+  - Paquete leído sin ejecutarlo: Kissat 4.0.2 con prueba **VeriPB**,
+    satsuma 1.2 sin tope de tiempo, y un tope de 5 M variables. El 15.º de
+    2025 no es solo efecto de «siempre». research/10 §0c y D-020 (#34)
+    corregidos.
+  - `--mem-gb` en el arnés A/B: 2025 tiene instancias que agotaron 30 GB.
+  - **EXP-023 preregistrado**, con R fijada desde research/11. La descarga
+    pasa a la cola como su primer paso.
+- **Decisiones**:
+  - La descarga empezó a mano y se pasó a la cola, para que no hubiera dos
+    escribiendo los mismos ficheros. Es reanudable.
+  - B4 se compone a partir de las dos ramas, sin una tercera: cuesta lo
+    mismo y no deja margen para ajustar nada después.
+- **Salió mal**: la lectura de 2025 del día anterior atribuía el 15.º a
+  «siempre». El paquete mostró que era otra configuración, con otro formato
+  de prueba. Se corrigió en cuanto se leyó.
