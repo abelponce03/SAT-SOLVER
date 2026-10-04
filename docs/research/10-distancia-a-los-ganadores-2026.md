@@ -290,7 +290,7 @@ margen por donde el ganador es débil.
 | 3 | **PGO + LTO** en el paquete | −15 s | Adoptado (EXP-017) |
 | 4 | **Topes de satsuma (P5)**: medir el tiempo de satsuma en las instancias simétricas de 2026 que tengamos y decidir el tope con datos. El de 60 s ayuda en las 3 medidas; el riesgo está en las 11 que no podemos medir | Proteger el margen (hasta +270 s de riesgo) | **EXP-020 cerrado: se mantienen 60 s** (300 s resuelve las mismas y cuesta +24,6 s). El riesgo de las 11 se declara |
 | 5 | **Cobertura de X1**: en EXP-019, 103 sistemas XOR se saltan por los topes de memoria. Partirlos en componentes conexas (Gauss por componente) no cambia nada cuando no refuta (clase E con salida temprana) | Más refutaciones posibles a coste casi nulo | **EXP-021 cerrado: X1 v2 activa por defecto.** 56 de 103 pasan a «consistente», 0 refutadas; las 47 restantes tienen una componente gigante (X1 v3) |
-| 8 | **Selector entre «siempre» y «nunca» (B4)** | Hasta −395 s (oráculo); real, mucho menos | Línea de investigación (D-020, d). Sin instancias simétricas frescas no se puede validar |
+| 8 | **Selector entre «siempre» y «nunca» (B4)** | Hasta −395 s (oráculo); real, mucho menos | **research/11** (exploratorio): regla estructural sobre los rasgos de satsuma. Validación propuesta con las 374 instancias de 2025 (EXP-023), a falta del permiso de descarga |
 | 6 | **X1b y fases de Gauss** para la paridad mezclada | Hasta ~10 instancias del hueco | Tras EXP-019; clase S, con A/B |
 | 7 | **Selector para MAB** (D-018) | Hasta 14 instancias (oráculo); sin selector, nada | Solo si hay un predictor con evidencia |
 | — | ~~K1, precarga~~ | ×0,931: un 7 % **más lento** (EXP-018) | Descartada |

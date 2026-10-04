@@ -5,6 +5,27 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-04): research/11, B4 (selector estructural, exploratorio)
+- Paso `b4-rasgos` hecho: rasgos de satsuma de las 84 instancias del banco
+  simétrico (`results/b4/`).
+- La estructura combinatoria (`row_column`, `johnson`, `orbitopal_units`) no
+  aparece en **ninguna** de las 450 industriales, y sí en el 50 % del banco
+  simétrico (con `sym_units ≥ 100`).
+- Regla R, solo con datos de diseño (`scripts/b4_exploratorio.py`):
+
+  | Muestra | «siempre» | «nunca» | B4 |
+  |---|---|---|---|
+  | Banco simétrico, tiempos de 2026 | 103,8 | 3946,7 | 69,4 |
+  | EXP-009 | 204,6 | 194,6 | 197,7 |
+  | EXP-014 | 165,0 | 162,4 | 165,7 |
+
+  El umbral da lo mismo entre 50 y 200, y R coincide al 100 % entre las dos
+  builds de satsuma.
+- Validación propuesta (EXP-023), con R fijada: las 374 instancias de 2025
+  de ≤ 512 MiB. Pendiente del permiso de descarga.
+- Diagnóstico de `lucky` en *baseball-lineup* (42 s antes del primer
+  conflicto, Kissat de fábrica). No se toca: valor ≈ −0,2 s.
+
 ### Cerrado (2026-10-04): EXP-022, X1s activa por defecto
 - **H0**: X1s actúa en 7 instancias (4 sintéticas y 3 de 2026: `75429ff7`,
   `28dcc411` y `01d6fa8e`); los 7 modelos verificados contra la CNF

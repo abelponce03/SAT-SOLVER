@@ -778,3 +778,21 @@ al cerrar cada sesión.
   - En el cierre de EXP-022 se escribió de memoria que `28dcc411` dio
     TIMEOUT en EXP-007; los CSV dicen 151 y 162 s. Se corrigió antes del
     commit.
+
+### 2026-10-04 (mediodía) — B4, selector estructural (exploratorio)
+
+- **Se hizo**: con los rasgos del paso `b4-rasgos`, se comparó lo que
+  satsuma encuentra en el banco simétrico y en la industria. La estructura
+  combinatoria (matrices, subconjuntos, orbitopes) solo aparece en el
+  simétrico. Se definió la regla R y se evaluó con el tiempo de satsuma
+  cargado (research/11).
+- **Decisiones**:
+  - Se documenta como **exploratorio**: R se eligió mirando estos datos,
+    igual que el retraso de 2 s, que luego falló.
+  - R queda fijada ya, antes de ver 2025, para que la validación (EXP-023)
+    sea honesta.
+  - La validación necesita descargar las instancias de 2025 (≈ 2-3 GB). Se
+    pide permiso al director.
+- **Salió mal**: la primera evaluación no cargaba a B4 el tiempo de satsuma
+  cuando no aplica, y salía demasiado buena en la industria (163 frente a
+  166). Se corrigió antes de escribir nada.
