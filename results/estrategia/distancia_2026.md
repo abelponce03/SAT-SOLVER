@@ -5,11 +5,16 @@ Ganador: `anders_satsuma-iter-kissat[main]`, PAR-2 3647.0, 276 resueltas.
 | Configuración | Resueltas | PAR-2 | Δ frente al ganador | Puesto en 2026 |
 |---|---|---|---|---|
 | LabeSAT por defecto hoy (Kissat 4.0.4, sin simetrías) ≈ K | 238 | 4611.5 | +964.5 | 16 |
+| LabeSAT sin simetrías + X1 + PGO/LTO (V2 de D-014) | 240 | 4533.8 | +886.8 | 15 |
 | LabeSAT `--symmetry` siempre ≈ S (el ganador) | 276 | 3647.0 | +0.0 | 1 |
-| LabeSAT B3 (retraso 2 s) | 276 | 3644.5 | -2.5 | 1 |
-| LabeSAT B3 + X1 | 278 | 3587.9 | -59.1 | 1 |
-| LabeSAT B3 + X1 + PGO/LTO | 278 | 3572.3 | -74.7 | 1 |
-| Referencia: S + X1 (si el ganador tuviera X1) | 278 | 3590.5 | -56.5 | 1 |
+| B3 (retraso 2 s), descartada por EXP-009 | 276 | 3644.5 | -2.5 | 1 |
+| B3 + X1 + PGO/LTO, descartada por EXP-009 | 278 | 3572.3 | -74.7 | 1 |
+| LabeSAT siempre + X1 | 278 | 3590.5 | -56.5 | 1 |
+| **LabeSAT siempre + X1 + PGO/LTO** (V1 propuesta, D-020) | 278 | 3574.7 | -72.3 | 1 |
+| Oráculo «siempre» o «nunca» + X1 + PGO/LTO (selector perfecto) | 291 | 3252.4 | -394.6 | 1 |
+
+El selector perfecto elige «nunca» con ventaja en 139 instancias; de ellas, 13 solo las resuelve «nunca» y 51 solo «siempre».
+- Solo «nunca»: allowable-seqence (2), multiplier-circuit-miters (1), datapath-equivalence-checking (1), oddball-weighing (1), boxfolding (1), fermat (1), syndrome-decoding (1), sorting-networks (1), argumentation (1), coloring (1), st-connectivity-principle (1), ntil (1)
 
 X1 actúa en 4 instancias (lights-out UNSAT): 0efcbd10 (K 4288, S 2184), 32e344a5 (K inf, S inf), 667341ee (K 388, S 431), 80b163b7 (K inf, S inf)
 
@@ -45,11 +50,11 @@ Instancias que resuelve algún solver del top-10 de 2026 y LabeSAT final no: 56.
 
 | f | Resueltas | PAR-2 | Δ frente al ganador |
 |---|---|---|---|
-| 0.5 | 259 | 3862.2 | +215.2 |
-| 0.6 | 259 | 3856.5 | +209.4 |
-| 0.7 | 258 | 3863.8 | +216.8 |
-| 0.8 | 266 | 3744.3 | +97.2 |
-| 0.9 | 277 | 3586.2 | -60.9 |
+| 0.5 | 259 | 3864.9 | +217.9 |
+| 0.6 | 259 | 3859.1 | +212.1 |
+| 0.7 | 258 | 3866.4 | +219.4 |
+| 0.8 | 266 | 3746.8 | +99.8 |
+| 0.9 | 277 | 3588.7 | -58.4 |
 
-Oráculo (LabeSAT final, anders_satsuma-iter-ae-kissat-mab): 292 resueltas, PAR-2 3201.0.
+Oráculo (LabeSAT final, anders_satsuma-iter-ae-kissat-mab): 292 resueltas, PAR-2 3204.0.
 Oráculo de los 33 solvers de 2026: 354 resueltas, PAR-2 1495.5.

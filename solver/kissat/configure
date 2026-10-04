@@ -661,7 +661,8 @@ then
 fi
 
 # [SOLVER] X1: refutación de sistemas XOR (research/09); con ella existe la
-# opción '--gauss' del binario, apagada por defecto.
+# opción '--gauss' del binario, activa por defecto (EXP-019 y EXP-021).
+# 'scripts/build.sh' la pide siempre, salvo con '--no-gauss'.
 if [ $gauss = yes ]
 then
   CFLAGS="$CFLAGS -DLABESAT_GAUSS"

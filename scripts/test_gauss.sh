@@ -11,10 +11,12 @@
 #      --statistics idénticos): clase E con salida temprana.
 #   3. Por componentes conexas, refuta un subsistema pequeño inconsistente
 #      aunque el sistema entero no quepa en el tope de memoria.
-#   4. Con --gauss=0 (el valor por defecto) no aparece ningún mensaje de X1.
+#   4. X1 está activa por defecto (EXP-019 y EXP-021) y --gauss=0 la apaga:
+#      sin ningún mensaje de X1.
 #
 # Uso: [TOOLS=dir] ./scripts/test_gauss.sh [kissat-con-gauss]
-# Sin argumento compila solver/kissat/build-gauss/ si no existe.  TOOLS es el
+# Sin argumento compila solver/kissat/build-gauss/ si no existe ('build.sh'
+# compila con 'configure --gauss' por defecto).  TOOLS es el
 # directorio de los verificadores (por defecto tools/, scripts/get_tools.sh).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -104,11 +106,14 @@ if [ "$code" = 20 ] && grep -q "gauss: refuted" "$TMP/c.out"; then
     if [ $ok = 1 ]; then echo "OK    componentes: refuta la pequeña aunque el sistema entero no quepa (prueba verificada)"; fi
 else bad "componentes: X1 no refutó con --gaussbits=1 (código $code)"; fi
 
-# 4. Apagada por defecto.
+# 4. Activa por defecto; --gauss=0 la apaga.
 python3 "$ROOT/scripts/gen_paridad.py" lights-out 5 --seed 3 > "$TMP/d.cnf"
-"$K" --verbose=1 "$TMP/d.cnf" > "$TMP/d.out" 2>&1 || true
-if grep -q "gauss:" "$TMP/d.out"; then bad "X1 se ejecuta sin --gauss=1"
-else echo "OK    sin --gauss=1, X1 no se ejecuta"; fi
+code=0; "$K" "$TMP/d.cnf" > "$TMP/d.out" 2>&1 || code=$?
+if [ "$code" = 20 ] && grep -q "gauss: refuted" "$TMP/d.out"; then echo "OK    sin opciones, X1 se ejecuta y refuta"
+else bad "X1 no se ejecuta por defecto (código $code)"; fi
+"$K" --gauss=0 --verbose=1 "$TMP/d.cnf" > "$TMP/d.out" 2>&1 || true
+if grep -q "gauss:" "$TMP/d.out"; then bad "X1 se ejecuta con --gauss=0"
+else echo "OK    con --gauss=0, X1 no se ejecuta"; fi
 
 if [ $fail = 0 ]; then echo "test_gauss: todo correcto"; else echo "test_gauss: HAY FALLOS"; fi
 exit $fail

@@ -1,6 +1,7 @@
 # Investigación 10 — ¿A qué distancia está LabeSAT de los ganadores de 2026, y qué hacen ellos que podamos integrar?
 
-- **Fecha**: 2026-10-01
+- **Fecha**: 2026-10-01; **actualizado el 2026-10-03** con el cierre de
+  EXP-009, EXP-020 y EXP-021 (§0b).
 - **Pedido del director**: un análisis actual de lo lejos que está LabeSAT de
   vencer a los ganadores de la SAT Competition 2026 y de lo que hacen ellos
   que podamos integrar.
@@ -54,6 +55,41 @@
    - 12 son *linear-equations* SAT que solo resolvió `lymphosat`. **No** son
      XOR sobre GF(2) (§4), así que Gauss no sirve.
 
+## 0b. Actualización del 2026-10-03
+
+- **EXP-009 descarta B3.** En 153 instancias industriales frescas, el
+  retraso de 2 s empeora frente a «nunca» (+9,9 s, Wilcoxon p = 2,9·10⁻⁸).
+  La simulación que lo eligió (−2,4 s) era optimista, como advertía §2.2.3.
+- **La configuración candidata pasa a ser «siempre» + X1 + PGO/LTO.** Con
+  los tiempos de 2026: 278 resueltas, PAR-2 3575, **1.º por −72 s**.
+  - Es casi lo mismo que la cuenta anterior con B3 (−75 s): en 2026, B3 y
+    «siempre» solo se distinguían en 2,5 s.
+  - El coste industrial de «siempre» ya está dentro de los tiempos del
+    ganador.
+- **Sin simetrías**, con X1 y PGO/LTO: 240 resueltas, **15.º** (+887 s).
+- **Cómo se activa en el paquete** lo decide el director: **D-020**. Se
+  recomiendan dos variantes (D-014): V1 «siempre» y V2 «nunca».
+- **Un selector perfecto** entre «siempre» y «nunca» daría 291 resueltas y
+  PAR-2 3252 (−395 s).
+  - Es una cota de oráculo: aprovecha también la variación entre dos
+    corridas.
+  - De las 13 instancias que solo resuelve «nunca», **10 son SAT**
+    (*allowable-sequence*, *boxfolding*, *ntil*, *sorting-networks*,
+    *coloring*…) y 3 UNSAT. De las 51 que solo resuelve «siempre», **43 son
+    UNSAT**. Es lo que predice la teoría: los predicados de ruptura acortan
+    las refutaciones y quitan soluciones, que en SAT pueden estorbar.
+  - Es la línea B4 (D-020, opción d).
+- **EXP-020**: el tope de 60 s se mantiene. El de 300 s resuelve las mismas
+  y cuesta +24,6 s, y el riesgo de las 11 instancias no medibles (§2.2) se
+  declara.
+- **EXP-021**: X1 v2, por componentes, se activa por defecto. Procesa 56 de
+  los 103 sistemas que la v1 saltaba, sin cambiar la búsqueda.
+- **Probado en los datos de 2026 y descartado** (exploratorio): carteras
+  secuenciales entre «nunca» y «siempre».
+  - «Nunca» X s y luego «siempre»: empeora con cualquier X ≥ 10 s.
+  - «Siempre» X s y luego «nunca»: con X = 300 s da 279 resueltas y −18 s,
+    pero en la muestra de diseño, igual que B3. Con X ≥ 600 s empeora.
+
 ## 1. El campo de 2026 (Main Track, 400 instancias, T = 5000 s)
 
 | Puesto | Entrada | Resueltas (SAT / UNSAT) | PAR-2 | Qué hace |
@@ -85,8 +121,11 @@ ruptura de simetrías acorta las pruebas de insatisfacibilidad
 | `--symmetry` siempre ≈ S | 276 | 3647,0 | 0 | empate |
 | B3 (retraso de 2 s) | 276 | 3644,5 | −2,5 | 1 |
 | B3 + X1 | 278 | 3587,9 | −59,1 | 1 |
-| **B3 + X1 + PGO/LTO** | **278** | **3572,3** | **−74,7** | **1** |
+| B3 + X1 + PGO/LTO (**descartada por EXP-009**) | 278 | 3572,3 | −74,7 | 1 |
 | Referencia: el ganador con X1 | 278 | 3590,5 | −56,5 | — |
+| **«Siempre» + X1 + PGO/LTO (V1 propuesta, D-020)** | **278** | **3574,7** | **−72,3** | **1** |
+| «Nunca» + X1 + PGO/LTO (V2 propuesta, D-020) | 240 | 4533,8 | +886,8 | 15 |
+| Selector perfecto entre las dos (cota) | 291 | 3252,4 | −394,6 | 1 |
 
 Detalle:
 
@@ -132,7 +171,7 @@ margen por donde el ganador es débil.
 
 | Técnica | Quién | ¿En LabeSAT? | Evidencia y decisión |
 |---|---|---|---|
-| Ruptura de simetrías con satsuma | 1.º, 2.º, 3.º–6.º, 8.º | **Sí** (ADR-0004 y ADR-0007; mclique v2) | Toda la ventaja del ganador. Su activación la decide **EXP-009 (B3)**, en la cola |
+| Ruptura de simetrías con satsuma | 1.º, 2.º, 3.º–6.º, 8.º | **Sí** (ADR-0004 y ADR-0007; mclique v2) | Toda la ventaja del ganador. EXP-009 descartó B3; cómo se activa en el paquete, **D-020** |
 | Topes de satsuma (componentes, modelos, tamaño) | 3.º–6.º | En parte (60 s, 512 MiB) | §2.2: el riesgo y la ventaja de nuestros topes. Acción 4 |
 | Bandido VSIDS/CHB (MAB), evolucionado con LLM en 2025 | 2.º, 3.º–6.º | **No** (D-018) | Más SAT (+9) y menos UNSAT (−16) que el 1.º. Ver §3.2 |
 | Un solver por familia | 7.º | No | No se generaliza a familias nuevas. Sus 12 *linear-equations* no son GF(2) (§4) |
@@ -180,11 +219,12 @@ margen por donde el ganador es débil.
 
 | # | Acción | Valor esperado | Estado |
 |---|---|---|---|
-| 1 | **EXP-009 (B3)**: decide si la ruptura de simetrías se activa y cómo. Es la diferencia entre el puesto 16 y el 1 | −964 s frente a la configuración por defecto de hoy | En la cola, tras EXP-019 |
+| 1 | **EXP-009 (B3)**: decide si la ruptura de simetrías se activa y cómo. Es la diferencia entre el puesto 16 y el 1 | −964 s frente a la configuración por defecto de hoy | **Cerrado (2026-10-03): B3 descartado.** El paquete, «siempre» (V1) y «nunca» (V2): **D-020** |
 | 2 | **Activar X1** (EXP-019) | −56 s; +2 que nadie resolvió | **EXP-019 cerrado: se adopta.** *xor-chain* y *tseitin-formulas* van codificadas con contadores unarios, sin XOR: X1 no las alcanza (EXP-019 §7) |
 | 3 | **PGO + LTO** en el paquete | −15 s | Adoptado (EXP-017) |
-| 4 | **Topes de satsuma (P5)**: medir el tiempo de satsuma en las instancias simétricas de 2026 que tengamos y decidir el tope con datos. El de 60 s ayuda en las 3 medidas; el riesgo está en las 11 que no podemos medir | Proteger el margen (hasta +270 s de riesgo) | **EXP-020 preregistrado**: 13 candidatas, fase 1 (satsuma solo, 300 s) y A/B con B3 a T = 1200 s; en la cola tras EXP-009 |
-| 5 | **Cobertura de X1**: en EXP-019, 103 sistemas XOR se saltan por los topes de memoria. Partirlos en componentes conexas (Gauss por componente) no cambia nada cuando no refuta (clase E con salida temprana) | Más refutaciones posibles a coste casi nulo | **Hecho** (research/09 §3.4, X1 v2); **EXP-021 preregistrado** sobre las 103 saltadas |
+| 4 | **Topes de satsuma (P5)**: medir el tiempo de satsuma en las instancias simétricas de 2026 que tengamos y decidir el tope con datos. El de 60 s ayuda en las 3 medidas; el riesgo está en las 11 que no podemos medir | Proteger el margen (hasta +270 s de riesgo) | **EXP-020 cerrado: se mantienen 60 s** (300 s resuelve las mismas y cuesta +24,6 s). El riesgo de las 11 se declara |
+| 5 | **Cobertura de X1**: en EXP-019, 103 sistemas XOR se saltan por los topes de memoria. Partirlos en componentes conexas (Gauss por componente) no cambia nada cuando no refuta (clase E con salida temprana) | Más refutaciones posibles a coste casi nulo | **EXP-021 cerrado: X1 v2 activa por defecto.** 56 de 103 pasan a «consistente», 0 refutadas; las 47 restantes tienen una componente gigante (X1 v3) |
+| 8 | **Selector entre «siempre» y «nunca» (B4)** | Hasta −395 s (oráculo); real, mucho menos | Línea de investigación (D-020, d). Sin instancias simétricas frescas no se puede validar |
 | 6 | **X1b y fases de Gauss** para la paridad mezclada | Hasta ~10 instancias del hueco | Tras EXP-019; clase S, con A/B |
 | 7 | **Selector para MAB** (D-018) | Hasta 14 instancias (oráculo); sin selector, nada | Solo si hay un predictor con evidencia |
 | — | ~~K1, precarga~~ | ×0,931: un 7 % **más lento** (EXP-018) | Descartada |

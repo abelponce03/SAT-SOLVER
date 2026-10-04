@@ -1,8 +1,9 @@
 # EXP-020 — ¿Subir el tope de tiempo de satsuma de 60 s a 300 s? (P5, preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con
-  `scripts/exp020.py` y `results/exp020/candidatas.txt`. No hay ejecuciones
-  previas.
+- **Estado**: **cerrado (2026-10-03): se mantiene el tope de 60 s.** El de
+  300 s resuelve las mismas (9 de 13) con más PAR-2 (+24,6 s); resultados en
+  §7. Se commiteó antes de ejecutar, junto con `scripts/exp020.py` y
+  `results/exp020/candidatas.txt`. No hubo ejecuciones previas.
 - **Fecha**: 2026-10-01
 - **Decide**: el tope de tiempo de satsuma en `labesat`
   (`LABESAT_SYMM_TIMEOUT`, hoy 60 s) para los experimentos siguientes y el
@@ -122,8 +123,66 @@ significación estadística: la regla es de dominancia.
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **Apagado de la máquina a mitad de la fase 2** (2026-10-03, de 14:02 a
+  14:50 hora local). El servicio retomó la tanda en la misma máquina con
+  `--resume` (ADR-0008): conservó las 4 parejas completas y descartó la fila
+  A a medias de `3728eb69`, que se repitió entera. Las ramas siguen
+  intercaladas, así que no hay sesgo entre A y B.
+- **satsuma muere en 6 de las 13 de la fase 1**, todas de más de 7,8
+  millones de cláusulas, con el tope de 6 GB de `compare_satsuma_builds.py`:
+  - 5 abortan (`std::bad_alloc`, salida −6);
+  - 1 se cae con SIGSEGV (`b3233e00`, 15 millones de cláusulas, salida −11).
+
+  En `labesat` no hay respuesta errónea: si satsuma sale con cualquier
+  código distinto de 0 (tiempo, memoria o señal), se cae a Kissat solo
+  (`run_plain`). Solo se pierde el tiempo hasta la caída. El SIGSEGV queda
+  anotado como fallo de robustez de satsuma cuando se queda sin memoria.
 
 ## 7. Resultados
 
-(pendiente)
+Informe: `results/exp020/informe.md` (`exp020.py analizar`).
+
+**Fase 1 (Q1)**: satsuma solo, con tope de 300 s:
+
+| Resultado | Instancias | Detalle |
+|---|---|---|
+| Termina entre 60 y 300 s | **5** | 66, 125, 165, 179 y 201 s |
+| Agota los 300 s | 2 | 10 y 25 millones de cláusulas |
+| Muere por memoria (6 GB) | 6 | §6 |
+
+En las 5 que terminan, la ruptura apenas cambia la fórmula:
+
+- de −2 % a −6 % de cláusulas en tres de ellas;
+- +0,1 % en `bc198d71`;
+- −33 % en `8db998d5`, que Kissat resuelve igual en 1 s.
+
+**Fase 2 (Q2)**: `labesat` con B3, T = 1200 s, n = 13:
+
+| | Tope 60 s | Tope 300 s |
+|---|---|---|
+| Resueltas | 9 | 9 |
+| PAR-2 medio | 826,1 | 850,6 |
+
+- Las dos resuelven las mismas 9.
+- El coste del tope alto se ve en `80bb5209`: con 60 s, satsuma se corta y
+  Kissat resuelve en 69 s; con 300 s, se esperan los 300 s y tarda 309 s.
+  En `8bb5819a`, satsuma termina a los 165 s, y aun así B tarda más que A
+  (142 frente a 91 s).
+- En ninguna candidata la ruptura que llega tarde resuelve algo que el tope
+  de 60 s no resolviera.
+
+**Decisión (§4)**: **se mantiene el tope de 60 s**. El de 300 s resuelve
+las mismas y su PAR-2 es mayor (+24,6 s de media).
+
+Lo que §4 manda informar:
+
+- **5 de las 13 candidatas terminan entre 60 y 300 s**, y en ninguna eso da
+  una instancia más.
+- **El riesgo de research/10 §2.2 sigue abierto.** Son las 11 instancias de
+  2026 en las que el ganador tarda más de 60 s y que no tenemos en disco.
+  Los datos locales apuntan a que el tope no las perdería (aquí, la ruptura
+  tardía no aporta), pero no lo prueban. Se declara en la descripción para
+  la competición.
+- **Nota de diseño**: la fase 2 usó B3, que EXP-009 descartó después. La
+  pregunta del tope es ortogonal al retraso (§3), y con «siempre» el coste
+  de esperar a satsuma sería el mismo.

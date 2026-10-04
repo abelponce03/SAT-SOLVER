@@ -1,8 +1,9 @@
 # EXP-021 — X1 v2: Gauss por componentes conexas (preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con
-  `scripts/exp021.py` y `results/exp021/muestra.csv`. La implementación
-  (research/09 §3.4, commit `14f2a2e`) solo se ha ejecutado en
+- **Estado**: **cerrado (2026-10-03): se activa X1 v2 por defecto.** H0, H1
+  y H2 se cumplen; resultados en §7. Se commiteó antes de ejecutar, junto
+  con `scripts/exp021.py` y `results/exp021/muestra.csv`. La implementación
+  (research/09 §3.4, commit `14f2a2e`) solo se había ejecutado en
   `test_gauss.sh`, con familias sintéticas.
 - **Fecha**: 2026-10-01
 - **Decide**: si la versión de X1 que se activa por defecto es la v2 (por
@@ -87,8 +88,48 @@ Son las de EXP-019, con los mismos umbrales, sobre las 103 instancias:
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- **La equivalencia tardó ~38 h, no ~1 h** (del 2026-10-02 a las 03:03 UTC
+  al 2026-10-03 a las 17:00 UTC). Son las instancias más grandes de los
+  bancos, hasta 127 MB comprimidas: justo las que la v1 saltaba por tamaño.
+  20 000 conflictos en ellas, dos veces, cuestan mucho más que en la muestra
+  de EXP-019. El log no guarda tiempos por instancia. Ninguna corrida llegó
+  al tope de 3600 s: las 103 parejas tienen los 81 contadores. No afecta a
+  la validez, solo a la estimación del coste.
+- **El informe se titula «EXP-019»**: `exp021.py analizar` reutiliza el
+  análisis de EXP-019 (§3), y la tabla v1 → v2 sí es la de EXP-021.
 
 ## 7. Resultados
 
-(pendiente)
+Informe: `results/exp021/informe.md`. Binario: `build-x1v2`, compilado por
+la cola desde el commit de `results/exp021/commit.txt`.
+
+| Hipótesis | Resultado | ¿Se cumple? |
+|---|---|---|
+| H0 (seguridad) | Ninguna refutación: 0 errores y 0 pruebas que verificar | Sí (no se puso a prueba en este experimento) |
+| H1 (equivalencia) | **103 de 103** parejas con los 81 contadores idénticos: 18 SAT, 17 UNSAT y 68 sin decidir a los 20 000 conflictos | Sí |
+| H2 (coste) | Mediana 0,080 s, **p95 0,34 s**, **máximo 1,47 s** | Sí (≤ 1 s y ≤ 10 s) |
+
+**H3 (cobertura)**:
+
+| v1 → v2 | Instancias |
+|---|---|
+| saltada → **consistente** | **56** |
+| saltada → saltada | 47 |
+| saltada → refutada | 0 |
+
+- **Se cumplió la predicción**: la mayoría pasa a «consistente» y ninguna
+  se refuta, aunque había 41 UNSAT en la muestra. Las XOR industriales
+  forman sistemas consistentes, porque son puertas que se definen unas a
+  otras.
+- **Las 47 que siguen saltadas** tienen una componente gigante que supera
+  por sí sola los 256 Mbit. La mayor tiene 230 530 filas sobre 252 422
+  variables (`d1dbf88a`), que con historial son ≈ 10¹¹ bits. Ni el tope ni
+  el Lema 6 cambian eso: haría falta eliminar sin historial (X1 v3,
+  research/10 §5) o con matrices dispersas.
+- **H2 holgada**: la v2 hace más trabajo que la v1 en estas instancias, y
+  aun así el máximo (1,47 s, en `d1dbf88a`, que acaba saltada) queda lejos
+  de 10 s.
+
+**Decisión (§4, fila 1)**: se activa por defecto **X1 v2**. `build.sh`
+compila con `--gauss` salvo que se pida `--no-gauss`, y la opción `--gauss`
+vale 1.

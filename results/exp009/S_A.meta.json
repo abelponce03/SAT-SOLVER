@@ -1,0 +1,46 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_sha1": "ee15c41cc318d590a6eb7a95807825ea304e74e3",
+  "solver_b": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_b_sha1": "ee15c41cc318d590a6eb7a95807825ea304e74e3",
+  "solver_b_version": "4.0.4",
+  "solver_id": "495512fb7d4de4b87009239573429bca4d3b417d",
+  "git_commit": "f964837435ab14ef177279886fd540639ea29d08",
+  "solver_id_coincide_con_head": false,
+  "guardas_sha1": {
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build/kissat": "28b587cf6ecfadad73e29de35c363ecbf6c72dd8",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma-mclique": "6156e2426de09a65f95b2008c66aa42d7efbcee8"
+  },
+  "git_dirty": true,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/symm2026"
+  ],
+  "n_parejas": 74,
+  "seeds": [
+    1
+  ],
+  "timeout": 180.0,
+  "conflicts": null,
+  "rama_a": {
+    "label": "A-siempre",
+    "opts": "--symmetry",
+    "env": {}
+  },
+  "rama_b": {
+    "label": "B-retraso2",
+    "opts": "--symmetry --symmetry-delay=2",
+    "env": {}
+  },
+  "instances_filter": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/results/exp009/secundario.txt",
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    1.61181640625,
+    1.6220703125,
+    1.63525390625
+  ],
+  "started_at": "2026-10-02T01:53:51+00:00"
+}

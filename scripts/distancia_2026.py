@@ -14,6 +14,10 @@ la competición sí midió:
        que se declaran (cliquer frente a mclique v2, EXP-011; sin topes frente
        a 60 s / 512 MiB).
   B3   ruptura con retraso X (EXP-009): t = t_K si t_K <= X; si no, X + t_S.
+       EXP-009 la descartó (2026-10-03): en la industria fresca empeora
+       frente a «nunca». Se conserva la fila como referencia histórica.
+  SEL  oráculo de simetrías: el mejor de K y S en cada instancia. Es la cota
+       de lo que daría un selector perfecto entre «siempre» y «nunca».
   X1   refutación por Gauss (research/09): las lights-out UNSAT son sistemas
        lineales inconsistentes por construcción (Ax = t sin solución). Su CNF
        son XOR de hasta 5 variables o cadenas de XOR de 3 con unitarias
@@ -77,16 +81,21 @@ def main():
     tB3 = np.where(tK <= X, tK, X + tS)
     x1 = ((fam == "lights-out") & (vres == "unsat")).values
     tB3X1 = np.where(x1, np.minimum(T_X1, tB3), tB3)
-    tFin = tB3X1 / PGO
     tSX1 = np.where(x1, np.minimum(T_X1, tS), tS)
+    tKX1 = np.where(x1, np.minimum(T_X1, tK), tK)
+    # Tras EXP-009, la configuración final es «siempre» (S) + X1 + PGO/LTO.
+    tFin = tSX1 / PGO
+    tSel = np.minimum(tSX1, tKX1) / PGO
 
     filas = [
         ("LabeSAT por defecto hoy (Kissat 4.0.4, sin simetrías) ≈ K", tK),
+        ("LabeSAT sin simetrías + X1 + PGO/LTO (V2 de D-014)", tKX1 / PGO),
         ("LabeSAT `--symmetry` siempre ≈ S (el ganador)", tS),
-        (f"LabeSAT B3 (retraso {X:g} s)", tB3),
-        (f"LabeSAT B3 + X1", tB3X1),
-        (f"LabeSAT B3 + X1 + PGO/LTO", tFin),
-        ("Referencia: S + X1 (si el ganador tuviera X1)", tSX1),
+        (f"B3 (retraso {X:g} s), descartada por EXP-009", tB3),
+        (f"B3 + X1 + PGO/LTO, descartada por EXP-009", tB3X1 / PGO),
+        ("LabeSAT siempre + X1", tSX1),
+        ("**LabeSAT siempre + X1 + PGO/LTO** (V1 propuesta, D-020)", tFin),
+        ("Oráculo «siempre» o «nunca» + X1 + PGO/LTO (selector perfecto)", tSel),
     ]
     out = []
     p = lambda *x: out.append(" ".join(str(y) for y in x))
@@ -97,10 +106,17 @@ def main():
     for nombre, t in filas:
         v = par2(t)
         p(f"| {nombre} | {resueltas(t)} | {v:.1f} | {v - campo[S]:+.1f} | {puesto(v, campo.drop([S]) if 'ganador' in nombre else campo)} |")
+    gS = (tSel < tFin)
+    p(f"\nEl selector perfecto elige «nunca» con ventaja en {int(gS.sum())} instancias; "
+      f"de ellas, {int(((tKX1 <= TIMEOUT) & ~(tSX1 <= TIMEOUT)).sum())} solo las resuelve «nunca» "
+      f"y {int(((tSX1 <= TIMEOUT) & ~(tKX1 <= TIMEOUT)).sum())} solo «siempre».")
+    solo_k = (tKX1 <= TIMEOUT) & ~(tSX1 <= TIMEOUT)
+    if solo_k.any():
+        p("- Solo «nunca»: " + ", ".join(f"{f} ({c})" for f, c in pd.Series(fam.values[solo_k]).value_counts().items()))
     p(f"\nX1 actúa en {int(x1.sum())} instancias (lights-out UNSAT): "
       + ", ".join(f"{h[:8]} (K {tK[i]:.0f}, S {tS[i]:.0f})" for i, h in enumerate(tm.columns) if x1[i]))
 
-    # ¿Dónde pierde y dónde gana B3 + X1 + PGO frente al ganador?
+    # ¿Dónde pierde y dónde gana LabeSAT final frente al ganador?
     gana = (tFin <= TIMEOUT) & ~(tS <= TIMEOUT)
     pierde = ~(tFin <= TIMEOUT) & (tS <= TIMEOUT)
     p(f"\nFrente al ganador: LabeSAT final resuelve {int(gana.sum())} que él no y pierde {int(pierde.sum())} que él sí.")

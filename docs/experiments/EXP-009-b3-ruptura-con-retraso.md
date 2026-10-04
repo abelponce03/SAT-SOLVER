@@ -1,7 +1,9 @@
 # EXP-009 — B3: ruptura de simetrías con retraso (preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea **antes** de ejecutar, junto con
-  la implementación (`solver/labesat --symmetry-delay`), sus pruebas
+- **Estado**: **cerrado (2026-10-03): se descarta el retraso de 2 s.** En el
+  contraste principal, B empeora frente a «nunca» con Wilcoxon p = 2,9·10⁻⁸
+  (fila 4 de §4); resultados en §7. Se commiteó **antes** de ejecutar, junto
+  con la implementación (`solver/labesat --symmetry-delay`), sus pruebas
   (`scripts/test_symmetry.sh`) y la selección y el análisis
   (`scripts/exp009.py`, `results/exp009/*.txt`, `grupos.csv`).
 - **Fecha**: 2026-09-30
@@ -130,6 +132,68 @@ python3 scripts/exp009.py analizar
   a medias se descarta y se repite entera. Las dos ramas siguen intercaladas,
   así que la pausa no introduce sesgo entre A y B.
 
+- **2026-10-01 a 02, reanudación.** Tras EXP-016 a EXP-019, la cola retomó
+  el contraste principal en la misma máquina y con el mismo binario
+  (`--guard` comprobó los SHA-1 de `build/kissat` y de satsuma). Terminó el
+  2026-10-02 a las 01:53 UTC, y el secundario a las 03:00 UTC. Ninguna
+  corrida salió con ERROR.
+
 ## 7. Resultados
 
-(pendiente)
+Informe: `results/exp009/informe.txt` (`exp009.py analizar`).
+
+| Contraste | n | Resueltas A / B | PAR-2 A / B | ΔPAR-2 (IC95 %) | Wilcoxon p |
+|---|---|---|---|---|---|
+| **Principal**: retraso 2 s (B) frente a nunca (A), T = 300 s | 153 | 110 / 108 | 194,6 / 204,6 | **+9,94 s** [−3,56; +22,90] | 2,9·10⁻⁸ |
+| — de ellas, S (satsuma rompe algo) | 113 | | | +8,29 s | |
+| — de ellas, no-S | 40 | | | +14,60 s | |
+| **Secundario**: retraso 2 s (B) frente a siempre (A), T = 180 s | 74 | 70 / 70 | 36,3 / 37,5 | +1,22 s [+0,09; +1,89] | 1,8·10⁻⁹ |
+
+- **H1 no se cumple**: el retraso no mejora a «nunca», y la diferencia va en
+  contra. McNemar: solo B resuelve 2 y solo A 4 (p = 0,69).
+- **H2 sí se cumple**: frente a «siempre», la espera cuesta +1,22 s, por
+  debajo del umbral de +5 s.
+
+**Decisión (§4)**: se aplica la **fila 4**. B empeora frente a A con
+p < 0,05 en el principal, así que **se descarta el retraso de 2 s**.
+
+- No queda como variante: la fila 2 era para «sin diferencia», y la hay, en
+  contra.
+- `labesat --symmetry-delay` se conserva, a 0 por defecto, para reproducir
+  este experimento.
+- `--symmetry` sigue apagado por defecto. La política de simetrías del
+  paquete de competición pasa a ser una decisión del director: **D-020**.
+
+### 7.1 Dónde está el coste (exploratorio, no preregistrado)
+
+ΔPAR-2 por instancia (B − A), por grupo y por lo que tarda A:
+
+| A tarda | S: n | S: Δ medio | S: Δ mediano | no-S: n | no-S: Δ medio |
+|---|---|---|---|---|---|
+| < 2 s | 41 | +0,01 | 0,00 | 6 | +0,01 |
+| 2–10 s | 14 | +8,4 | +4,0 | 2 | +3,3 |
+| 10–60 s | 24 | +24,3 | +24,9 | 6 | +19,7 |
+| 60–300 s | 12 | +95,8 | +16,1 | 5 | +91,8 |
+| TIMEOUT | 22 | −41,5 | 0,00 | 21 | 0,00 |
+
+- **El daño está en las instancias medianas**, las que Kissat solo resuelve
+  entre 2 y 300 s. Ahí B paga los 2 s perdidos, satsuma, la segunda lectura
+  y, sobre todo, una trayectoria distinta.
+  - En *station-repacking*, que es el peor caso, satsuma tarda ~35 s
+    (EXP-014 §8.3).
+  - Hay pérdidas mayores que esa suma: `2efa3ca1` (*scheduling*, no-S) pasa
+    de 88 a 238 s. Aunque no rompa nada, satsuma reescribe la fórmula
+    (EXP-014 §8.1) y la búsqueda cambia.
+- **La ganancia está en pocas instancias difíciles**:
+  - `bf6a49b7` (*scheduling*): TIMEOUT con A, UNSAT en 3,8 s con B;
+  - `bb86b80e` (*miter*): TIMEOUT con A, UNSAT en 283 s con B.
+- B pierde 4 que A resolvía en 191–286 s: dos *scheduling*, una
+  *argumentation* y una *station-repacking*.
+- **La simulación era optimista**: predecía −2,4 s (EXP-014 §8.3) y la
+  medida en instancias frescas es +9,9 s. X se eligió mirando los datos
+  (§5), y una sola semilla no separa bien una diferencia de este tamaño.
+- **En la industria, toda forma de ruptura cuesta un poco**: «siempre» costó
+  +2,9 s en EXP-014 y el retraso +9,9 s aquí, en muestras distintas y con
+  IC que se solapan. **En lo simétrico, la ganancia es enorme**: −140 s de
+  PAR-2 en EXP-007 y +38 resueltas para el ganador de 2026. research/10 §2
+  rehace la cuenta con «siempre» (D-020).

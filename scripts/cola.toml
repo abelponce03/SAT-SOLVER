@@ -76,7 +76,7 @@ id = "exp012"
 descripcion = "EXP-012: equivalencia de kissat --symmetry con la tubería"
 hecho = "[ $(filas results/exp012/equivalencia.csv) -ge $(find bench/symm2026 -name '*.cnf*' | wc -l) ]"
 comando = """
-[ -x solver/kissat/build-symm/kissat ] || ./scripts/build.sh --dir=build-symm --symmetry --clean
+[ -x solver/kissat/build-symm/kissat ] || ./scripts/build.sh --dir=build-symm --symmetry --no-gauss --clean
 python3 scripts/compare_integrada.py --bench bench/symm2026 \
    --integrado solver/kissat/build-symm/kissat --kissat solver/kissat/build/kissat \
    --conflicts 100000 --out results/exp012/equivalencia.csv --resume
@@ -168,10 +168,10 @@ descripcion = "EXP-017: compilar build-base, build-pgo, build-march y build-fma 
 requiere = ["scripts/pgo_entrenamiento.txt", "bench/calib2"]
 hecho = "for d in build-base build-pgo build-march build-fma; do [ -x solver/kissat/$d/kissat ] || exit 1; done"
 comando = """
-./scripts/build.sh --dir=build-base --clean --jobs=4
-./scripts/build.sh --dir=build-pgo --clean --pgo --lto --jobs=4
-./scripts/build.sh --dir=build-march --clean --pgo --lto --march=x86-64-v3 --jobs=4
-./scripts/build.sh --dir=build-fma --clean --control-fma=x86-64-v3 --jobs=4
+./scripts/build.sh --dir=build-base --clean --no-gauss --jobs=4
+./scripts/build.sh --dir=build-pgo --clean --pgo --lto --no-gauss --jobs=4
+./scripts/build.sh --dir=build-march --clean --pgo --lto --march=x86-64-v3 --no-gauss --jobs=4
+./scripts/build.sh --dir=build-fma --clean --control-fma=x86-64-v3 --no-gauss --jobs=4
 sha1sum solver/kissat/build-*/kissat > results/exp017/binarios.sha1
 { git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp017/commit.txt
 """
@@ -222,8 +222,8 @@ descripcion = "EXP-018: compilar build-base18 y build-k1 (--prefetch=8) desde el
 requiere = ["results/exp017/banco.txt"]
 hecho = "for d in build-base18 build-k1; do [ -x solver/kissat/$d/kissat ] || exit 1; done"
 comando = """
-./scripts/build.sh --dir=build-base18 --clean --jobs=4
-./scripts/build.sh --dir=build-k1 --clean --prefetch=8 --jobs=4
+./scripts/build.sh --dir=build-base18 --clean --no-gauss --jobs=4
+./scripts/build.sh --dir=build-k1 --clean --prefetch=8 --no-gauss --jobs=4
 mkdir -p results/exp018
 sha1sum solver/kissat/build-base18/kissat solver/kissat/build-k1/kissat > results/exp018/binarios.sha1
 { git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp018/commit.txt

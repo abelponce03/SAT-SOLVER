@@ -158,9 +158,11 @@ vigente es el del plan.
 - [x] EXP-008: se mantiene 4.0.4 (D-013). EXP-010/011: **mclique v2
       adoptada** (D-005). EXP-012: el binario integrado es equivalente a la
       tubería.
-- [ ] **EXP-009 (B3)**: ruptura con retraso; la simulación con X = 2 s
-      mejora a «siempre» y a «nunca» en los dos bancos. Falta preregistrarlo y
-      validarlo con datos nuevos.
+- [x] **EXP-009 (B3)**: la ruptura con retraso de 2 s **se descarta**. En
+      153 instancias industriales frescas empeora frente a «nunca» (+9,9 s,
+      Wilcoxon p = 2,9·10⁻⁸); la simulación era optimista. Cómo se activan
+      las simetrías en el paquete: **D-020** (recomendado: V1 «siempre» y
+      V2 «nunca»).
 - [ ] D-018: línea VSIDS/CHB, pendiente del director.
 
 ### Fase 3c — Optimización con demostración · desde 2026-10-01
@@ -181,18 +183,22 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
 - [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
       prueba escrita antes de implementar.
 - [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):
-      B3 (EXP-009) y X1.
+      la ruptura de simetrías (D-020) y X1.
   - [x] research/09: familias que separan los sistemas, diseño y Teorema 1
         de X1.
   - [x] X1 en Kissat detrás de `configure --gauss`; `test_gauss.sh` en
         verde con los tres verificadores.
   - [x] **EXP-019**: se adopta X1 (0 errores, 321/321 equivalentes, p95
-        0,37 s). Se activa por defecto tras EXP-021 (v2, por componentes).
-  - [ ] **EXP-021**: X1 v2 (por componentes) en las 103 instancias saltadas;
-        decide qué versión se activa por defecto.
-  - [ ] X1b (unidades y equivalencias del sistema XOR), si EXP-019 sale bien.
-- [ ] **EXP-020**: tope de satsuma, 60 s frente a 300 s (el mayor riesgo sin
-      medir de research/10).
+        0,37 s).
+  - [x] **EXP-021**: X1 v2 procesa 56 de los 103 sistemas saltados, sin
+        cambiar la búsqueda. **X1 v2 activa por defecto** (2026-10-03);
+        `build/` compilado con PGO + LTO.
+  - [ ] X1 v3: eliminación sin historial para las 47 componentes gigantes.
+  - [ ] X1b (unidades y equivalencias del sistema XOR).
+- [x] **EXP-020**: se mantiene el tope de satsuma de 60 s (300 s resuelve
+      las mismas y cuesta +24,6 s). El riesgo de research/10 §2.2 se declara.
+- [ ] B4: selector entre «siempre» y «nunca» (D-020, opción d). Cota de
+      oráculo en 2026: −395 s.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

@@ -5,6 +5,60 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cambiado (2026-10-03): X1 activa por defecto y compilación PGO + LTO
+- **X1 v2** (refutación de sistemas XOR por Gauss, research/09) pasa a estar
+  **activa por defecto**:
+  - `build.sh` compila con `configure --gauss` salvo con `--no-gauss`;
+  - la opción `--gauss` vale 1.
+  - Con un sistema consistente, o sin XOR, la búsqueda es idéntica a la de
+    antes (EXP-019 y EXP-021: 424 de 424 parejas con los contadores
+    idénticos).
+- `build/` se compila con `--pgo --lto`, la compilación adoptada en EXP-017.
+  Se esperó a que terminara EXP-009, que medía con el binario anterior.
+- Los pasos ya hechos de la cola que compilaban binarios sin X1 (EXP-012,
+  EXP-017 y EXP-018) llevan ahora `--no-gauss`, para que reproducirlos dé
+  el mismo binario.
+- `test_gauss.sh` comprueba que X1 actúa sin opciones y que `--gauss=0` la
+  apaga.
+- Manual de usuario y página `man`: X1, sus opciones y la compilación de
+  competición.
+
+### Cerrado (2026-10-03): EXP-009, se descarta el retraso de 2 s (B3)
+- Principal (153 instancias industriales frescas, T = 300 s): el retraso
+  **empeora** frente a «nunca», ΔPAR-2 +9,9 s, IC95 % [−3,6; +22,9],
+  Wilcoxon p = 2,9·10⁻⁸. Resueltas: 108 frente a 110.
+- Secundario (74 de EXP-007): frente a «siempre», la espera cuesta +1,2 s
+  (H2 sí).
+- Se aplica la fila 4 del criterio: **B3 se descarta**. `--symmetry-delay`
+  se conserva, a 0 por defecto, para reproducirlo.
+- El coste está en las instancias medianas (2–300 s): satsuma, la segunda
+  lectura y una trayectoria distinta.
+- **D-020**: cómo se activan las simetrías en el paquete. Se recomienda
+  V1 «siempre» y V2 «nunca», las dos con X1 y PGO + LTO.
+
+### Cerrado (2026-10-03): EXP-021, X1 v2 por defecto
+- De los 103 sistemas que la v1 saltaba, la v2 procesa **56**, todos
+  consistentes; 0 refutaciones. Las 47 restantes tienen una componente
+  gigante (hasta 230 530 filas).
+- H1: 103 de 103 parejas con los contadores idénticos. H2: p95 0,34 s,
+  máximo 1,47 s.
+
+### Cerrado (2026-10-03): EXP-020, se mantiene el tope de satsuma de 60 s
+- Fase 1: con 300 s, satsuma termina en 5 de las 13 candidatas; muere por
+  memoria en 6 (una con SIGSEGV).
+- Fase 2 (T = 1200 s): las dos ramas resuelven las mismas 9; el tope de
+  300 s cuesta +24,6 s de PAR-2.
+- El riesgo de las 11 instancias de 2026 no medibles sigue abierto y se
+  declara.
+
+### Cambiado (2026-10-03): research/10 rehecho tras EXP-009
+- La configuración candidata pasa a ser «siempre» + X1 + PGO/LTO: 1.º con
+  −72 s (antes, B3 + X1 + PGO/LTO, −75 s).
+- `distancia_2026.py` añade la V2 («nunca» + X1 + PGO/LTO, 15.º) y el
+  selector perfecto entre «siempre» y «nunca» (−395 s, cota de oráculo).
+  - Lo que solo resuelve «nunca» es casi todo SAT (10 de 13).
+  - Lo que solo resuelve «siempre», casi todo UNSAT (43 de 51).
+
 ### Añadido (2026-10-01): EXP-020 y EXP-021 preregistrados
 - **EXP-020**: ¿subir el tope de satsuma de 60 s a 300 s?
   - Fase 1: satsuma solo, en las 13 instancias en las que agotó los 60 s

@@ -1,0 +1,60 @@
+{
+  "diseno": "A/B intercalado (run_ab_interleaved.py)",
+  "solver": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_sha1": "ee15c41cc318d590a6eb7a95807825ea304e74e3",
+  "solver_b": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/labesat",
+  "solver_b_sha1": "ee15c41cc318d590a6eb7a95807825ea304e74e3",
+  "solver_b_version": "4.0.4",
+  "solver_id": "495512fb7d4de4b87009239573429bca4d3b417d",
+  "git_commit": "1ce8d4a0d2fc106edab829f18a9c42ea04167102",
+  "solver_id_coincide_con_head": false,
+  "guardas_sha1": {
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/solver/kissat/build/kissat": "28b587cf6ecfadad73e29de35c363ecbf6c72dd8",
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/tools/satsuma-mclique": "6156e2426de09a65f95b2008c66aa42d7efbcee8"
+  },
+  "git_dirty": false,
+  "solver_version": "4.0.4",
+  "benches": [
+    "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/bench/tesis-dev"
+  ],
+  "n_parejas": 153,
+  "seeds": [
+    42
+  ],
+  "timeout": 300.0,
+  "rama_a": {
+    "label": "A-nunca",
+    "opts": "--no-symmetry",
+    "env": {}
+  },
+  "rama_b": {
+    "label": "B-retraso2",
+    "opts": "--symmetry --symmetry-delay=2",
+    "env": {}
+  },
+  "instances_filter": "/home/abel/Escritorio/PROYECTOS/SAT-SOLVER/.claude/worktrees/labesat-solver-optimization-69f5f4/results/exp009/principal.txt",
+  "host": "ROCO",
+  "nproc": 8,
+  "platform": "Linux-6.17.0-42-generic-x86_64-with-glibc2.39",
+  "loadavg": [
+    1.142578125,
+    1.0166015625,
+    1.19384765625
+  ],
+  "started_at": "2026-10-01T00:38:58+00:00",
+  "reanudaciones": [
+    {
+      "git_commit": "14f2a2e007092217f09b3776080b67a2a02352c7",
+      "git_dirty": true,
+      "host": "ROCO",
+      "loadavg": [
+        1.4951171875,
+        1.71728515625,
+        1.95849609375
+      ],
+      "started_at": "2026-10-01T18:58:41+00:00",
+      "solver_id_coincide_con_head": false,
+      "parejas_conservadas": 62
+    }
+  ]
+}

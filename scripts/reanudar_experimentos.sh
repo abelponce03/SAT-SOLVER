@@ -117,7 +117,7 @@ paso_exp011_parte2() {
 paso_exp012() {
   log "EXP-012: equivalencia de kissat --symmetry con la tubería"
   if [ ! -x solver/kissat/build-symm/kissat ]; then
-    ./scripts/build.sh --dir=build-symm --symmetry --clean || return 1
+    ./scripts/build.sh --dir=build-symm --symmetry --no-gauss --clean || return 1
   fi
   local esperadas=$(( $(find bench/symm2026 -name '*.cnf*' | wc -l) ))
   if [ "$(filas results/exp012/equivalencia.csv)" -ge "$esperadas" ]; then

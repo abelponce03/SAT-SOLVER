@@ -663,3 +663,42 @@ al cerrar cada sesión.
   codifican la paridad con contadores unarios. Se documenta como límite de
   X1.
 
+
+### 2026-10-03 — Cierre de EXP-009, EXP-020 y EXP-021; X1 por defecto; D-020
+
+- **Se pidió**: continuar («continua») con la consigna de seguir mejorando
+  LabeSAT mientras corren los experimentos. La cola había terminado.
+- **Se hizo**:
+  - **EXP-009 cerrado**: el retraso de 2 s (B3) se descarta. Empeora frente
+    a «nunca» en 153 instancias frescas (fila 4 del criterio). Análisis
+    exploratorio: el coste está en las instancias medianas.
+  - **EXP-021 cerrado**: X1 v2 procesa 56 de los 103 sistemas saltados y
+    pasa a estar **activa por defecto** (`build.sh` con `--gauss`, la
+    opción a 1).
+  - **EXP-020 cerrado**: se mantiene el tope de 60 s.
+  - `build/` recompilado con PGO + LTO, lo adoptado en EXP-017, ahora que
+    ninguna tanda lo vigila.
+  - research/10 rehecho: «siempre» + X1 + PGO/LTO queda 1.º con −72 s en
+    2026, y el selector perfecto entre «siempre» y «nunca» es una cota de
+    −395 s.
+  - **D-020** registrada (política de simetrías del paquete), con issue.
+  - Manual, página `man`, CHANGELOG, ROADMAP y plan al día.
+- **Decisiones**:
+  - Se aplicó la fila 4 de EXP-009 y no la 2: hay diferencia, y va en
+    contra.
+  - La política de simetrías del paquete no la decide un experimento sino
+    el director (D-020). Mientras tanto no cambia ningún valor por defecto.
+  - Los pasos históricos de la cola llevan `--no-gauss`, para que
+    reproducirlos dé el mismo binario.
+- **Salió mal**:
+  - La simulación que eligió X = 2 s predecía −2,4 s, y la medida fresca
+    dio +9,9 s. Elegir un parámetro con los mismos datos con los que se
+    evalúa infló el efecto, como advertía el propio preregistro (§5).
+  - La estimación de EXP-021 (~1 h) se quedó corta: la equivalencia tardó
+    ~38 h, porque la muestra eran justo las instancias más grandes.
+  - Se tuvieron que corregir dos cifras del borrador de EXP-020 (el rango de
+    cambio de cláusulas) y la explicación del respaldo de satsuma, antes de
+    commitear.
+- **Aprendido**: en 2026, lo que solo resuelve «nunca» es casi todo SAT y lo
+  que solo resuelve «siempre», casi todo UNSAT. Un selector entre los dos
+  tiene que predecir SAT/UNSAT, que es justo lo difícil.

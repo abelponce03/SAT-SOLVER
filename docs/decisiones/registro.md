@@ -34,6 +34,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-017 | Cómo comparar LabeSAT con el Kissat de la tesis (otra máquina y otra 4.0.x) | ✅ **opción b** (2026-09-30): EXP-013 calibra ambos grupos (0,26 y 0,47, IC ±8 %); las features se deciden con A/B local | Director | §D-017 · EXP-013 · issue #28 |
 | D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | ✅ **opción a** (2026-10-01): sin `-march` ni en la competición ni en los experimentos; solo PGO + LTO | Director | §D-019 · issue #33 · EXP-017 §7 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
+| D-020 | Política de simetrías del paquete de competición tras descartar B3 | 🟡 recomendada la a: V1 «siempre» y V2 «nunca», las dos con X1 y PGO + LTO | Director | §D-020 · issue #34 · EXP-009 §7 · [research/10](../research/10-distancia-a-los-ganadores-2026.md) §2 |
 
 ---
 
@@ -299,3 +300,51 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   - La compilación adoptada es `build.sh --pgo --lto` (EXP-017, ×1,030).
   - `--march` sigue en `build.sh` solo para reproducir EXP-017.
 
+## D-020 — Política de simetrías del paquete de competición
+
+- **Surge**: el 2026-10-03, al cerrar EXP-009. B3, la ruptura con retraso
+  de 2 s, era la forma prevista de activar las simetrías por defecto, y se
+  descarta: en 153 instancias industriales frescas empeora frente a «nunca»
+  (ΔPAR-2 +9,9 s, Wilcoxon p = 2,9·10⁻⁸).
+- **Contexto**:
+  - En la industria, cualquier forma de ruptura cuesta un poco: «siempre»,
+    +2,9 s de PAR-2 (EXP-014); con retraso, +9,9 s (EXP-009). Son muestras
+    distintas, con intervalos que se solapan.
+  - En lo simétrico, la ganancia es enorme. EXP-007: −140 s de PAR-2. En
+    2026, el ganador es exactamente «siempre» (satsuma + Kissat 4.0.4):
+    +38 resueltas y −964 s frente a Kissat solo, con el coste industrial ya
+    incluido.
+  - research/10 §2, rehecho con los tiempos oficiales de 2026:
+
+    | Configuración | Resueltas | PAR-2 | Puesto |
+    |---|---|---|---|
+    | «siempre» + X1 + PGO/LTO | 278 | 3575 | 1.º (−72 s) |
+    | «nunca» + X1 + PGO/LTO | 240 | 4534 | 15.º (+887 s) |
+    | Selector perfecto entre las dos (cota) | 291 | 3252 | — |
+
+  - CLAUDE.md §5: una opción de búsqueda sigue apagada por defecto hasta que
+    un experimento la valide. «Siempre» no pasó el criterio de EXP-014 en la
+    industria, así que `--symmetry` sigue apagado por defecto en el binario
+    y en el guion. Lo que se decide aquí es qué se entrega, y D-014 ya
+    permite hasta 4 variantes.
+- **Opciones**:
+  - **a. (recomendada)** Dos variantes, como propone D-014:
+    - **V1** = `labesat --symmetry` («siempre», tope de 60 s por EXP-020) +
+      X1 + PGO/LTO;
+    - **V2** = `labesat` sin simetrías + X1 + PGO/LTO, como cobertura frente
+      a un 2027 con menos simetría.
+  - **b.** Una sola variante, «siempre».
+  - **c.** Una sola variante, «nunca», que es el valor por defecto de hoy.
+    Con los datos de 2026 es el puesto 15.
+  - **d.** Buscar antes un selector entre «siempre» y «nunca» (B4), con un
+    experimento preregistrado. Hay hasta −395 s de margen en 2026, pero es
+    una cota de oráculo. Lo que solo resuelve «nunca» es casi todo SAT (10 de
+    13), y lo que solo resuelve «siempre», casi todo UNSAT (43 de 51): elegir
+    bien exige predecir SAT/UNSAT, que es lo difícil (research/10 §3.2). Además, faltan instancias simétricas frescas para
+    validarlo: habría que descargar más (permiso aparte), porque `bench/test`
+    está reservado.
+- **Recomendación**: a ahora, y d como línea de investigación. La a es lo
+  que respaldan los datos, y la V2 limita el daño si 2027 trae poca
+  simetría.
+- **Mientras tanto**: no cambia ningún valor por defecto. Los experimentos
+  que midan la configuración de V1 la piden con `--symmetry`.

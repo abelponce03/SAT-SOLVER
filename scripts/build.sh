@@ -10,6 +10,11 @@
 #   ./scripts/build.sh --stats         # release + contadores de estadísticas completos
 #   ./scripts/build.sh --competition   # configuración de entrega (--no-options --quiet)
 #   ./scripts/build.sh --symmetry      # satsuma integrado en el binario (D-016, ADR-0007)
+#   ./scripts/build.sh --no-gauss      # sin X1 (refutación de sistemas XOR por Gauss,
+#                                      # research/09).  Por defecto se compila con
+#                                      # 'configure --gauss' y la opción vale 1 (EXP-019
+#                                      # y EXP-021); --no-gauss reproduce los binarios
+#                                      # de los experimentos anteriores
 #   ./scripts/build.sh --dir=NOMBRE    # compila en solver/kissat/NOMBRE en vez de build/
 #                                      # (p. ej. mientras un experimento vigila build/kissat)
 #   ./scripts/build.sh --lto           # optimización en tiempo de enlace (-flto)
@@ -20,6 +25,9 @@
 #                                      # instrumentado, entrenamiento con las instancias de
 #                                      # scripts/pgo_entrenamiento.txt y recompilación con el
 #                                      # perfil (ADR-0009, clase E)
+#
+# La compilación adoptada de LabeSAT (EXP-017, D-019) es  --pgo --lto ; la de
+# competición,  --competition --pgo --lto .
 #   ./scripts/build.sh --jobs=N        # procesos de make (por defecto, nproc)
 #   ./scripts/build.sh --control-fma=X # SOLO para el control negativo de EXP-017: -march=X
 #                                      # SIN -ffp-contract=off. Puede cambiar la búsqueda;
@@ -38,6 +46,7 @@ CONFIGURE_ARGS=()
 CLEAN=0
 DIR=build
 PGO=0
+GAUSS=1
 JOBS="$(nproc 2>/dev/null || echo 4)"
 for arg in "$@"; do
     case "$arg" in
@@ -45,6 +54,8 @@ for arg in "$@"; do
         --lto)      CONFIGURE_ARGS+=("-flto") ;;
         --march=*)  CONFIGURE_ARGS+=("CC=gcc -march=${arg#--march=}" "-ffp-contract=off") ;;
         --pgo)      PGO=1 ;;
+        --gauss)    GAUSS=1 ;;     # ya es el valor por defecto; se admite por compatibilidad
+        --no-gauss) GAUSS=0 ;;
         --control-fma=*) CONFIGURE_ARGS+=("CC=gcc -march=${arg#--control-fma=}") ;;
         --jobs=*)   JOBS="${arg#--jobs=}" ;;
         # Los nombres de la izquierda son NUESTROS; a la derecha van las opciones
@@ -58,6 +69,8 @@ for arg in "$@"; do
         *)          CONFIGURE_ARGS+=("$arg") ;;
     esac
 done
+
+[ "$GAUSS" = 1 ] && CONFIGURE_ARGS+=("--gauss")
 
 cd "$KISSAT_DIR"
 

@@ -23,6 +23,9 @@ results/**/*.csv
 results/**/*.json
 results/logs/
 results/.estado/
+# marcas de pasos de la cola y CNF sintéticas regenerables (gen_paridad.py)
+results/**/*.hecho
+results/exp019/sinteticas/
 !results/*.reference.csv
 !results/.gitkeep
 
