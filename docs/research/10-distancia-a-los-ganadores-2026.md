@@ -133,6 +133,19 @@ a «nunca» en 2026, **40 son de familias que no estaban en 2025**:
   decida por la estructura que encuentra satsuma (filas intercambiables,
   tamaño del grupo), no por SAT/UNSAT. Los rasgos de EXP-014 ya existen
   para la industria; faltan los del banco simétrico.
+- **Ninguna configuración gana los dos años**:
+
+  | Configuración | 2025 | 2026 |
+  |---|---|---|
+  | satsuma + Kissat («siempre») | 15.º | **1.º** |
+  | satsuma + AE-Kissat-MAB | no participó | 2.º (+50 s) |
+  | AE-Kissat-MAB, sin satsuma | **1.º** | 19.º o peor (`ding_kissat-mab-eae*`), por debajo de Kissat |
+  | Kissat sin simetrías (Kissat-public / kissat-biere) | 2.º | 16.º |
+
+  Con las cuatro variantes de D-014, la rejilla {con / sin simetrías} ×
+  {Kissat / MAB} tiene una variante cerca del primer puesto en cada uno de
+  los dos regímenes. Para las dos variantes con MAB hace falta D-018
+  (portar el bandido), y cada variante necesita su propia validación.
 - **Robustez**: hay que poder limitar la **memoria** de satsuma, no solo el
   tamaño de la CNF. En competición, una explosión de memoria de satsuma
   puede matar la corrida entera en vez de caer al respaldo.

@@ -269,6 +269,12 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     cambiaría la base sin EXP-008 y mezclaría dos cambios.
 - **Mientras tanto**: nada; no se toca código hasta que EXP-008 decida la
   base (D-013).
+- **Dato nuevo (2026-10-04)** (research/10 §0c): AE-Kissat-MAB **ganó
+  2025**, por delante de Kissat-public. En 2026, sin satsuma quedó por
+  debajo de Kissat, y con satsuma, 2.º a 50 s del ganador. Con «siempre»
+  (15.º en 2025 y 1.º en 2026), la rejilla {con / sin simetrías} ×
+  {Kissat / MAB} tiene una variante arriba en cada régimen. Es un argumento
+  a favor de la opción b para V3/V4 (D-014).
 
 ## D-019 — ¿`-march=x86-64-v3` en el paquete de competición?
 
