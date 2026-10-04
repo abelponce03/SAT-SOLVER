@@ -13,6 +13,11 @@
 #      aunque el sistema entero no quepa en el tope de memoria.
 #   4. X1 está activa por defecto (EXP-019 y EXP-021) y --gauss=0 la apaga:
 #      sin ningún mensaje de X1.
+#   5. X1s (research/09 §3.5, --gausslucky=1): en las variantes satisfacibles
+#      la solución de Gauss es un modelo; 'lucky' la asigna, sin conflictos,
+#      y verify_model.py acepta el modelo contra la CNF.  Con una cláusula
+#      ajena que la solución no cumple, X1s se rechaza y la búsqueda es la
+#      misma que con --gausslucky=0.
 #
 # Uso: [TOOLS=dir] ./scripts/test_gauss.sh [kissat-con-gauss]
 # Sin argumento compila solver/kissat/build-gauss/ si no existe ('build.sh'
@@ -59,7 +64,9 @@ for spec in "${FAMILIAS[@]}"; do
 done
 
 # 2. Variantes satisfacibles: ni refuta ni cambia la búsqueda.
-cuenta() { awk '/^c [a-z_0-9]+:[ ]+[0-9]+/ { n=$2; if (n ~ /time|resident|memory|real|process|second/) next; print n, $3 } /^s / {print}'; }
+# Fuera también 'allocated_*' (solo en builds con métricas, configure -g): es
+# el pico de memoria, que X1 sube con sus matrices; no es la búsqueda.
+cuenta() { awk '/^c [a-z_0-9]+:[ ]+[0-9]+/ { n=$2; if (n ~ /time|resident|memory|real|process|second|allocated/) next; print n, $3 } /^s / {print}'; }
 for spec in "${FAMILIAS[@]}"; do
     f="$TMP/s.cnf"
     python3 "$ROOT/scripts/gen_paridad.py" $spec --seed 3 --sat > "$f"
@@ -114,6 +121,48 @@ else bad "X1 no se ejecuta por defecto (código $code)"; fi
 "$K" --gauss=0 --verbose=1 "$TMP/d.cnf" > "$TMP/d.out" 2>&1 || true
 if grep -q "gauss:" "$TMP/d.out"; then bad "X1 se ejecuta con --gauss=0"
 else echo "OK    con --gauss=0, X1 no se ejecuta"; fi
+
+# 5. X1s.
+for spec in "${FAMILIAS[@]}"; do
+    f="$TMP/s.cnf"
+    python3 "$ROOT/scripts/gen_paridad.py" $spec --seed 3 --sat > "$f"
+    "$K" --gausslucky=1 --statistics "$f" > "$TMP/l.out" 2>&1 || true
+    if grep -q "lucky Gauss solution" "$TMP/l.out" && grep -q "^s SATISFIABLE" "$TMP/l.out" &&
+       grep -qE "^c conflicts:[[:space:]]+0 " "$TMP/l.out" &&
+       python3 "$ROOT/scripts/verify_model.py" --model "$TMP/l.out" "$f" > /dev/null 2>&1; then
+        echo "OK    $spec --sat: X1s asigna la solución de Gauss, 0 conflictos, modelo verificado"
+    else bad "$spec --sat: X1s no resolvió con un modelo válido"; fi
+done
+# Rechazo: una cláusula nueva que la solución de Gauss (libres a 1) incumple
+# no es XOR; X1s calcula σ, la descarta y no toca el solver.
+python3 "$ROOT/scripts/gen_paridad.py" lights-out 5 --seed 3 --sat > "$TMP/s.cnf"
+"$K" --gausslucky=1 --verbose=1 --conflicts=0 "$TMP/s.cnf" > "$TMP/r.out" 2>&1 || true
+modelo=$(python3 - "$TMP/r.out" <<'PY'
+import re, sys
+# La solución de Gauss sale en la línea «v» (X1s la asignó): su negación
+# sobre las 3 primeras variables es una cláusula que σ incumple.
+vals = [int(t) for l in open(sys.argv[1]) if l.startswith("v ") for t in l[2:].split()]
+print(" ".join(str(-x) for x in vals[:3]))
+PY
+)
+python3 - "$TMP/s.cnf" "$modelo" > "$TMP/x.cnf" <<'PY'
+import sys
+lines = open(sys.argv[1]).read().splitlines()
+cls = [l for l in lines if l and l[0] not in "cp"]
+n = int(next(l for l in lines if l.startswith("p")).split()[2])
+print(f"p cnf {n} {len(cls) + 1}")
+print("\n".join(cls))
+print(sys.argv[2], 0)
+PY
+"$K" --gausslucky=1 --verbose=1 --conflicts=0 "$TMP/x.cnf" > "$TMP/x.out" 2>&1 || true
+"$K" --gausslucky=0 --seed=1 --conflicts=2000 --statistics "$TMP/x.cnf" > "$TMP/a.out" 2>&1 || true
+"$K" --gausslucky=1 --seed=1 --conflicts=2000 --statistics "$TMP/x.cnf" > "$TMP/b.out" 2>&1 || true
+cuenta < "$TMP/a.out" > "$TMP/a"
+cuenta < "$TMP/b.out" > "$TMP/b"
+if grep -q "falsifies a clause" "$TMP/x.out" && ! grep -q "lucky Gauss solution" "$TMP/x.out" &&
+   cmp -s "$TMP/a" "$TMP/b"; then
+    echo "OK    X1s rechazada: σ incumple una cláusula y la búsqueda es idéntica ($(wc -l < "$TMP/a") contadores)"
+else bad "X1s rechazada: no se rechazó o la búsqueda cambió"; fi
 
 if [ $fail = 0 ]; then echo "test_gauss: todo correcto"; else echo "test_gauss: HAY FALLOS"; fi
 exit $fail

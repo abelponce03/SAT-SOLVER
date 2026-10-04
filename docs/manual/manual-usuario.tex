@@ -213,6 +213,12 @@ opción.
         vivifica antes las cláusulas cuya variable menos activa tiene mayor
         puntuación. Con \texttt{0}, la búsqueda es idéntica a la de Kissat
         4.0.4. Cerrada sin efecto detectado (EXP-015).
+  \item[\texttt{--gausslucky=1}] \emph{X1s}: si el sistema XOR es consistente
+        y una solución suya satisface todas las cláusulas, se asigna antes de
+        buscar (research/09 §3.5). Resuelve al instante las familias de
+        paridad puras satisfacibles (\emph{lights-out},
+        \emph{random-graph-xorsat}); en el resto no cambia nada. En
+        evaluación: EXP-022.
   \item[\texttt{--modeadaptive=1}] Reparto adaptativo del presupuesto entre
         los modos estable y enfocado (A4.1). Cerrado sin efecto detectado
         (EXP-006); se conserva para reproducir aquel experimento.

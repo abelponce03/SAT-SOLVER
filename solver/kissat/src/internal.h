@@ -242,6 +242,9 @@ struct kissat {
 #endif
 
   statistics statistics;
+#ifdef LABESAT_GAUSS
+  value *gauss_model; /* [SOLVER] X1s: σ verificada (research/09 §3.5) */
+#endif
 };
 
 #define VARS (solver->vars)

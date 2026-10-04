@@ -19,7 +19,13 @@
 
    Si el sistema es consistente, o algún límite no se cumple, no se emite
    nada ni se modifica el estado del solver: la búsqueda que sigue es la
-   misma que sin X1. */
+   misma que sin X1.
+
+   X1s (research/09 §3.5, opción 'gausslucky'): si todas las componentes son
+   consistentes, una solución particular σ (sustitución hacia atrás, Lema 7)
+   se comprueba contra todas las cláusulas irredundantes sin escribir nada.
+   Solo si las satisface se guarda, y 'kissat_lucky' la asigna la primera
+   (Proposición 4: sin conflicto). */
 
 #ifdef LABESAT_GAUSS
 
@@ -28,8 +34,10 @@
 #include "inline.h"
 #include "internal.h"
 #include "logging.h"
+#include "decide.h"
 #include "error.h"
 #include "print.h"
+#include "proprobe.h"
 #include "proof.h"
 #include "resources.h"
 
@@ -69,8 +77,9 @@ static int compare_candidates (const void *p, const void *q) {
   return 0;
 }
 
-static bool make_candidate (gauss_candidate *c, unsigned size,
-                            const unsigned *lits) {
+static bool make_candidate (kissat *solver, gauss_candidate *c,
+                            unsigned size, const unsigned *lits) {
+  (void) solver; // 'IDX' lo usa solo con asertos (configure -g)
   unsigned sorted[GAUSS_MAX_K];
   for (unsigned i = 0; i != size; i++) {
     unsigned lit = lits[i], j = i;
@@ -318,6 +327,104 @@ static uint64_t emit_proof (kissat *solver, const unsigneds *rows,
 }
 
 /* Raíz de la unión-búsqueda, con compresión de caminos a la mitad. */
+/* X1s, Lema 7: R en forma escalonada (filas 0..rank-1, pivote de la fila i
+   en pivcol[i], creciente).  Las columnas libres valen 'initial'; cada pivote
+   se fija de la última fila a la primera.  La fila i solo tiene columnas
+   >= pivcol[i], y 'sol' no tiene bits a partir de m, así que el AND ya
+   descarta la paridad y el historial. */
+static void gauss_back_substitute (kissat *solver, uint64_t **R, unsigned rank,
+                                   const unsigned *pivcol, unsigned m,
+                                   const unsigned *colvar, value initial,
+                                   value *sigma) {
+  const unsigned cw = (m + 63) / 64;
+  uint64_t *sol = kissat_calloc (solver, cw, 8);
+  if (initial > 0)
+    for (unsigned col = 0; col != m; col++)
+      sol[col / 64] |= (uint64_t) 1 << (col % 64);
+  for (unsigned i = 0; i != rank; i++) // los pivotes se calculan, no se fijan
+    sol[pivcol[i] / 64] &= ~((uint64_t) 1 << (pivcol[i] % 64));
+  for (unsigned i = rank; i-- != 0;) {
+    const uint64_t *row = R[i];
+    unsigned acc = (unsigned) (row[m / 64] >> (m % 64)) & 1u;
+    for (unsigned w = pivcol[i] / 64; w != cw; w++)
+      acc ^= (unsigned) __builtin_popcountll (row[w] & sol[w]) & 1u;
+    if (acc)
+      sol[pivcol[i] / 64] |= (uint64_t) 1 << (pivcol[i] % 64);
+  }
+  for (unsigned col = 0; col != m; col++)
+    sigma[colvar[col]] = (sol[col / 64] >> (col % 64)) & 1 ? 1 : -1;
+  kissat_dealloc (solver, sol, cw, 8);
+}
+
+/* X1s: ¿satisface σ todas las cláusulas irredundantes?  Solo lee. */
+static bool gauss_satisfies_all (kissat *solver, const value *sigma,
+                                 size_t *checked) {
+  size_t n = 0;
+  for (all_literals (lit)) {
+    const value a = NEGATED (lit) ? -sigma[IDX (lit)] : sigma[IDX (lit)];
+    watches *ws = &WATCHES (lit);
+    for (all_binary_blocking_watches (watch, *ws)) {
+      if (!watch.type.binary)
+        continue;
+      const unsigned other = watch.binary.lit;
+      if (lit > other)
+        continue;
+      n++;
+      const value b =
+          NEGATED (other) ? -sigma[IDX (other)] : sigma[IDX (other)];
+      if (a < 0 && b < 0) {
+        *checked = n;
+        return false;
+      }
+    }
+  }
+  for (all_clauses (c)) {
+    if (c->garbage || c->redundant)
+      continue;
+    n++;
+    bool satisfied = false;
+    for (all_literals_in_clause (lit, c)) {
+      const value v = NEGATED (lit) ? -sigma[IDX (lit)] : sigma[IDX (lit)];
+      if (v > 0) {
+        satisfied = true;
+        break;
+      }
+    }
+    if (!satisfied) {
+      *checked = n;
+      return false;
+    }
+  }
+  *checked = n;
+  return true;
+}
+
+/* X1s, Proposición 4: con σ ⊨ F, asumir σ variable a variable y propagar no
+   produce conflicto y deja todas asignadas.  Se llama desde 'kissat_lucky',
+   con 'probing' puesto. */
+int kissat_gauss_lucky (kissat *solver) {
+  value *sigma = solver->gauss_model;
+  if (!sigma)
+    return 0;
+  solver->gauss_model = 0;
+  assert (!solver->level);
+  for (all_variables (idx)) {
+    if (!ACTIVE (idx))
+      continue;
+    const unsigned lit = LIT (idx);
+    if (VALUE (lit))
+      continue;
+    kissat_internal_assume (solver, sigma[idx] > 0 ? lit : NOT (lit));
+    if (kissat_probing_propagate (solver, 0, true))
+      kissat_fatal ("gauss: conflict assigning the Gauss solution "
+                    "(internal error)");
+  }
+  kissat_dealloc (solver, sigma, VARS, sizeof (value));
+  assert (!solver->unassigned);
+  kissat_message (solver, "lucky Gauss solution of the XOR system (X1s)");
+  return 10;
+}
+
 static inline unsigned gauss_find (unsigned *parent, unsigned x) {
   while (parent[x] != x)
     x = parent[x] = parent[parent[x]];
@@ -349,7 +456,7 @@ int kissat_gauss (kissat *solver) {
         continue;
       const unsigned lits[2] = {lit, other};
       gauss_candidate c;
-      if (make_candidate (&c, 2, lits))
+      if (make_candidate (solver, &c, 2, lits))
         PUSH_STACK (candidates, c);
       if (SIZE_STACK (candidates) > max_candidates) {
         too_many = true;
@@ -363,7 +470,7 @@ int kissat_gauss (kissat *solver) {
     if (c->garbage || c->redundant || c->size > max_size)
       continue;
     gauss_candidate cand;
-    if (make_candidate (&cand, c->size, c->lits))
+    if (make_candidate (solver, &cand, c->size, c->lits))
       PUSH_STACK (candidates, cand);
     if (SIZE_STACK (candidates) > max_candidates)
       too_many = true;
@@ -496,17 +603,28 @@ int kissat_gauss (kissat *solver) {
   unsigned largest = 0;
   unsigneds certificate;
   INIT_STACK (certificate);
+  // X1s: solo si 'kissat_lucky' la va a usar antes del preproceso.
+  const bool x1s = GET_OPTION (gausslucky) && GET_OPTION (lucky) &&
+                   GET_OPTION (luckyearly);
+  value *sigma = x1s ? kissat_calloc (solver, VARS, sizeof (value)) : 0;
+  double x1s_time = 0;
+  unsigneds colvars;
+  INIT_STACK (colvars);
   for (unsigned c = 0; c != num_components && EMPTY_STACK (certificate); c++) {
     const unsigned *crow = comp_rows + comp_start[c];
     const unsigned n = comp_start[c + 1] - comp_start[c];
     if (n > largest)
       largest = n;
     unsigned m = 0; // columnas locales
+    CLEAR_STACK (colvars);
     for (unsigned i = 0; i != n; i++) {
       const unsigned *vars = BEGIN_STACK (rows) + PEEK_STACK (starts, crow[i]);
       for (unsigned k = 0; k != PEEK_STACK (sizes, crow[i]); k++)
-        if (column[vars[k]] == INVALID_IDX)
+        if (column[vars[k]] == INVALID_IDX) {
           column[vars[k]] = m++;
+          if (x1s)
+            PUSH_STACK (colvars, vars[k]);
+        }
     }
     const uint64_t words = ((uint64_t) m + 1 + n + 63) / 64;
     const uint64_t bits = words * 64 * n;
@@ -532,6 +650,7 @@ int kissat_gauss (kissat *solver) {
         row[h / 64] |= (uint64_t) 1 << (h % 64);
       }
       unsigned rank = 0;
+      unsigned *pivcol = x1s ? kissat_nalloc (solver, n, sizeof (unsigned)) : 0;
       for (unsigned col = 0; col != m && rank != n; col++) {
         const unsigned w = col / 64;
         const uint64_t bit = (uint64_t) 1 << (col % 64);
@@ -550,6 +669,8 @@ int kissat_gauss (kissat *solver) {
             for (uint64_t k = w; k != words; k++)
               row[k] ^= piv[k];
         }
+        if (pivcol)
+          pivcol[rank] = col;
         rank++;
       }
       rank_total += rank;
@@ -577,7 +698,14 @@ int kissat_gauss (kissat *solver) {
         kissat_dealloc (solver, mark, m, 1);
         if (odd || !sum_parity)
           kissat_fatal ("gauss: invalid certificate (internal error)");
+      } else if (pivcol) {
+        const double t = kissat_process_time ();
+        gauss_back_substitute (solver, R, rank, pivcol, m,
+                               BEGIN_STACK (colvars), INITIAL_PHASE, sigma);
+        x1s_time += kissat_process_time () - t;
       }
+      if (pivcol)
+        kissat_dealloc (solver, pivcol, n, sizeof (unsigned));
       kissat_dealloc (solver, R, n, sizeof (uint64_t *));
       kissat_dealloc (solver, matrix, n * words, 8);
     }
@@ -609,12 +737,42 @@ int kissat_gauss (kissat *solver) {
                     "(%u of %u components over the limits, %.2f seconds)",
                     skipped_rows, skipped_columns, skipped, num_components,
                     kissat_process_time () - started);
-  else
+  else {
     kissat_verbose (solver,
                     "gauss: %u XOR rows over %u variables are consistent "
                     "(rank %u, %.2f seconds)",
                     num_rows, num_columns, rank_total,
                     kissat_process_time () - started);
+    if (sigma) {
+      // σ completa: la raíz en las fijadas, la fase inicial fuera del sistema.
+      const double t = kissat_process_time ();
+      for (unsigned idx = 0; idx != VARS; idx++) {
+        const value v = values[LIT (idx)];
+        if (v)
+          sigma[idx] = v;
+        else if (!sigma[idx])
+          sigma[idx] = INITIAL_PHASE;
+      }
+      size_t checked;
+      const bool all = gauss_satisfies_all (solver, sigma, &checked);
+      x1s_time += kissat_process_time () - t;
+      if (all) {
+        kissat_message (solver,
+                        "gauss: solution of %u XOR rows over %u variables "
+                        "satisfies all %zu clauses (%.2f seconds)",
+                        num_rows, num_columns, checked, x1s_time);
+        solver->gauss_model = sigma;
+        sigma = 0;
+      } else
+        kissat_verbose (solver,
+                        "gauss: solution of %u XOR rows over %u variables "
+                        "falsifies a clause (%.2f seconds)",
+                        num_rows, num_columns, x1s_time);
+    }
+  }
+  if (sigma)
+    kissat_dealloc (solver, sigma, VARS, sizeof (value));
+  RELEASE_STACK (colvars);
   RELEASE_STACK (certificate);
   kissat_dealloc (solver, comp_rows, num_rows, sizeof (unsigned));
   kissat_dealloc (solver, comp_start, num_components + 1, sizeof (unsigned));

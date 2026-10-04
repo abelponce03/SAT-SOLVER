@@ -9,5 +9,6 @@
 struct kissat;
 
 int kissat_gauss (struct kissat *);
+int kissat_gauss_lucky (struct kissat *);
 
 #endif

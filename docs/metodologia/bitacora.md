@@ -702,3 +702,27 @@ al cerrar cada sesión.
 - **Aprendido**: en 2026, lo que solo resuelve «nunca» es casi todo SAT y lo
   que solo resuelve «siempre», casi todo UNSAT. Un selector entre los dos
   tiene que predecir SAT/UNSAT, que es justo lo difícil.
+
+### 2026-10-03 (noche) — X1s: la solución de Gauss como asignación afortunada
+
+- **Se pidió**: seguir buscando mejoras (consigna permanente).
+- **Se hizo**:
+  - Se revisó qué queda del hueco de research/10 que se pueda cobrar sin
+    cambiar la búsqueda. X1 solo refuta, pero research/06 ya había visto
+    que Gauss resuelve al instante las *lights-out* y *random-graph-xorsat*
+    **satisfacibles**.
+  - Prototipo: en las tres de 2026 que hay en disco, la solución de Gauss
+    es un modelo. En *xor-shifting* (mezclada) no lo es.
+  - Diseño y demostraciones en research/09 §3.5 (Lema 7, Proposición 4),
+    implementación detrás de `--gausslucky` y **EXP-022** preregistrado.
+  - Comprobado que, sin X1, el binario no cambia (95/95 objetos).
+- **Decisiones**:
+  - X1s va dentro de `lucky`, la primera, y solo si σ ya se comprobó contra
+    todas las cláusulas. Así es clase E con salida temprana, como X1.
+  - El valor es pequeño (−2,3 a −2,7 s en 2026), y se dice así. Se hace
+    porque es casi gratis y completa X1 en las familias puras.
+  - La validación fuera de muestra de la cartera «siempre → nunca» necesita
+    los datos de 2025: es una descarga, y queda propuesta al director.
+- **Salió mal**: el build con asertos destapó un fallo de X1 v1 y v2 que
+  llevaba ahí desde el principio (`IDX` sin `solver`): nunca se había
+  compilado con `configure -g`. Se corrigió y la CI añade ese build.

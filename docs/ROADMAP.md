@@ -193,6 +193,9 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
   - [x] **EXP-021**: X1 v2 procesa 56 de los 103 sistemas saltados, sin
         cambiar la búsqueda. **X1 v2 activa por defecto** (2026-10-03);
         `build/` compilado con PGO + LTO.
+  - [ ] **X1s** (research/09 §3.5): la solución de Gauss como asignación
+        afortunada, detrás de `--gausslucky`. **EXP-022** preregistrado y en
+        la cola.
   - [ ] X1 v3: eliminación sin historial para las 47 componentes gigantes.
   - [ ] X1b (unidades y equivalencias del sistema XOR).
 - [x] **EXP-020**: se mantiene el tope de satsuma de 60 s (300 s resuelve

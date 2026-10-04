@@ -411,6 +411,113 @@ sigue sin caber: el historial cuesta O(m²) bits. Para eso haría falta
 eliminar sin historial y reconstruir el certificado después, que queda
 anotado como mejora posible (X1 v3).
 
+### 3.5 X1s: la solución de Gauss como asignación afortunada (2026-10-03)
+
+X1 solo usa la eliminación para refutar. Cuando el sistema es consistente y
+la fórmula **es** el sistema (más unidades), la misma eliminación da un
+modelo. Es el caso de las *lights-out* y *random-graph-xorsat* satisfacibles
+(research/06 §5). En 2026, Kissat tardó en ellas 113, 245, 600 y 1613 s, y
+el ganador, de 32 a 714 s. El prototipo
+(`scripts/x1s_prototipo.py`) comprueba que en las tres que hay en disco la
+solución de Gauss satisface la fórmula entera, con las libres a 0 o a 1:
+
+| Instancia | Cláusulas | Cubiertas por XOR | Filas | Cláusulas sin satisfacer |
+|---|---|---|---|---|
+| `75429ff7` (*random-graph-xorsat*) | 1000 | 100 % | 250 | 0 |
+| `01d6fa8e` (*lights-out*) | 9216 | 100 % | 625 | 0 |
+| `28dcc411` (*lights-out* + 625 unidades) | 8933 | 100 % | 2077 | 0 |
+| `a60a1383` (*xor-shifting*, mezclada) | 9500 | 68 % | 1611 | 311–366 |
+
+**Construcción.** Si todas las componentes son consistentes y ninguna se
+salta:
+
+1. En cada componente, ya en forma escalonada, se toma una solución
+   particular por **sustitución hacia atrás**. Las columnas libres valen la
+   fase inicial de Kissat (`INITIAL_PHASE`) y cada fila, de la última a la
+   primera, fija su pivote: x_p = b_i ⊕ ⊕_{c > p, c ∈ fila i} x_c.
+2. σ es esa solución sobre las variables del sistema, el valor de la raíz
+   sobre las fijadas, y `INITIAL_PHASE` sobre el resto.
+3. Se **comprueba** σ ⊨ C para toda cláusula irredundante C (binarias de las
+   listas de vigilancia y grandes de la arena) **sin escribir nada en el
+   solver**. Si alguna falla, se descarta σ.
+4. Si todas se cumplen, σ se guarda y `kissat_lucky` la prueba **la
+   primera**: para cada variable activa sin valor, la asume según σ y
+   propaga.
+
+**Lema 7 (sustitución hacia atrás).** Sea R la forma escalonada de una
+componente consistente, con pivotes p_1 < … < p_r. La fila i solo tiene
+columnas ≥ p_i: las de los pivotes anteriores se anularon al eliminar, y una
+columna libre c < p_i en la fila i habría sido pivote al recorrerla. Por
+eso, recorriendo i = r, …, 1, cada x_{p_i} depende solo de valores ya
+fijados, y x cumple todas las filas no nulas de R. Las filas nulas (0 = 0)
+se cumplen siempre, y R se obtuvo de (A | b) por operaciones de fila
+invertibles, así que A x = b. ∎
+
+**Proposición 4 (la asignación no tiene conflicto).** Sea σ una asignación
+total de las variables activas que coincide con la raíz y satisface todas
+las cláusulas irredundantes de F. Entonces el bucle de asumir σ(v) y
+propagar, variable a variable, termina sin conflicto con la traza igual a σ.
+
+*Demostración.* Por inducción, la traza está contenida en σ:
+
+- **Decisión**: asume un literal de σ.
+- **Propagación**: si C fuerza l, sus demás literales son falsos en la
+  traza, luego en σ. Como σ ⊨ C, l es verdadero en σ. Vale para las
+  irredundantes por hipótesis y para las redundantes porque F las implica,
+  y todo modelo de F las cumple.
+- **Conflicto**: exigiría una cláusula con todos los literales falsos en la
+  traza ⊆ σ, y σ la satisface.
+
+El bucle acaba porque cada paso asigna al menos una variable. Al final todas
+están asignadas, sin conflicto y con la propagación completa: la traza es un
+modelo. ∎
+
+**Por qué es clase E con salida temprana** (como X1):
+
+- Si σ no satisface F, solo se ha leído el estado del solver: la búsqueda
+  es idéntica.
+- Si la satisface, la respuesta es SAT y el modelo es σ. La comprobación del
+  paso 3 hace que la corrección no dependa de la de Gauss: aunque la
+  sustitución tuviera un error, nunca se afirmaría SAT sin un modelo
+  verificado, y la Proposición 4 se comprueba en ejecución (`kissat_fatal`
+  si hubiera conflicto).
+- **No hace falta prueba**: en SAT, el certificado es el modelo.
+
+**Coste.** La sustitución es O(r · palabras) por componente, menor que la
+eliminación. La comprobación es O(|F|) y se detiene en la primera cláusula
+falsa, que en una fórmula mezclada suele aparecer enseguida.
+
+**Valor esperado** (contrafactual de research/10 con los tiempos de 2026):
+de −2,3 s de PAR-2 (las 3 verificadas) a −2,7 s (con la cuarta *lights-out*,
+que no está en disco). Es poco, porque el ganador ya resolvía las cuatro.
+Completa la ventaja exclusiva de X1 en las familias de paridad puras, a coste
+casi nulo.
+
+**Qué no cubre.** Las familias mezcladas (*xor-shifting*,
+*syndrome-decoding*…): ahí σ deja cientos de cláusulas sin satisfacer. Para
+ellas habría que buscar dentro del espacio afín de soluciones (cambiar
+variables libres), y eso ya es búsqueda: clase S.
+
+**Implementación** (`gauss.c`, `lucky.c`, opción `--gausslucky`, apagada
+hasta EXP-022):
+
+- `gauss_back_substitute`: Lema 7 sobre la matriz de bits de cada
+  componente. Un AND con el vector solución, que no tiene bits a partir de
+  m, descarta la paridad y el historial.
+- `gauss_satisfies_all`: recorre las binarias y las grandes irredundantes.
+  Solo lee.
+- `kissat_gauss_lucky` se llama la primera dentro de `kissat_lucky`, ya con
+  `probing` puesto. Si hubiera conflicto, lo que la Proposición 4 excluye,
+  termina con `kissat_fatal`.
+- **El binario sin X1 no cambia.** `TERMINATED` incrusta `__LINE__`, así que
+  las líneas nuevas de `lucky.c` van seguidas de `#line`, que restaura la
+  numeración. Compilado con `--no-gauss`, los 95 objetos de código son
+  idénticos byte a byte a los de antes del cambio; solo cambia `build.o`,
+  por la fecha.
+- **Al compilarlo con asertos (`configure -g`) apareció un fallo de X1 v1 y
+  v2**, que nunca se habían compilado así: `make_candidate` usaba `IDX` sin
+  `solver` en el ámbito. Corregido, y la CI añade ese build.
+
 ## 4. Validación del diseño (prototipo)
 
 ### 4.1 Herramientas
@@ -614,6 +721,7 @@ arriba. ∎
 | 2 | X1 dentro de Kissat, en C, detrás de `configure --gauss` y `--gauss` (apagada): extracción en la raíz antes de la búsqueda, Gauss con bits, prueba sin borrados con índices de variable por encima del máximo externo | **Hecho**: `test_gauss.sh` en verde con los tres verificadores; contadores idénticos donde no refuta; objetos idénticos sin la macro |
 | 3 | **EXP-019**: X1 sobre `calib`, `calib2`, `symm2026`, `tesis-dev` y sintéticas (no `bench/test`) | **Cerrado, se adopta**: 0 errores en 221 SAT, 321/321 equivalentes, p95 0,37 s |
 | 4 | X1b, si el paso 3 sale bien | Clase S: A/B de PAR-2 |
+| 5 | **X1s** (§3.5), detrás de `--gausslucky` (apagada) | `test_gauss.sh` en verde en release, ASan/UBSan y depuración; sin X1, los 95 objetos de código idénticos. **EXP-022** decide la activación |
 
 ## Referencias
 

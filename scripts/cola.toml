@@ -375,3 +375,37 @@ ab --solver solver/labesat --bench bench/exp020 --instances results/exp020/candi
    --timeout 1200 --seeds 42
 python3 scripts/exp020.py analizar > results/exp020/informe.md 2>&1
 """
+
+# EXP-022 (X1s, research/09 §3.5): la solución de Gauss como asignación
+# afortunada, sobre la muestra de EXP-019 y su ampliación de bench/dev.
+[[paso]]
+id = "exp022-construir"
+descripcion = "EXP-022: compilar build-x1s (X1 por defecto, --gausslucky apagada) desde el commit"
+requiere = ["results/exp019/muestra.csv", "results/exp019/muestra-dev.csv"]
+hecho = "[ -x solver/kissat/build-x1s/kissat ] && [ -f results/exp022/commit.txt ]"
+comando = """
+mkdir -p results/exp022
+./scripts/build.sh --dir=build-x1s --clean --jobs=4
+sha1sum solver/kissat/build-x1s/kissat > results/exp022/binarios.sha1
+{ git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/exp022/commit.txt
+"""
+
+[[paso]]
+id = "exp022-x1s"
+descripcion = "EXP-022: X1s en la muestra de EXP-019; modelos verificados contra la CNF original"
+requiere = ["results/exp022/commit.txt", "solver/kissat/build-x1s/kissat"]
+hecho = "[ $(filas results/exp022/x1s.csv) -ge $(( $(filas results/exp019/muestra.csv) + $(filas results/exp019/muestra-dev.csv) )) ]"
+comando = """
+python3 scripts/exp022.py correr
+"""
+
+[[paso]]
+id = "exp022-equivalencia"
+descripcion = "EXP-022: contadores con --gausslucky=0 y =1 donde X1s se rechaza (2000 conflictos), e informe"
+requiere = ["results/exp022/x1s.csv"]
+hecho = "[ -f results/exp022/equivalencia.hecho ] && [ -f results/exp022/informe.md ]"
+comando = """
+python3 scripts/exp022.py equivalencia
+touch results/exp022/equivalencia.hecho
+python3 scripts/exp022.py analizar > results/exp022/informe.md 2>&1
+"""

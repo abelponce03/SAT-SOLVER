@@ -5,6 +5,29 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-03): X1s y EXP-022 preregistrado
+- **X1s** (research/09 §3.5): si el sistema XOR es consistente, una solución
+  de Gauss σ (sustitución hacia atrás, Lema 7) se comprueba contra todas las
+  cláusulas sin tocar el solver.
+  - Si las satisface, `kissat_lucky` la asigna la primera, sin conflicto
+    (Proposición 4).
+  - Detrás de `--gausslucky`, apagada.
+  - Prototipo (`scripts/x1s_prototipo.py`): σ es un modelo en las tres
+    instancias de paridad puras y satisfacibles de 2026 que hay en disco.
+    Kissat tardó en ellas de 113 a 1613 s.
+  - Valor esperado en 2026: de −2,3 a −2,7 s de PAR-2.
+- Sin X1 (`--no-gauss`), los 95 objetos de código son idénticos byte a byte:
+  `#line` restaura la numeración que `TERMINATED` incrusta.
+- **Corregido**: X1 no compilaba con asertos (`configure -g`), porque
+  `make_candidate` usaba `IDX` sin `solver`. La CI añade el build de
+  depuración, y `test_gauss.sh` ya no compara `allocated_*`, el pico de
+  memoria de los builds con métricas.
+- `test_gauss.sh`: X1s resuelve las cuatro familias sintéticas satisfacibles
+  con 0 conflictos y modelo verificado. Cuando se rechaza, la búsqueda es
+  idéntica.
+- **EXP-022** preregistrado (`scripts/exp022.py`) y en la cola: seguridad,
+  equivalencia, coste y dónde actúa, sobre la muestra de EXP-019.
+
 ### Cambiado (2026-10-03): X1 activa por defecto y compilación PGO + LTO
 - **X1 v2** (refutación de sistemas XOR por Gauss, research/09) pasa a estar
   **activa por defecto**:
