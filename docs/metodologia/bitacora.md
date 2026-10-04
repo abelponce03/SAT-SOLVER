@@ -817,3 +817,19 @@ al cerrar cada sesión.
 - **Salió mal**: la lectura de 2025 del día anterior atribuía el 15.º a
   «siempre». El paquete mostró que era otra configuración, con otro formato
   de prueba. Se corrigió en cuanto se leyó.
+
+### 2026-10-04 (tarde, mientras corre EXP-023) — B4 preparado, PR al día
+
+- **Se pidió**: continuar.
+- **Se hizo**:
+  - EXP-023: descarga (374/374) y rasgos de satsuma hechos; A/B en curso.
+    R se cumple en 53 de 374 instancias de 2025; satsuma tarda 9,6 s de
+    media, que es lo que B4 paga cuando no aplica.
+  - Se descartó decidir R antes de la fase de Schreier: en 2025 solo es el
+    20 % del tiempo de satsuma.
+  - **B4 en `labesat`, preparado y no aplicado** (`scripts/b4_parche_labesat.py`):
+    el A/B de EXP-023 vigila el SHA-1 de `labesat`. Probado sobre una copia.
+  - Descripción del PR #32 al día (terminaba en EXP-017 y aún presentaba B3
+    como candidata).
+- **Salió mal**: `gh pr edit` falla por la retirada de *projects classic* en
+  GitHub; se usó la API REST.
