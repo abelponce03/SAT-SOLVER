@@ -75,6 +75,13 @@ if [ $code = 20 ] && grep -q "sin simetrías" "$TMP/out" &&
    out=$("$DRAT" "$cnf" "$TMP/fb" 2>/dev/null) && grep -q "s VERIFIED" <<< "$out"; then
     echo "OK    respaldo: satsuma falla → prueba DRAT pura verificada"
 else bad "respaldo (código $code)"; fi
+# Tope de memoria de satsuma (LABESAT_SYMM_MEM): con 1 MiB no puede ni
+# arrancar; muere solo satsuma y kissat resuelve la CNF original.
+LABESAT_SYMM_MEM=1048576 "$W" --symmetry "$cnf" "$TMP/fm" > "$TMP/out"; code=$?
+if [ $code = 20 ] && grep -q "sin simetrías: satsuma terminó" "$TMP/out" &&
+   out=$("$DRAT" "$cnf" "$TMP/fm" 2>/dev/null) && grep -q "s VERIFIED" <<< "$out"; then
+    echo "OK    tope de memoria: satsuma muere, kissat solo, prueba DRAT pura verificada"
+else bad "tope de memoria (código $code)"; fi
 
 # Ruptura con retraso (B3, EXP-009).  (a) Si kissat resuelve en la fase 1, la
 # respuesta y la prueba son las de kissat sobre la CNF original (DRAT pura).

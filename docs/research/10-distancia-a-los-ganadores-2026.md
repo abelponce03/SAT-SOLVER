@@ -1,7 +1,8 @@
 # Investigación 10 — ¿A qué distancia está LabeSAT de los ganadores de 2026, y qué hacen ellos que podamos integrar?
 
 - **Fecha**: 2026-10-01; **actualizado el 2026-10-03** con el cierre de
-  EXP-009, EXP-020 y EXP-021 (§0b).
+  EXP-009, EXP-020 y EXP-021 (§0b), y el **2026-10-04** con los datos de
+  2025 (§0c).
 - **Pedido del director**: un análisis actual de lo lejos que está LabeSAT de
   vencer a los ganadores de la SAT Competition 2026 y de lo que hacen ellos
   que podamos integrar.
@@ -89,6 +90,58 @@
   - «Nunca» X s y luego «siempre»: empeora con cualquier X ≥ 10 s.
   - «Siempre» X s y luego «nunca»: con X = 300 s da 279 resueltas y −18 s,
     pero en la muestra de diseño, igual que B3. Con X ≥ 600 s empeora.
+
+## 0c. Fuera de muestra: 2025 (2026-10-04)
+
+`scripts/fuera_de_muestra_2025.py` (salida en
+`results/estrategia/fuera_de_muestra_2025.md`). 2025 no publica resultados
+por instancia: solo las curvas de cactus de las diapositivas. De ellas salen
+las resueltas y el PAR-2 de cada solver, y la cuenta coincide con las cifras
+oficiales.
+
+**En 2025, «siempre» quedó 15.º de 22.**
+
+| Solver | Puesto | Resueltas (SAT / UNSAT) | PAR-2 |
+|---|---|---|---|
+| AE-Kissat2025-MAB (ganador) | 1 | 327 (173 / 154) | 2264,7 |
+| Kissat-public (Biere, sin simetrías) | 2 | 321 (163 / 158) | 2423,4 |
+| Kissat-sc2025 (Biere, sin simetrías) | 10 | 308 (161 / 147) | 2694,3 |
+| **Satsuma-Kissat-sc («siempre»)** | **15** | **290 (154 / 136)** | **3007,6** |
+
+- La entrada de satsuma resolvió 18 menos que `Kissat-sc2025` y 31 menos
+  que `Kissat-public`, **también en UNSAT**, donde la ruptura debería ayudar.
+- Las curvas no dicen qué base de Kissat ni qué topes usaba esa entrada, ni
+  por qué falló. Las diapositivas de 2025 hablan de corridas muertas por
+  memoria con 30 GB, y satsuma gasta mucha: en EXP-020 murió a 6 GB en 6
+  instancias de 277–423 MiB, por debajo de nuestro tope de tamaño.
+
+**Por qué 2026 fue distinto.** De las 44 instancias netas que «siempre» ganó
+a «nunca» en 2026, **40 son de familias que no estaban en 2025**:
+*graph-coloring* (+12), *exam-scheduling* (+11), *chnl* (+6), *count* (+6) y
+*boxfolding* (+4). 2025 traía, en cambio, 20 *argumentation* y 20
+*oddball-weighing*, donde la ruptura perdió en 2026.
+
+**Lectura**:
+
+- El «1.º» de §0b es un resultado **de 2026**, y depende de unas pocas
+  familias combinatorias simétricas. En el banco de 2025, la misma
+  configuración habría quedado en la mitad baja.
+- El valor de «siempre» cambia de signo de un año a otro. Eso refuerza la
+  opción a de D-020 (dos variantes) y hace la V2 («nunca») mucho más que
+  una cobertura.
+- Lo que cobraría los dos regímenes es un **selector estructural** (B4): que
+  decida por la estructura que encuentra satsuma (filas intercambiables,
+  tamaño del grupo), no por SAT/UNSAT. Los rasgos de EXP-014 ya existen
+  para la industria; faltan los del banco simétrico.
+- **Robustez**: hay que poder limitar la **memoria** de satsuma, no solo el
+  tamaño de la CNF. En competición, una explosión de memoria de satsuma
+  puede matar la corrida entera en vez de caer al respaldo.
+  - Hecho: `LABESAT_SYMM_MEM`, en `labesat` y en el binario integrado
+    (RLIMIT_AS solo para satsuma).
+  - Por defecto vale 0, sin tope, porque así se midieron todos los A/B:
+    `run_ab_interleaved.py` no pone tope, y la máquina tiene 15 GB.
+  - Su valor se fija con el límite de memoria que anuncien las reglas de
+    2027 (P5).
 
 ## 1. El campo de 2026 (Main Track, 400 instancias, T = 5000 s)
 

@@ -9,8 +9,9 @@
 # vez de discutirla en abstracto.
 #
 # Descarga (a data/competition/, ignorado por git — son ~30 MB regenerables):
-#   scores.csv            resultado de cada solver en cada instancia (2026)
-#   track_main_2026.uri   los 400 hashes del Main Track 2026
+#   scores_<año>.csv      resultado de cada solver en cada instancia (2026)
+#   track_main_<año>.uri  los 400 hashes del Main Track
+#   2025/main-*.tex       2025: curvas de cactus (no hay datos por instancia)
 #   gbd.db                base de metadatos de GBD (familia, autor, resultado)
 #
 # Uso: ./scripts/fetch_competition_data.sh [año]
@@ -27,8 +28,21 @@ get() {  # get <url> <destino>
 }
 
 echo "== Resultados oficiales SAT Competition $YEAR"
-get "https://satcompetition.github.io/$YEAR/downloads/scores.csv"             "$OUT/scores_$YEAR.csv"
-get "https://satcompetition.github.io/$YEAR/downloads/track_main_$YEAR.uri"   "$OUT/track_main_$YEAR.uri"
+if [ "$YEAR" = 2025 ]; then
+    # 2025 no publica resultados por instancia (ni scores.csv ni
+    # detailed_results): solo las curvas de cactus de las diapositivas, que dan
+    # resueltas y PAR-2 por solver, pero no qué instancia resolvió cada uno.
+    # Se analizan con scripts/fuera_de_muestra_2025.py.
+    RAW="https://raw.githubusercontent.com/satcompetition/2025/HEAD"
+    mkdir -p "$OUT/2025"
+    for k in ALL SAT UNSAT; do
+        get "$RAW/slides/plots/main-$k.tex" "$OUT/2025/main-$k.tex"
+    done
+    get "$RAW/downloads/SC2025.uri" "$OUT/track_main_2025.uri"
+else
+    get "https://satcompetition.github.io/$YEAR/downloads/scores.csv"             "$OUT/scores_$YEAR.csv"
+    get "https://satcompetition.github.io/$YEAR/downloads/track_main_$YEAR.uri"   "$OUT/track_main_$YEAR.uri"
+fi
 
 echo "== Metadatos de GBD (familia de cada instancia)"
 get "https://benchmark-database.de/getdatabase" "$OUT/gbd.db"

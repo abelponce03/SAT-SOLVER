@@ -17,6 +17,8 @@
    Topes (los mismos nombres que en solver/labesat):
      LABESAT_SYMM_TIMEOUT   segundos máximos para satsuma (60)
      LABESAT_SYMM_MAXBYTES  tamaño máximo de la CNF sin comprimir (512 MiB)
+     LABESAT_SYMM_MEM       tope de memoria virtual de satsuma en bytes
+                            (RLIMIT_AS, solo en el hijo; 0 = sin tope)
    Diagnóstico: con LABESAT_SYMM_KEEP=1 no se borra el directorio temporal
    (la CNF simplificada queda en <dir>/sb.cnf y la ruta sale por stderr).
 

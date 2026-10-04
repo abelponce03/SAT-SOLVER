@@ -31,6 +31,11 @@
 #                             adoptado en EXP-011— y, en su falta, tools/satsuma)
 #   LABESAT_SYMM_TIMEOUT      segundos máximos para satsuma            (60)
 #   LABESAT_SYMM_MAXBYTES     tamaño máximo de CNF sin comprimir       (536870912)
+#   LABESAT_SYMM_MEM          tope de memoria virtual de satsuma, en
+#                             bytes (RLIMIT_AS); si lo supera, muere y
+#                             se cae a kissat solo.  0 = sin tope, como
+#                             en todos los A/B medidos (research/10 §0c,
+#                             P5): se fija con el límite de las reglas  (0)
 #   LABESAT_SYMM_DELAY        ruptura con RETRASO (B3, EXP-009): con
 #                             --symmetry, kissat corre antes N segundos
 #                             sobre la CNF original y, solo si no resuelve,
@@ -48,6 +53,7 @@ KISSAT="${LABESAT_KISSAT:-$(first_exe "$HERE/kissat" "$HERE/kissat/build/kissat"
 SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma-mclique" "$ROOT/tools/satsuma")}"
 SYMM_TIMEOUT="${LABESAT_SYMM_TIMEOUT:-60}"
 SYMM_MAXBYTES="${LABESAT_SYMM_MAXBYTES:-536870912}"
+SYMM_MEM="${LABESAT_SYMM_MEM:-0}"
 read -r -a KARGS <<< "${LABESAT_KISSAT_ARGS:-}"
 
 symmetry="${LABESAT_SYMMETRY:-0}"
@@ -148,7 +154,12 @@ sargs=(fix "$INPUT" --silent --full-skip-limit 100000000 --add-reduced-as-unit
 [ -n "$PROOF" ] && { : > "$PROOF"; sargs+=(--proof-file "$PROOF"); }
 
 t0=$(date +%s.%N)
-timeout -s KILL "$SYMM_TIMEOUT" "$SATSUMA" "${sargs[@]}" </dev/null >/dev/null 2>&1
+# El tope de memoria, solo para satsuma (subshell).  Si el entorno ya tiene
+# uno menor, 'ulimit' falla y se queda el del entorno.
+(
+    if [ "$SYMM_MEM" -gt 0 ] 2>/dev/null; then ulimit -v $((SYMM_MEM / 1024)) 2>/dev/null; fi
+    exec timeout -s KILL "$SYMM_TIMEOUT" "$SATSUMA" "${sargs[@]}"
+) </dev/null >/dev/null 2>&1
 st=$?
 t1=$(date +%s.%N)
 secs=$(awk -v a="$t0" -v b="$t1" 'BEGIN { printf "%.2f", b - a }')

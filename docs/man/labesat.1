@@ -138,6 +138,11 @@ Segundos máximos para satsuma (60).
 .B LABESAT_SYMM_MAXBYTES
 Tamaño máximo de la CNF para aplicar satsuma (536870912).
 .TP
+.B LABESAT_SYMM_MEM
+Tope de memoria virtual de satsuma, en bytes (RLIMIT_AS, solo para satsuma).
+Si lo supera, satsuma muere y se resuelve la CNF original con kissat.
+Por defecto 0, sin tope.
+.TP
 .B LABESAT_KISSAT_ARGS
 Argumentos extra para kissat.
 .TP

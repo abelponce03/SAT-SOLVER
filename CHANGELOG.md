@@ -5,6 +5,29 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-04): 2025 fuera de muestra, tope de memoria de satsuma y datos para B4
+- **2025, fuera de muestra** (`scripts/fuera_de_muestra_2025.py`,
+  research/10 §0c). 2025 no publica resultados por instancia; las curvas de
+  cactus oficiales dan resueltas y PAR-2 por solver, y cuadran con las
+  diapositivas.
+  - «Siempre» (Satsuma-Kissat-sc) quedó **15.º de 22**, 18 resueltas por
+    debajo de Kissat-sc2025.
+  - 40 de las 44 instancias netas que «siempre» ganó en 2026 son de familias
+    que no estaban en 2025.
+  - D-020 (issue #34): se descarta la opción b; la a sale reforzada.
+- `fetch_competition_data.sh 2025` baja las curvas y la lista de instancias,
+  porque `scores.csv` no existe para 2025.
+- **`LABESAT_SYMM_MEM`**: tope de memoria virtual (RLIMIT_AS) solo para
+  satsuma, en `labesat` y en el binario integrado.
+  - Si satsuma lo supera, muere sola y se resuelve la CNF original.
+  - Por defecto 0, sin tope, como en todos los A/B medidos. El valor se fija
+    con el límite de las reglas de 2027 (P5).
+  - En EXP-020, satsuma agotó 6 GB en 6 instancias de 277–423 MiB, por
+    debajo del tope de tamaño.
+  - Pruebas en `test_symmetry.sh` y `test_symmetry_integrada.sh`.
+- Cola: paso **`b4-rasgos`** (exploratorio). Rasgos de satsuma del banco
+  simétrico, para diseñar un selector estructural (D-020, opción d).
+
 ### Añadido (2026-10-03): X1s y EXP-022 preregistrado
 - **X1s** (research/09 §3.5): si el sistema XOR es consistente, una solución
   de Gauss σ (sustitución hacia atrás, Lema 7) se comprueba contra todas las

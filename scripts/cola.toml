@@ -409,3 +409,21 @@ python3 scripts/exp022.py equivalencia
 touch results/exp022/equivalencia.hecho
 python3 scripts/exp022.py analizar > results/exp022/informe.md 2>&1
 """
+
+# B4 (research/10 §0c, D-020 opción d): datos EXPLORATORIOS para diseñar un
+# selector estructural de la ruptura.  Los rasgos de satsuma (generadores,
+# filas intercambiables, predicados) del banco simétrico, con el mismo satsuma
+# que el escaneo industrial de EXP-014 (sin cliques) y con el de labesat
+# (mclique v2).  No decide nada: cualquier regla que salga se valida aparte.
+[[paso]]
+id = "b4-rasgos"
+descripcion = "B4 (exploratorio): rasgos de satsuma en bench/symm2026, sin cliques y con mclique v2"
+requiere = ["bench/symm2026", "tools/satsuma", "tools/satsuma-mclique"]
+hecho = "[ $(filas results/b4/satsuma-symm2026.csv) -ge 84 ] && [ $(filas results/b4/satsuma-mclique-symm2026.csv) -ge 84 ]"
+comando = """
+mkdir -p results/b4
+python3 scripts/scan_symmetry.py --bench bench/symm2026 --out results/b4/satsuma-symm2026.csv \
+   --satsuma tools/satsuma --timeout 60 --mem-gb 6
+python3 scripts/scan_symmetry.py --bench bench/symm2026 --out results/b4/satsuma-mclique-symm2026.csv \
+   --satsuma tools/satsuma-mclique --timeout 60 --mem-gb 6
+"""

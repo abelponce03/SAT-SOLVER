@@ -726,3 +726,31 @@ al cerrar cada sesión.
 - **Salió mal**: el build con asertos destapó un fallo de X1 v1 y v2 que
   llevaba ahí desde el principio (`IDX` sin `solver`): nunca se había
   compilado con `configure -g`. Se corrigió y la CI añade ese build.
+
+### 2026-10-04 — Datos de 2025: «siempre» fuera de muestra
+
+- **Se pidió**: descargar los datos de 2025 y continuar.
+- **Se hizo**:
+  - `scores.csv` no existe para 2025 (404), y el repositorio de 2025 no
+    publica resultados por instancia. Se usaron las curvas de cactus de las
+    diapositivas: dan resueltas y PAR-2 por solver, y la cuenta cuadra con
+    las cifras oficiales. También la lista de instancias, para cruzar
+    familias con GBD.
+  - Resultado: en 2025, «siempre» (Satsuma-Kissat-sc) quedó 15.º de 22,
+    y la ventaja de 2026 viene de familias que no estaban en 2025.
+    research/10 §0c y D-020 (issue #34) actualizados.
+  - `LABESAT_SYMM_MEM` (tope de memoria de satsuma), apagado por defecto,
+    con pruebas.
+  - Paso `b4-rasgos` en la cola (datos exploratorios para el selector).
+- **Decisiones**:
+  - Sin datos por instancia, no se puede validar la cartera «siempre →
+    nunca» con 2025. Se informa de lo que sí dicen los datos (el ranking y
+    las familias) y no se fuerza más.
+  - El tope de memoria queda a 0 porque así se midió todo. Un valor por
+    defecto distinto cambiaría lo medido.
+  - No se descargó el paquete de la entrada de satsuma de 2025, para ver su
+    base y sus topes: es código, no los datos autorizados. Queda propuesto.
+- **Salió mal**: al razonar sobre el riesgo de memoria se dio por hecho que
+  el arnés de los A/B ponía 6 GB a satsuma. No lo pone (solo EXP-019 y los
+  escaneos de satsuma). Se comprobó en el código antes de fijar ningún valor
+  por defecto.
