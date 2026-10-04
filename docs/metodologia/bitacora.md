@@ -754,3 +754,27 @@ al cerrar cada sesión.
   el arnés de los A/B ponía 6 GB a satsuma. No lo pone (solo EXP-019 y los
   escaneos de satsuma). Se comprobó en el código antes de fijar ningún valor
   por defecto.
+
+### 2026-10-04 (mañana) — Cierre de EXP-022; `lucky` en *baseball-lineup*
+
+- **Se pidió**: continuar; tras un corte, «Intentar nuevamente».
+- **Se hizo**:
+  - **EXP-022 cerrado**: X1s se activa por defecto (7 modelos verificados,
+    250/250 equivalentes, p95 0,01 s).
+  - Diagnóstico de una anomalía vista al compilar la PGO: en
+    *baseball-lineup* (3,5 M variables), `lucky` se lleva 42 s (94 %)
+    antes del primer conflicto. Se localizó con muestreo por `gdb`
+    (`perf` no está permitido para usuarios en esta máquina) en
+    `forward_true_satisfiable`: 290 conflictos a nivel 1, cada uno
+    propagando un cono enorme. Es Kissat 4.0.4 de fábrica.
+  - **Decisión**: no se toca. Un tope de esfuerzo en `lucky` es clase S,
+    perdería las 322 unidades que aprende, y su valor en 2026 sería de unos
+    −0,2 s de PAR-2 (dos instancias, resueltas en ~300 s).
+- **Salió mal**:
+  - `build.sh --clean --pgo` sobre `build/` con la cola en marcha borró
+    `build/` antes de que la salvaguarda lo parase: la comprobación iba
+    detrás de `--clean`. Ningún paso de la cola usaba `build/` en ese
+    momento. Corregido: la salvaguarda va antes.
+  - En el cierre de EXP-022 se escribió de memoria que `28dcc411` dio
+    TIMEOUT en EXP-007; los CSV dicen 151 y 162 s. Se corrigió antes del
+    commit.

@@ -70,13 +70,15 @@ cuenta() { awk '/^c [a-z_0-9]+:[ ]+[0-9]+/ { n=$2; if (n ~ /time|resident|memory
 for spec in "${FAMILIAS[@]}"; do
     f="$TMP/s.cnf"
     python3 "$ROOT/scripts/gen_paridad.py" $spec --seed 3 --sat > "$f"
-    "$K" --gauss=1 --verbose=1 "$f" > "$TMP/s1.out" 2>&1 || true
+    "$K" --gauss=1 --gausslucky=0 --verbose=1 "$f" > "$TMP/s1.out" 2>&1 || true
     if grep -q "gauss: refuted" "$TMP/s1.out" || ! grep -q "^s SATISFIABLE" "$TMP/s1.out"; then
         bad "$spec --sat: X1 refutó una instancia satisfacible"; continue
     fi
     # Kissat sale con 10 o 20: a fichero con '|| true', y después se cuenta.
+    # X1 (refutar) sola: con X1s, que vale 1 por defecto (EXP-022), estas
+    # variantes puras se resolverían sin buscar (lo comprueba el punto 5).
     "$K" --gauss=0 --seed=1 --conflicts=2000 --statistics "$f" > "$TMP/a.out" 2>&1 || true
-    "$K" --gauss=1 --seed=1 --conflicts=2000 --statistics "$f" > "$TMP/b.out" 2>&1 || true
+    "$K" --gauss=1 --gausslucky=0 --seed=1 --conflicts=2000 --statistics "$f" > "$TMP/b.out" 2>&1 || true
     cuenta < "$TMP/a.out" > "$TMP/a"
     cuenta < "$TMP/b.out" > "$TMP/b"
     if cmp -s "$TMP/a" "$TMP/b"; then

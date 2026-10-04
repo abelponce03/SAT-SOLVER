@@ -32,7 +32,9 @@ sistema lineal sobre GF(2) que forman no tiene solución, la refuta por
 eliminación de Gauss (X1). La prueba sigue siendo DRAT: define variables de
 extensión y deriva la cláusula vacía en un número polinómico de pasos, también
 en las familias de paridad que la resolución no refuta en tiempo polinómico.
-Si el sistema tiene solución, la búsqueda es exactamente la misma que sin X1.
+Si el sistema tiene solución y esta satisface todas las cláusulas, la fórmula
+es satisfacible y se responde sin buscar (X1s); si no, la búsqueda es
+exactamente la misma que sin X1.
 .PP
 El binario de Kissat compilado con
 .B "configure \-\-symmetry"
@@ -66,7 +68,10 @@ reproducir aquel experimento. También con
 .TP
 .BR \-\-gauss=0
 Desactiva X1, la refutación de sistemas XOR por Gauss, que está activa por
-defecto (EXP-019 y EXP-021). Sus topes:
+defecto (EXP-019 y EXP-021), y con ella X1s. Con
+.B \-\-gausslucky=0
+se desactiva solo X1s (EXP-022): asignar, antes de buscar, una solución del
+sistema XOR que satisfaga todas las cláusulas. Sus topes:
 .BI \-\-gaussmaxsize= k
 (longitud máxima de las XOR extraídas, 6),
 .BI \-\-gaussbits= M
@@ -88,10 +93,7 @@ Cualquier opción que empiece por \- se pasa a kissat (p. ej.
 .BR \-\-seed=\fIS\fP ).
 Opciones experimentales de LabeSAT, apagadas por defecto:
 .B \-\-vivifyactivity=1
-(vivificación programada por actividad, cerrada sin efecto en EXP-015),
-.B \-\-gausslucky=1
-(X1s: asigna la solución del sistema XOR si satisface todas las cláusulas,
-en evaluación en EXP-022) y
+(vivificación programada por actividad, cerrada sin efecto en EXP-015) y
 .B \-\-modeadaptive=1
 (A4.1, cerrada sin efecto en EXP-006).
 .B labesat \-\-id

@@ -1,8 +1,10 @@
 # EXP-022 — X1s: la solución de Gauss como asignación afortunada (preregistrado)
 
-- **Estado**: **preregistrado**. Se commitea antes de ejecutar, junto con la
-  implementación (`gauss.c` y `lucky.c`, opción `--gausslucky`, apagada),
-  `scripts/exp022.py` y la ampliación de `scripts/test_gauss.sh`.
+- **Estado**: **cerrado (2026-10-04): `--gausslucky` se activa por
+  defecto.** H0, H1 y H2 se cumplen; resultados en §7. Se commiteó antes de
+  ejecutar, junto con la implementación (`gauss.c` y `lucky.c`, opción
+  `--gausslucky`, apagada), `scripts/exp022.py` y la ampliación de
+  `scripts/test_gauss.sh`.
 - **Ejecuciones previas** (no forman parte de los datos):
   - el prototipo en Python (`scripts/x1s_prototipo.py`) sobre 4 instancias
     (research/09 §3.5);
@@ -122,8 +124,47 @@ medir lo mismo que en EXP-019:
 
 ## 6. Incidencias de ejecución
 
-(vacío)
+- Sin incidencias. La cola ejecutó los tres pasos el 2026-10-04 (03:32 a
+  04:14 UTC), con el binario compilado desde `dea46da`
+  (`results/exp022/commit.txt`).
+- La carga ajena que preveía §5 siguió durante el paso 1. Afecta, como
+  mucho, a los tiempos de H2, que quedan muy por debajo del umbral.
 
 ## 7. Resultados
 
-(pendiente)
+Informe: `results/exp022/informe.md` (`exp022.py analizar`).
+
+| X1 | X1s | Instancias |
+|---|---|---|
+| consistente | **actúa** | 7 |
+| consistente | rechazada | 250 |
+| saltada | no aplica | 47 |
+| refutada | no aplica | 5 |
+| sin XOR | no aplica | 270 |
+| sin mensaje | no aplica | 3 |
+
+| Hipótesis | Resultado | ¿Se cumple? |
+|---|---|---|
+| H0 (seguridad) | X1s actúa en 7; **los 7 modelos los verifica `verify_model.py`** contra la CNF original; ninguna es UNSAT | Sí |
+| H1 (equivalencia) | **250 de 250** parejas con los contadores idénticos donde X1s se rechaza | Sí |
+| H2 (coste) | Mediana 0,000 s, **p95 0,010 s**, **máximo 0,04 s** (n = 257) | Sí (≤ 0,1 s y ≤ 2 s) |
+
+**H3 (dónde actúa)**: exactamente donde se predijo.
+
+| Instancia | Banco | Filas | Tiempo total | Kissat sin X1s |
+|---|---|---|---|---|
+| 4 variantes satisfacibles sintéticas | sintéticas | 196–598 | ≤ 0,02 s | — |
+| `75429ff7` (*random-graph-xorsat*) | calib | 250 | 0,02 s | 113 s en 2026 |
+| `28dcc411` (*lights-out*) | symm2026 | 2077 | 0,03 s | 1613 s en 2026; 151 s sin simetrías y 162 s con ellas en EXP-007 |
+| `01d6fa8e` (*lights-out*) | dev | 625 | 0,02 s | 600 s en 2026 |
+
+- **Las 3 «sin mensaje» no son de X1s**:
+  - `e85fb114` (*miter*) muere por el tope de 6 GB del arnés, como en
+    EXP-016 y EXP-019;
+  - las otras dos son UNSAT ya al leer la fórmula, y X1 no llega a
+    ejecutarse.
+- La predicción «en la industria, en ninguna» se cumple: las 250 rechazadas
+  son, casi todas, instancias industriales con XOR consistentes.
+
+**Decisión (§4, fila 1)**: `--gausslucky` vale 1 por defecto.
+`test_gauss.sh` compara ahora X1 sola con `--gausslucky=0` explícito.

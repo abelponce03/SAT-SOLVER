@@ -9,13 +9,14 @@
 /* [SOLVER] X1 (research/09): opciones de Gauss, solo si se compila con
    'configure --gauss' (-DLABESAT_GAUSS).  Sin la macro la lista está vacía
    y el binario es el mismo que sin X1.  Activa por defecto desde EXP-019
-   (v1) y EXP-021 (v2, por componentes). */
+   (v1) y EXP-021 (v2, por componentes); X1s ('gausslucky'), desde
+   EXP-022. */
 #ifdef LABESAT_GAUSS
 #define GAUSS_OPTIONS \
   OPTION (gauss, 1, 0, 1, "refute inconsistent XOR systems (X1)") \
   OPTION (gaussbits, 256, 1, 1e5, "Gauss matrix limit in mega bits") \
   OPTION (gaussclauses, 1e7, 1, INT_MAX, "Gauss candidate clauses limit") \
-  OPTION (gausslucky, 0, 0, 1, "assign Gauss solution if it satisfies all (X1s)") \
+  OPTION (gausslucky, 1, 0, 1, "assign Gauss solution if it satisfies all (X1s)") \
   OPTION (gaussmaxsize, 6, 2, 8, "maximum XOR size for Gauss") \
   OPTION (gaussops, 4000, 1, 1e7, "Gauss effort in mega word operations")
 #else

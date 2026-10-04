@@ -5,6 +5,19 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cerrado (2026-10-04): EXP-022, X1s activa por defecto
+- **H0**: X1s actúa en 7 instancias (4 sintéticas y 3 de 2026: `75429ff7`,
+  `28dcc411` y `01d6fa8e`); los 7 modelos verificados contra la CNF
+  original.
+- **H1**: 250/250 parejas con los contadores idénticos donde X1s se
+  rechaza.
+- **H2**: p95 0,01 s, máximo 0,04 s.
+- `--gausslucky` vale 1. `test_gauss.sh` compara X1 sola con
+  `--gausslucky=0` explícito.
+- **Corregido** en `build.sh`: con `--clean --pgo` sobre `build/` y la cola en
+  marcha, borraba `build/` antes de comprobar la salvaguarda. Ahora la
+  comprueba antes de limpiar.
+
 ### Añadido (2026-10-04): 2025 fuera de muestra, tope de memoria de satsuma y datos para B4
 - **2025, fuera de muestra** (`scripts/fuera_de_muestra_2025.py`,
   research/10 §0c). 2025 no publica resultados por instancia; las curvas de

@@ -75,6 +75,13 @@ done
 cd "$KISSAT_DIR"
 
 case "$DIR" in */*|""|.|..) echo "build.sh: --dir espera un nombre, no una ruta" >&2; exit 1 ;; esac
+# La PGO borra y recompila el directorio dos veces: nunca sobre build/ mientras
+# la cola de experimentos lo vigila (ADR-0008).  Se comprueba ANTES de --clean:
+# el 2026-10-04 se comprobaba después, y --clean ya había borrado build/.
+if [ "$PGO" = 1 ] && [ "$DIR" = build ] &&
+   systemctl --user is-active --quiet labesat-experimentos 2>/dev/null; then
+    echo "build.sh: --pgo sobre build/ con la cola en marcha; usa --dir=OTRO" >&2; exit 1
+fi
 if [ "$CLEAN" = "1" ]; then
     echo "== limpiando $DIR/"
     rm -rf "$DIR" "$DIR.pgo-perfil" makefile
@@ -99,11 +106,6 @@ configurar_y_compilar() {   # $@: argumentos extra para configure
 }
 
 if [ "$PGO" = 1 ]; then
-    # La PGO borra y recompila el directorio dos veces: nunca sobre build/
-    # mientras la cola de experimentos lo vigila (ADR-0008).
-    if [ "$DIR" = build ] && systemctl --user is-active --quiet labesat-experimentos 2>/dev/null; then
-        echo "build.sh: --pgo sobre build/ con la cola en marcha; usa --dir=OTRO" >&2; exit 1
-    fi
     # Fase 1: binario instrumentado.  El perfil va a un directorio absoluto
     # propio, que sobrevive a la limpieza de los objetos entre fases.
     PERFIL="$KISSAT_DIR/$DIR.pgo-perfil"

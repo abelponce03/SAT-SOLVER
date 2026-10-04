@@ -498,8 +498,8 @@ casi nulo.
 ellas habría que buscar dentro del espacio afín de soluciones (cambiar
 variables libres), y eso ya es búsqueda: clase S.
 
-**Implementación** (`gauss.c`, `lucky.c`, opción `--gausslucky`, apagada
-hasta EXP-022):
+**Implementación** (`gauss.c`, `lucky.c`, opción `--gausslucky`, activa por
+defecto desde EXP-022):
 
 - `gauss_back_substitute`: Lema 7 sobre la matriz de bits de cada
   componente. Un AND con el vector solución, que no tiene bits a partir de
@@ -721,7 +721,7 @@ arriba. ∎
 | 2 | X1 dentro de Kissat, en C, detrás de `configure --gauss` y `--gauss` (apagada): extracción en la raíz antes de la búsqueda, Gauss con bits, prueba sin borrados con índices de variable por encima del máximo externo | **Hecho**: `test_gauss.sh` en verde con los tres verificadores; contadores idénticos donde no refuta; objetos idénticos sin la macro |
 | 3 | **EXP-019**: X1 sobre `calib`, `calib2`, `symm2026`, `tesis-dev` y sintéticas (no `bench/test`) | **Cerrado, se adopta**: 0 errores en 221 SAT, 321/321 equivalentes, p95 0,37 s |
 | 4 | X1b, si el paso 3 sale bien | Clase S: A/B de PAR-2 |
-| 5 | **X1s** (§3.5), detrás de `--gausslucky` (apagada) | `test_gauss.sh` en verde en release, ASan/UBSan y depuración; sin X1, los 95 objetos de código idénticos. **EXP-022** decide la activación |
+| 5 | **X1s** (§3.5), detrás de `--gausslucky` | **Cerrado, activa por defecto (EXP-022)**: 7 modelos verificados, 250/250 equivalentes, p95 0,01 s |
 
 ## Referencias
 

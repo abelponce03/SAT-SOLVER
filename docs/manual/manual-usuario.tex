@@ -189,9 +189,16 @@ defecto} desde los experimentos EXP-019 y EXP-021.
         comprobación (mediana de 0{,}02 a 0{,}08~s, máximo medido 1{,}8~s).
   \item El sistema se trata por componentes conexas. Si una componente supera
         los topes, se salta solo esa.
+  \item \emph{X1s} (EXP-022): si el sistema es consistente y una solución suya
+        satisface todas las cláusulas, se asigna antes de buscar y la
+        respuesta es \texttt{s SATISFIABLE} sin un solo conflicto. Resuelve
+        al instante las familias de paridad puras satisfacibles
+        (\emph{lights-out}, \emph{random-graph-xorsat}). Si la solución
+        incumple alguna cláusula, no se toca nada.
 \end{itemize}
 \begin{description}
-  \item[\texttt{--gauss=0}] Desactiva X1.
+  \item[\texttt{--gauss=0}] Desactiva X1 (y con ella X1s).
+  \item[\texttt{--gausslucky=0}] Desactiva solo X1s.
   \item[\texttt{--gaussmaxsize=k}] Longitud máxima de las XOR extraídas (6;
         de 2 a 8).
   \item[\texttt{--gaussbits=M}] Tope de memoria por componente, en megabits
@@ -213,12 +220,6 @@ opción.
         vivifica antes las cláusulas cuya variable menos activa tiene mayor
         puntuación. Con \texttt{0}, la búsqueda es idéntica a la de Kissat
         4.0.4. Cerrada sin efecto detectado (EXP-015).
-  \item[\texttt{--gausslucky=1}] \emph{X1s}: si el sistema XOR es consistente
-        y una solución suya satisface todas las cláusulas, se asigna antes de
-        buscar (research/09 §3.5). Resuelve al instante las familias de
-        paridad puras satisfacibles (\emph{lights-out},
-        \emph{random-graph-xorsat}); en el resto no cambia nada. En
-        evaluación: EXP-022.
   \item[\texttt{--modeadaptive=1}] Reparto adaptativo del presupuesto entre
         los modos estable y enfocado (A4.1). Cerrado sin efecto detectado
         (EXP-006); se conserva para reproducir aquel experimento.
