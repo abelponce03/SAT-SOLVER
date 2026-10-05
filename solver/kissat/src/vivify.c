@@ -740,7 +740,6 @@ static void swap_first_literal_with_best_watch (kissat *solver,
      literal no falso, como sugiere la guarda. */
   signed char *const best_value = &value;
   const bool fix_watch = GET_OPTION (vivifywatchfix);
-  unsigned *fixed_ptr = 0; /* lo que elegiría el arreglo (diagnóstico) */
   unsigned best_level = LEVEL (best);
   const unsigned *const end = lits + size;
   for (unsigned *p = lits + 1; value < 0 && p != end; p++) {
@@ -754,19 +753,58 @@ static void swap_first_literal_with_best_watch (kissat *solver,
     }
     best_ptr = p;
     best = lit;
-    if (value >= 0 && !fixed_ptr)
-      fixed_ptr = p;
     if (fix_watch) /* [SOLVER] M10 */
       *best_value = value;
   }
-  if (fixed_ptr && fixed_ptr != best_ptr) /* [SOLVER] M10, solo con --stats */
-    INC (vivify_watch_mismatch);
   if (best_ptr == lits)
     return;
   LOG ("better watch %s instead of %s", LOGLIT (best), LOGLIT (first));
   *best_ptr = first;
   *lits = best;
 }
+
+#ifdef STATISTICS
+/* [SOLVER] M10, diagnóstico (solo con --stats; la búsqueda no cambia).
+   Simula sobre una copia las dos elecciones de vigilante de
+   'vivify_watch_clause', con la guarda de Kissat (fix = false) o con el
+   arreglo (fix = true), y devuelve cuántos de los dos vigilados no son
+   falsos. */
+static unsigned best_watch_position (kissat *solver, const unsigned *lits,
+                                     unsigned size, bool fix) {
+  unsigned best_pos = 0;
+  signed char value = VALUE (lits[0]);
+  unsigned best_level = LEVEL (lits[0]);
+  for (unsigned i = 1; value < 0 && i != size; i++) {
+    const signed char v = VALUE (lits[i]);
+    if (v < 0) {
+      const unsigned level = LEVEL (lits[i]);
+      if (level <= best_level)
+        continue;
+      best_level = level;
+    }
+    best_pos = i;
+    if (fix)
+      value = v;
+  }
+  return best_pos;
+}
+
+static unsigned non_false_watches (kissat *solver, const unsigned *lits,
+                                   unsigned size, bool fix) {
+  unsigneds copy;
+  INIT_STACK (copy);
+  for (unsigned i = 0; i != size; i++)
+    PUSH_STACK (copy, lits[i]);
+  unsigned *c = BEGIN_STACK (copy);
+  unsigned p = best_watch_position (solver, c, size, fix);
+  SWAP (unsigned, c[0], c[p]);
+  p = 1 + best_watch_position (solver, c + 1, size - 1, fix);
+  SWAP (unsigned, c[1], c[p]);
+  const unsigned res = (VALUE (c[0]) >= 0) + (VALUE (c[1]) >= 0);
+  RELEASE_STACK (copy);
+  return res;
+}
+#endif
 
 static void vivify_unwatch_clause (kissat *solver, clause *c) {
   unsigned *lits = c->lits;
@@ -779,6 +817,13 @@ static void vivify_watch_clause (kissat *solver, clause *c) {
   unsigned size = c->size;
   unsigned *lits = c->lits;
   const reference ref = kissat_reference_clause (solver, c);
+#ifdef STATISTICS
+  /* [SOLVER] M10: el par vigilado tendría más literales no falsos con el
+     arreglo (vivify_watch_mismatch, research/12 §7, EXP-031). */
+  if (non_false_watches (solver, lits, size, true) >
+      non_false_watches (solver, lits, size, false))
+    INC (vivify_watch_mismatch);
+#endif
   swap_first_literal_with_best_watch (solver, lits, size);
   swap_first_literal_with_best_watch (solver, lits + 1, size - 1);
   kissat_watch_blocking (solver, lits[0], lits[1], ref);
