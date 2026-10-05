@@ -4,7 +4,7 @@
 #
 # Revisa los commits del rango (por defecto, los que no están en origin/main):
 #   - autor y committer no pueden ser una identidad de Claude o de Anthropic;
-#   - el mensaje no puede llevar trailers de coautoría, «Generated with
+#   - el mensaje no puede llevar trailers de coautoría, «Generated with|by
 #     Claude Code» ni enlaces de sesión de claude.ai.
 # Mencionar CLAUDE.md u otras herramientas en el texto de un commit está
 # permitido: es contenido, no autoría.
@@ -19,7 +19,7 @@ set -euo pipefail
 RANGO="${1:-origin/main..HEAD}"
 DESDE="${AUTORIA_DESDE:-2026-09-23 12:00:00 +0000}"
 patron_id='(^|[^a-z])claude([^a-z.]|$)|anthropic'
-patron_msg='^co-authored-by:.*(claude|anthropic)|generated with .*claude|claude\.ai/code/session|noreply@anthropic\.com'
+patron_msg='^co-authored-by:.*(claude|anthropic)|generated (with|by) .*claude|claude\.ai/code/session|noreply@anthropic\.com'
 fallos=0
 while IFS=$'\t' read -r sha autor committer; do
     msg=$(git log -1 --format=%B "$sha")
