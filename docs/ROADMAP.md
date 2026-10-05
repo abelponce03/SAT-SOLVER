@@ -229,7 +229,8 @@ apagadas, y se mide en la máquina local, detrás de EXP-023.
   - EXP-032 (X2).
 - [ ] Pruebas: EXP-033 (coste de escribirlas) y EXP-034 (verificación a
       escala; antes de H8).
-- [ ] D-021 (avisar a Biere) y D-022 (cribado en dos etapas como norma).
+- [x] D-022: el cribado en dos etapas pasa a ADR-0003 §4c (opción b).
+- [ ] D-021: avisar a Biere de los fallos de Kissat.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

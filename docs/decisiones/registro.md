@@ -36,7 +36,7 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 | D-020 | Política de simetrías del paquete de competición tras descartar B3 | 🟡 recomendada la a: V1 «siempre» y V2 «nunca», las dos con X1 y PGO + LTO; reforzada por 2025 («siempre», 15.º) | Director | §D-020 · issue #34 · EXP-009 §7 · [research/10](../research/10-distancia-a-los-ganadores-2026.md) §2 |
 | D-021 | ¿Avisar a Biere de los fallos de `eliminate.c` y `vivify.c`? | 🟡 recomendado: sí, después de EXP-028, con el dato | Director (sale del repositorio) | §D-021 · issue #47 · [research/12](../research/12-vias-de-mejora.md) §7 · EXP-028 · EXP-031 |
-| D-022 | ¿Cribado en dos etapas como norma de ADR-0003 para las opciones de búsqueda? | 🟡 aplicado provisionalmente en EXP-026 a EXP-032, cada uno con su regla preregistrada | Director | §D-022 · issue #48 · [research/12](../research/12-vias-de-mejora.md) §10 |
+| D-022 | ¿Cribado en dos etapas como norma de ADR-0003 para las opciones de búsqueda? | ✅ **opción b** (2026-10-05): ADR-0003 §4c | Director | §D-022 · issue #48 · [research/12](../research/12-vias-de-mejora.md) §10 |
 
 ---
 
@@ -452,4 +452,11 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 - **Mientras tanto**: EXP-026 a EXP-032 llevan cada uno su regla de dos
   etapas en el preregistro, lo que ya es válido con ADR-0003 (la regla se
   fija antes de ver datos). D-022 decide si pasa a ser la norma.
+- **Resolución (2026-10-05, director): opción b.**
+  - El diseño en dos etapas pasa a ADR-0003 como §4c: un diseño
+    preregistrable para opciones de búsqueda, no obligatorio.
+  - No cambia ningún preregistro: EXP-026 a EXP-032 ya lo usan con estas
+    mismas reglas.
+  - La opción c (cribado multibrazo) queda fuera; se puede proponer aparte
+    si el cómputo lo pide.
 

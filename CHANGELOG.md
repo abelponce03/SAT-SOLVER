@@ -5,6 +5,14 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cambiado (2026-10-05): D-022 resuelta, el cribado en dos etapas entra en ADR-0003
+- El director elige la opción b. ADR-0003 gana el §4c: diseño
+  preregistrable en dos etapas para opciones de búsqueda.
+  - Cribado: 40 instancias, sin contraste, solo para descartar.
+  - Confirmación: 60 instancias que el cribado no ha visto, con los
+    criterios de §3.
+- No cambia ningún preregistro: EXP-026 a EXP-032 ya lo usaban.
+
 ### Añadido (2026-10-05): research/12, vías de mejora desde siete ángulos, y EXP-024 a EXP-034
 - **research/12**: simetrías, razonamiento algebraico, heurística,
   inprocesado, calidad del código base, pruebas y metodología. Hallazgos:

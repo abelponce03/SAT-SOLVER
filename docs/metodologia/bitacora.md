@@ -904,3 +904,16 @@ al cerrar cada sesión.
   (−61 s) puede no sobrevivir fuera (+70 s en la competición). Es el mejor
   argumento a favor del preregistro que ha aparecido en el proyecto, y
   sale de datos públicos.
+
+### 2026-10-05 (tarde) — D-022 resuelta
+
+- **Se pidió**: «D-022 opción b, procede».
+- **Se hizo**:
+  - ADR-0003 §4c: el diseño en dos etapas (cribado de 40 sin contraste,
+    confirmación con 60 instancias frescas) queda como diseño
+    preregistrable para opciones de búsqueda.
+  - Registro, ROADMAP, research/12 y CHANGELOG al día; issue #48 cerrado y
+    el acta de la reunión #4 actualizada.
+- **Decisiones**: la rama de la sesión se rehízo desde la rama del PR #32,
+  que ya contiene el #49 fusionado; `main` aún no tiene research/12.
+- **Salió mal**: nada.
