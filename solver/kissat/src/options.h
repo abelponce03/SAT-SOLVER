@@ -18,7 +18,8 @@
   OPTION (gaussclauses, 1e7, 1, INT_MAX, "Gauss candidate clauses limit") \
   OPTION (gausslucky, 1, 0, 1, "assign Gauss solution if it satisfies all (X1s)") \
   OPTION (gaussmaxsize, 6, 2, 8, "maximum XOR size for Gauss") \
-  OPTION (gaussops, 4000, 1, 1e7, "Gauss effort in mega word operations")
+  OPTION (gaussops, 4000, 1, 1e7, "Gauss effort in mega word operations") \
+  OPTION (gaussphase, 0, 0, 1, "Gauss solution as initial phases [SOLVER X2]")
 #else
 #define GAUSS_OPTIONS
 #endif
@@ -49,6 +50,7 @@
   OPTION (congruencexorcounts, 2, 1, INT_MAX, "XOR counting rounds") \
   OPTION (congruencexors, 1, 0, 1, "extract XOR gates for congruence closure") \
   OPTION (decay, 50, 1, 200, "per mille scores decay") \
+  OPTION (decayramp, 0, 0, 200, "initial decay ramped down to 'decay' [SOLVER M5]") \
   OPTION (definitioncores, 2, 1, 100, "how many cores") \
   OPTION (definitions, 1, 0, 1, "extract general definitions") \
   OPTION (definitionticks, 1e6, 0, INT_MAX, "kitten ticks limits") \
@@ -59,6 +61,7 @@
   OPTION (eliminatebound, 16, 0, 1 << 13, "maximum elimination bound") \
   OPTION (eliminateclslim, 100, 1, INT_MAX, "elimination clause size limit") \
   OPTION (eliminateeffort, 100, 0, 2e3, "effort in per mille") \
+  OPTION (eliminatefix, 0, 0, 1, "count last round eliminations [SOLVER M9]") \
   OPTION (eliminateinit, 500, 0, INT_MAX, "initial elimination interval") \
   OPTION (eliminateint, 500, 10, INT_MAX, "base elimination interval") \
   OPTION (eliminateocclim, 2e3, 0, INT_MAX, "elimination occurrence limit") \
@@ -117,6 +120,7 @@
   OPTION (probe, 1, 0, 1, "enable probing") \
   OPTION (probeinit, 100, 0, INT_MAX, "initial probing interval") \
   OPTION (probeint, 100, 2, INT_MAX, "probing interval") \
+  OPTION (probeiterate, 0, 0, 1, "congruence and transitive again [SOLVER M8]") \
   OPTION (proberounds, 2, 1, INT_MAX, "probing rounds") \
   NQTOPT (profile, 2, 0, 4, "profile level") \
   OPTION (promote, 1, 0, 1, "promote clauses") \
@@ -187,6 +191,7 @@
   OPTION (vivifytier1, 3, 0, 100, "relative tier1 effort") \
   OPTION (vivifytier2, 3, 0, 100, "relative tier2 effort") \
   OPTION (vivifytier3, 1, 0, 100, "relative tier3 effort") \
+  OPTION (vivifywatchfix, 0, 0, 1, "fix best watch selection [SOLVER M10]") \
   OPTION (walkeffort, 50, 0, 1e6, "effort in per mille") \
   OPTION (walkinitially, 0, 0, 1, "initial local search") \
   OPTION (warmup, 1, 0, 1, "initialize phases by unit propagation")

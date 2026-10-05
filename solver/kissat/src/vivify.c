@@ -733,6 +733,14 @@ static void swap_first_literal_with_best_watch (kissat *solver,
   unsigned *best_ptr = lits;
   unsigned first = *best_ptr, best = first;
   signed char value = VALUE (best);
+  /* [SOLVER] M10 (research/12): el 'value' de dentro del bucle tapa a este,
+     así que la guarda 'value < 0' nunca cambia.  Si tras un literal no falso
+     viene uno falso de nivel mayor, se vigila el falso.  Con
+     'vivifywatchfix' se actualiza este y el bucle para en el primer
+     literal no falso, como sugiere la guarda. */
+  signed char *const best_value = &value;
+  const bool fix_watch = GET_OPTION (vivifywatchfix);
+  unsigned *fixed_ptr = 0; /* lo que elegiría el arreglo (diagnóstico) */
   unsigned best_level = LEVEL (best);
   const unsigned *const end = lits + size;
   for (unsigned *p = lits + 1; value < 0 && p != end; p++) {
@@ -746,7 +754,13 @@ static void swap_first_literal_with_best_watch (kissat *solver,
     }
     best_ptr = p;
     best = lit;
+    if (value >= 0 && !fixed_ptr)
+      fixed_ptr = p;
+    if (fix_watch) /* [SOLVER] M10 */
+      *best_value = value;
   }
+  if (fixed_ptr && fixed_ptr != best_ptr) /* [SOLVER] M10, solo con --stats */
+    INC (vivify_watch_mismatch);
   if (best_ptr == lits)
     return;
   LOG ("better watch %s instead of %s", LOGLIT (best), LOGLIT (first));

@@ -268,6 +268,7 @@
   COUNTER (vivify_reused, 2, PCNT_VIVIFY_PROBES, "%", "probes") \
   STATISTIC (vivify_ticks, 2, PCNT_TICKS, "%", "ticks") \
   STATISTIC (vivify_units, 1, PCNT_VARIABLES, "%", "variables") \
+  STATISTIC (vivify_watch_mismatch, 1, PCNT_VIVIFIED, "%", "vivified") \
   METRIC (walk_decisions, 1, PCNT_WALKS, "%", "walks") \
   STATISTIC (walk_improved, 1, PCNT_WALKS, "%", "walks") \
   METRIC (walk_previous, 1, PCNT_WALKS, "%", "walks") \

@@ -126,7 +126,7 @@ static void child (const char *input, const char *proof, const char *dir,
     if ((double) kissat_file_size (input) > max_bytes)
       _exit (EXIT_TOO_BIG);
   }
-  char *argv[16];
+  char *argv[16 + 32];
   int argc = 0;
   argv[argc++] = (char *) "satsuma";
   argv[argc++] = (char *) "fix";
@@ -141,6 +141,23 @@ static void child (const char *input, const char *proof, const char *dir,
   if (proof) {
     argv[argc++] = (char *) "--proof-file";
     argv[argc++] = (char *) proof;
+  }
+  /* [SOLVER] M2 (research/12, EXP-024): argumentos extra para 'satsuma
+     fix', separados por blancos ('labesat' usa scripts/satsuma_topes.sh).  Si
+     no caben, el hijo falla y se cae al respaldo, como con cualquier otro
+     fallo de satsuma. */
+  static char extra[4096];
+  const char *env = getenv ("LABESAT_SYMM_ARGS");
+  if (env && *env) {
+    if (strlen (env) >= sizeof extra)
+      _exit (EXIT_FAILURE);
+    strcpy (extra, env);
+    for (char *tok = strtok (extra, " \t\n"); tok;
+         tok = strtok (0, " \t\n")) {
+      if (argc >= (int) (sizeof argv / sizeof *argv) - 1)
+        _exit (EXIT_FAILURE);
+      argv[argc++] = tok;
+    }
   }
   argv[argc] = 0;
   _exit (labesat_satsuma_main (argc, argv));

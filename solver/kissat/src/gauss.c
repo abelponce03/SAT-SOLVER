@@ -435,6 +435,28 @@ int kissat_gauss_lucky (kissat *solver) {
   return 10;
 }
 
+/* [SOLVER] X2 (research/12, research/06 §X2): las variables de las
+   componentes resueltas toman como fase guardada inicial su valor en σ
+   (las libres, la fase inicial; las pivote, lo que fuerza el sistema).
+   Solo cambia la primera elección de signo de esas variables: la fase
+   guardada se sobrescribe al retroceder y al refasear, como siempre.  No
+   añade cláusulas ni toca la prueba.  Se llama antes de completar σ para
+   X1s, así que σ[idx] != 0 solo en las variables de esas componentes. */
+static void gauss_phases (kissat *solver, const value *sigma) {
+  value *const saved = solver->phases.saved;
+  const value *const values = solver->values;
+  unsigned set = 0;
+  for (unsigned idx = 0; idx != VARS; idx++) {
+    const value v = sigma[idx];
+    if (!v || !ACTIVE (idx) || values[LIT (idx)])
+      continue;
+    saved[idx] = v;
+    set++;
+  }
+  kissat_verbose (solver,
+                  "gauss: %u saved phases from the XOR solution (X2)", set);
+}
+
 static inline unsigned gauss_find (unsigned *parent, unsigned x) {
   while (parent[x] != x)
     x = parent[x] = parent[parent[x]];
@@ -616,7 +638,10 @@ int kissat_gauss (kissat *solver) {
   // X1s: solo si 'kissat_lucky' la va a usar antes del preproceso.
   const bool x1s = GET_OPTION (gausslucky) && GET_OPTION (lucky) &&
                    GET_OPTION (luckyearly);
-  value *sigma = x1s ? kissat_calloc (solver, VARS, sizeof (value)) : 0;
+  // [SOLVER] X2 (research/12): la misma σ, como fases iniciales.
+  const bool x2 = GET_OPTION (gaussphase);
+  value *sigma =
+      x1s || x2 ? kissat_calloc (solver, VARS, sizeof (value)) : 0;
   double x1s_time = 0;
   unsigneds colvars;
   INIT_STACK (colvars);
@@ -632,7 +657,7 @@ int kissat_gauss (kissat *solver) {
       for (unsigned k = 0; k != PEEK_STACK (sizes, crow[i]); k++)
         if (column[vars[k]] == INVALID_IDX) {
           column[vars[k]] = m++;
-          if (x1s)
+          if (sigma)
             PUSH_STACK (colvars, vars[k]);
         }
     }
@@ -660,7 +685,8 @@ int kissat_gauss (kissat *solver) {
         row[h / 64] |= (uint64_t) 1 << (h % 64);
       }
       unsigned rank = 0;
-      unsigned *pivcol = x1s ? kissat_nalloc (solver, n, sizeof (unsigned)) : 0;
+      unsigned *pivcol =
+          sigma ? kissat_nalloc (solver, n, sizeof (unsigned)) : 0;
       for (unsigned col = 0; col != m && rank != n; col++) {
         const unsigned w = col / 64;
         const uint64_t bit = (uint64_t) 1 << (col % 64);
@@ -728,6 +754,8 @@ int kissat_gauss (kissat *solver) {
   kissat_very_verbose (solver,
                        "gauss: %u components, the largest with %u rows",
                        num_components, largest);
+  if (x2 && EMPTY_STACK (certificate))
+    gauss_phases (solver, sigma);
   if (!EMPTY_STACK (certificate)) {
     uint64_t fresh = 0;
     if (solver->proof)
@@ -753,7 +781,7 @@ int kissat_gauss (kissat *solver) {
                     "(rank %u, %.2f seconds)",
                     num_rows, num_columns, rank_total,
                     GAUSS_TIME () - started);
-    if (sigma) {
+    if (sigma && x1s) {
       // σ completa: la raíz en las fijadas, la fase inicial fuera del sistema.
       const double t = GAUSS_TIME ();
       for (unsigned idx = 0; idx != VARS; idx++) {
