@@ -103,7 +103,7 @@ def parse_stats(text):
 
 
 def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_grace,
-            env=None, mem_bytes=0):
+            env=None, mem_bytes=0, proof=None):
     """Ejecuta una corrida y devuelve (status, exit_code, wall_s, cpu_s, rss_mb, stats).
 
     El tiempo de CPU se toma de `wait4` sobre ESTE hijo concreto (no de
@@ -115,7 +115,11 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
 
     `mem_bytes` > 0: tope de memoria virtual (RLIMIT_AS) de CADA proceso de la
     corrida (se hereda: con solver/labesat, satsuma y kissat por separado).
-    0 = sin tope, como en todos los A/B anteriores a EXP-023."""
+    0 = sin tope, como en todos los A/B anteriores a EXP-023.
+
+    `proof`: ruta donde el solver escribe la prueba (segundo argumento
+    posicional de kissat y de solver/labesat).  None = sin prueba, como en
+    todos los A/B anteriores a EXP-033 (M11, research/12)."""
     cmd = [solver, "-n", "-s", f"--seed={seed}"]
     if budget_kind == "time":
         # Kissat solo acepta segundos enteros en --time.
@@ -126,6 +130,8 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
         hard_limit = None
     cmd.extend(extra_opts)
     cmd.append(instance)
+    if proof:
+        cmd.append(proof)
 
     t0 = time.monotonic()
     killed = False

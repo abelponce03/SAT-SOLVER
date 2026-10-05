@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import os
 import resource
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -47,6 +48,10 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--bench", required=True, nargs="+")
     ap.add_argument("--build", required=True, action="append", metavar="NOMBRE=RUTA")
+    ap.add_argument("--build-args", action="append", default=[], metavar="NOMBRE=ARGS",
+                    help="argumentos extra para 'satsuma fix' de ese build (p. ej. topes "
+                         "internos, M2 de research/12, EXP-024); el mismo binario puede "
+                         "aparecer con dos nombres y argumentos distintos")
     ap.add_argument("--timeout", type=float, default=60.0,
                     help="el mismo tope que LABESAT_SYMM_TIMEOUT")
     ap.add_argument("--out", required=True)
@@ -59,6 +64,10 @@ def main():
                     help="conservar las instancias ya completas (todas sus builds) y seguir (ADR-0008)")
     args = ap.parse_args()
     builds = [b.split("=", 1) for b in args.build]
+    extra = {}
+    for b in args.build_args:
+        nombre, _, a = b.partition("=")
+        extra[nombre] = shlex.split(a)
     mem = int(args.mem_gb * (1 << 30))
 
     def tope():
@@ -107,8 +116,8 @@ def main():
                             os.remove(f)
                     t0 = time.monotonic()
                     try:
-                        code = subprocess.run([exe, "fix", cnf, *ARGS, "--proof-file", proof,
-                                               "--out-file", out],
+                        code = subprocess.run([exe, "fix", cnf, *ARGS, *extra.get(nombre, []),
+                                               "--proof-file", proof, "--out-file", out],
                                               stdout=subprocess.DEVNULL,
                                               stderr=subprocess.DEVNULL,
                                               timeout=args.timeout,
