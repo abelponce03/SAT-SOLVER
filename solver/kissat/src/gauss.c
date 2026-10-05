@@ -62,6 +62,16 @@ struct gauss_node {
   int out;
 };
 
+/* [SOLVER] El reloj solo se lee para los mensajes (research/08 T5 (c)).  En
+   el build de competición (QUIET) no existe 'kissat_process_time' ni se
+   imprime nada: sin esto, 'configure --competition --gauss' no enlaza. */
+#ifdef QUIET
+#define GAUSS_TIME() 0.0
+#else
+#include "resources.h"
+#define GAUSS_TIME() kissat_process_time ()
+#endif
+
 typedef STACK (gauss_candidate) gauss_candidates;
 typedef STACK (gauss_node) gauss_nodes;
 
@@ -435,7 +445,7 @@ int kissat_gauss (kissat *solver) {
   if (solver->inconsistent || solver->level || !solver->watching)
     return 0;
   // El reloj solo se lee para informar: no decide nada (research/08 T5 (c)).
-  const double started = kissat_process_time ();
+  const double started = GAUSS_TIME ();
   const unsigned max_size = (unsigned) GET_OPTION (gaussmaxsize);
   assert (2 <= max_size && max_size <= GAUSS_MAX_K);
   // Tope de memoria: cada candidata ocupa sizeof (gauss_candidate) bytes.
@@ -479,7 +489,7 @@ int kissat_gauss (kissat *solver) {
     kissat_verbose (solver,
                     "gauss: skipping, more than %zu candidate clauses "
                     "(%.2f seconds)",
-                    max_candidates, kissat_process_time () - started);
+                    max_candidates, GAUSS_TIME () - started);
     RELEASE_STACK (candidates);
     return 0;
   }
@@ -538,7 +548,7 @@ int kissat_gauss (kissat *solver) {
   const unsigned num_rows = SIZE_STACK (sizes);
   if (!num_rows || trivial_conflict) {
     kissat_verbose (solver, "gauss: no XOR rows to eliminate (%.2f seconds)",
-                    kissat_process_time () - started);
+                    GAUSS_TIME () - started);
     RELEASE_STACK (rows);
     RELEASE_STACK (starts);
     RELEASE_STACK (sizes);
@@ -699,10 +709,10 @@ int kissat_gauss (kissat *solver) {
         if (odd || !sum_parity)
           kissat_fatal ("gauss: invalid certificate (internal error)");
       } else if (pivcol) {
-        const double t = kissat_process_time ();
+        const double t = GAUSS_TIME ();
         gauss_back_substitute (solver, R, rank, pivcol, m,
                                BEGIN_STACK (colvars), INITIAL_PHASE, sigma);
-        x1s_time += kissat_process_time () - t;
+        x1s_time += GAUSS_TIME () - t;
       }
       if (pivcol)
         kissat_dealloc (solver, pivcol, n, sizeof (unsigned));
@@ -728,7 +738,7 @@ int kissat_gauss (kissat *solver) {
                     "(certificate of %zu rows, %" PRIu64
                     " extension variables in the proof, %.2f seconds)",
                     num_rows, num_columns, SIZE_STACK (certificate), fresh,
-                    kissat_process_time () - started);
+                    GAUSS_TIME () - started);
     solver->inconsistent = true;
     res = 20;
   } else if (skipped)
@@ -736,16 +746,16 @@ int kissat_gauss (kissat *solver) {
                     "gauss: skipping %u rows over %u variables "
                     "(%u of %u components over the limits, %.2f seconds)",
                     skipped_rows, skipped_columns, skipped, num_components,
-                    kissat_process_time () - started);
+                    GAUSS_TIME () - started);
   else {
     kissat_verbose (solver,
                     "gauss: %u XOR rows over %u variables are consistent "
                     "(rank %u, %.2f seconds)",
                     num_rows, num_columns, rank_total,
-                    kissat_process_time () - started);
+                    GAUSS_TIME () - started);
     if (sigma) {
       // σ completa: la raíz en las fijadas, la fase inicial fuera del sistema.
-      const double t = kissat_process_time ();
+      const double t = GAUSS_TIME ();
       for (unsigned idx = 0; idx != VARS; idx++) {
         const value v = values[LIT (idx)];
         if (v)
@@ -755,7 +765,7 @@ int kissat_gauss (kissat *solver) {
       }
       size_t checked;
       const bool all = gauss_satisfies_all (solver, sigma, &checked);
-      x1s_time += kissat_process_time () - t;
+      x1s_time += GAUSS_TIME () - t;
       if (all) {
         kissat_message (solver,
                         "gauss: solution of %u XOR rows over %u variables "
