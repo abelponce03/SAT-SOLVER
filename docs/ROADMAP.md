@@ -206,8 +206,8 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
 
 ### Fase 3d — Vías de mejora de research/12 · desde 2026-10-05
 
-Catálogo, hallazgos y orden de la cola en
-[`research/12`](research/12-vias-de-mejora.md). Todo va detrás de opciones
+Épica: #35 (EXP-024 a EXP-034: #36 a #46; D-021 #47, D-022 #48). Catálogo,
+hallazgos y orden de la cola en [`research/12`](research/12-vias-de-mejora.md). Todo va detrás de opciones
 apagadas, y se mide en la máquina local, detrás de EXP-023.
 
 - [x] Hallazgos:
