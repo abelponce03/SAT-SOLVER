@@ -424,6 +424,11 @@ static void eliminate_variables (kissat *solver) {
   uint64_t tried = 0;
 #endif
   unsigned last_round_eliminated = 0;
+  /* [SOLVER] M9 (research/12): dentro del bucle, 'last_round_eliminated' se
+     vuelve a declarar y tapa a esta, que se queda en 0; así 'complete', al
+     final, ignora lo eliminado en la última ronda (desde Kissat 3.1.0, lo
+     señaló SATLUTION).  Con 'eliminatefix' se copia aquí cada ronda. */
+  unsigned *const eliminated_in_last_round = &last_round_eliminated;
 
   SET_EFFORT_LIMIT (resolution_limit, eliminate, eliminate_resolutions);
 
@@ -500,6 +505,8 @@ static void eliminate_variables (kissat *solver) {
       eliminated += last_round_eliminated;
 #endif
     }
+    if (GET_OPTION (eliminatefix)) /* [SOLVER] M9 */
+      *eliminated_in_last_round = last_round_eliminated;
 
     if (!solver->inconsistent) {
       kissat_flush_large_connected (solver);

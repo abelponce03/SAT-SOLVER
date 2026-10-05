@@ -79,6 +79,12 @@ def main():
                          "tanda (repetible).  Imprescindible cuando --solver es un "
                          "guion como solver/labesat: hay que vigilar también kissat "
                          "y satsuma")
+    ap.add_argument("--proof-dir-a", default=None, metavar="DIR",
+                    help="la rama A escribe su prueba en un fichero temporal de DIR, que se "
+                         "borra tras medir su tamaño (en <out-a>.pruebas.csv). Sin esto, "
+                         "sin prueba, como antes de EXP-033 (M11, research/12)")
+    ap.add_argument("--proof-dir-b", default=None, metavar="DIR",
+                    help="igual para la rama B")
     ap.add_argument("--mem-gb", type=float, default=0,
                     help="tope de memoria virtual (RLIMIT_AS) de cada proceso de cada "
                          "corrida; 0 = sin tope (lo de siempre).  Para bancos con "
@@ -154,6 +160,18 @@ def main():
     # apagón deja como mucho una línea a medias, que --resume descarta.
     escritores = {k: EscritorDuradero(out, CSV_FIELDS, previas[k])
                   for k, (_, _, out, _) in ramas.items()}
+    # Pruebas (M11): el tamaño va en un CSV aparte para no cambiar el formato
+    # de A.csv/B.csv, que --resume de las tandas en curso necesita intacto.
+    dirs_prueba = {"A": args.proof_dir_a, "B": args.proof_dir_b}
+    CAMPOS_PRUEBA = ["instance", "seed", "proof_bytes"]
+    pruebas = {}
+    for k, (_, _, out, _) in ramas.items():
+        if dirs_prueba[k]:
+            os.makedirs(dirs_prueba[k], exist_ok=True)
+            ruta = os.path.splitext(out)[0] + ".pruebas.csv"
+            prev = [r for r in filas_completas(ruta, CAMPOS_PRUEBA)
+                    if (r["instance"], r["seed"]) in hechas] if args.resume else []
+            pruebas[k] = EscritorDuradero(ruta, CAMPOS_PRUEBA, prev)
 
     # Metadatos de procedencia, como run_experiment.py: el ADR-0003 dice que un
     # resultado sin ellos "no se usa para nada".
@@ -189,8 +207,10 @@ def main():
         "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
         "seeds": seeds, "timeout": args.timeout, "conflicts": args.conflicts,
         "mem_gb": args.mem_gb,
-        "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a},
-        "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b},
+        "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a,
+                   "proof_dir": args.proof_dir_a},
+        "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b,
+                   "proof_dir": args.proof_dir_b},
         "instances_filter": os.path.abspath(args.instances) if args.instances else None,
         "host": socket.gethostname(), "nproc": os.cpu_count(),
         "platform": platform.platform(), "loadavg": os.getloadavg(),
@@ -232,10 +252,18 @@ def main():
         for k in orden:
             label, opts, _, env = ramas[k]
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            prueba = (os.path.join(dirs_prueba[k], f"ab-{os.getpid()}-{k}.proof")
+                      if dirs_prueba[k] else None)
             status, code, wall, cpu, rss, stats = run_one(
                 args.solver if k == "A" else solver_b, inst, seed, presupuesto[0],
                 presupuesto[1], opts, hard_grace=30.0, env=env,
-                mem_bytes=int(args.mem_gb * (1 << 30)))
+                mem_bytes=int(args.mem_gb * (1 << 30)), proof=prueba)
+            if prueba:
+                tam = os.path.getsize(prueba) if os.path.exists(prueba) else 0
+                if os.path.exists(prueba):
+                    os.remove(prueba)
+                pruebas[k].escribir({"instance": os.path.basename(inst), "seed": seed,
+                                     "proof_bytes": tam})
             escritores[k].escribir({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,
@@ -251,7 +279,7 @@ def main():
               f"A {resumen['A'][0]:<7} {resumen['A'][1]:7.1f}s | "
               f"B {resumen['B'][0]:<7} {resumen['B'][1]:7.1f}s  ({'-'.join(orden)})")
 
-    for e in escritores.values():
+    for e in list(escritores.values()) + list(pruebas.values()):
         e.close()
     print(f"\nListo. Analiza con:  python3 scripts/par2.py {args.out_a} {args.out_b}")
 

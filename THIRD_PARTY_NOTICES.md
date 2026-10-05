@@ -14,6 +14,7 @@ salvo Kissat, que está vendorizado.
 | **dsr-trim** | Verificador de pruebas SR/DSR. Solo pruebas y CI, **no se distribuye** | `c3119d8` y `8f857dd` (SC2026) | Apache 2.0 | Cayden R. Codel | `tools/dsr-trim-src/LICENSE` |
 | **Kissat sc2026** | Candidata a nueva base; **solo experimentos** (EXP-008), no se distribuye | Paquete oficial de la SAT Competition 2026, sha256 `69fbdae7…` | MIT | Armin Biere, Mathias Fleury, Florian Pollitt | `tools/kissat-sc2026-src/LICENSE` |
 | **drat-trim** | Verificador de pruebas DRAT. Solo pruebas y CI, **no se distribuye** | HEAD en la descarga | MIT | Marijn Heule, Nathan Wetzler (UT Austin) | `tools/drat-trim-src/LICENSE` |
+| **Kissat_MAB / SATLUTION** (`kissat-mab-hypre-satlution`) | **Idea** de M8 (`--probeiterate`, research/12 §6): congruencia y una segunda reducción transitiva tras una reducción con éxito. Se reescribió en `probe.c`; es una idea de 3 líneas, no se copió código. También señaló el fallo de `eliminate.c` (M9) | Paquete oficial de la SAT Competition 2026 (`zheng.tar.xz`, leído el 2026-10-05) | MIT (la licencia de Kissat) | Armin Biere et al.; cambios de los autores de Kissat_MAB y SATLUTION | `LICENSE` del paquete |
 
 ## Lo que **no** se usa
 

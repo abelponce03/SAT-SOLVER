@@ -36,6 +36,17 @@ clase() {
             echo ACTIVA ;;     # B3'' terminador, --append-proof, identidad del banner
         solver/kissat/src/symmetry.c|solver/kissat/src/symmetry.h)
             echo INACTIVA ;;   # D-016: solo con 'configure --symmetry' y '--symmetry'
+        solver/kissat/src/gauss.c|solver/kissat/src/gauss.h|\
+        solver/kissat/src/internal.c|solver/kissat/src/internal.h|\
+        solver/kissat/src/proof.c|solver/kissat/src/proof.h)
+            echo ACTIVA ;;     # X1 y X1s, activas por defecto (EXP-019, 021, 022); X2 dentro, apagada
+        solver/kissat/src/proplit.h)
+            echo INACTIVA ;;   # K1, solo con 'configure --prefetch' (EXP-018: no se adopta)
+        solver/kissat/src/vivify.c|solver/kissat/src/bump.c|\
+        solver/kissat/src/eliminate.c|solver/kissat/src/probe.c|\
+        solver/kissat/src/transitive.c|solver/kissat/src/transitive.h|\
+        solver/kissat/src/statistics.h)
+            echo INACTIVA ;;   # VSA (EXP-015) y research/12: M5, M8, M9, M10, todas a 0
         solver/kissat/UPSTREAM.md|solver/kissat/scripts/*|\
         solver/kissat/configure|solver/kissat/makefile.in)
             echo DOC/BUILD ;;
@@ -78,8 +89,8 @@ cat <<EOF
 - **Documentación y build dentro de Kissat**: +${add[DOC/BUILD]:-0} / −${del[DOC/BUILD]:-0}.
 - **Guion de la tubería** (\`solver/labesat\`): **$guion** líneas.
 - **mclique** (\`solver/mclique\`, clique máxima para satsuma, D-005): **$mclique**
-  líneas de C, más $mclique_test de pruebas. Solo entra en la entrega si EXP-010
-  la valida.
+  líneas de C, más $mclique_test de pruebas. Adoptada (v2) en EXP-011: entra en
+  la entrega con satsuma.
 - **Unión con satsuma** (\`solver/symmetry/satsuma_entry.cpp\`, D-016): **$union** líneas
   de C++. satsuma y dejavu van vendorizados **sin modificar** (0 líneas).
 - **Escritas por IA**: todas las anteriores (asistente de IA bajo la dirección del autor).

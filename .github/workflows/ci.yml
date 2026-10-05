@@ -48,6 +48,26 @@ jobs:
           ./scripts/build.sh --dir=build-gauss-dbg --debug
           ./scripts/test_gauss.sh solver/kissat/build-gauss-dbg/kissat
 
+  opciones-research12:
+    name: Opciones de research/12 (apagadas por defecto, respuestas verificadas)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Herramientas externas (drat-trim y los dos dsr-trim)
+        run: ./scripts/get_tools.sh --jobs 4
+      - name: Compilar
+        run: ./scripts/build.sh --dir=build-m
+      - name: Valores por defecto, búsqueda intacta y respuestas verificadas
+        run: ./scripts/test_opciones_m.sh solver/kissat/build-m/kissat
+      - name: Lo mismo bajo ASan/UBSan
+        env:
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+        run: |
+          ./scripts/build.sh --dir=build-m-san --sanitize
+          ./scripts/test_opciones_m.sh solver/kissat/build-m-san/kissat
+      - name: El build con --stats compila (estadística diagnóstica de M10)
+        run: ./scripts/build.sh --dir=build-m-stats --stats
+
   simetrias-integradas:
     name: Ruptura de simetrías integrada en Kissat (D-016)
     runs-on: ubuntu-latest
@@ -168,7 +188,11 @@ jobs:
       - name: Cifras de la declaración de IA (plan Main Track §5)
         # Falla si un fichero modificado de Kissat está sin clasificar como
         # activo o inactivo: la cifra declarada nunca puede quedar desfasada.
-        run: ./scripts/declaracion_ia.sh | tee -a "$GITHUB_STEP_SUMMARY"
+        # pipefail: sin él, el código de 'tee' tapaba el del guion y un fichero
+        # sin clasificar pasaba en verde (ocurrió con gauss.c, research/12).
+        run: |
+          set -o pipefail
+          ./scripts/declaracion_ia.sh | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Instalar TeX Live y groff
         run: |
           sudo apt-get update -qq

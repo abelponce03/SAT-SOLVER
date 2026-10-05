@@ -5,6 +5,64 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Añadido (2026-10-05): research/12, vías de mejora desde siete ángulos, y EXP-024 a EXP-034
+- **research/12**: simetrías, razonamiento algebraico, heurística,
+  inprocesado, calidad del código base, pruebas y metodología. Hallazgos:
+  - **fallo en Kissat 4.0.4** (`eliminate.c`, desde la 3.1.0; también en
+    `development` y sc2026): una variable redeclarada hace que la
+    eliminación se dé siempre por completa;
+  - otro en `vivify.c` (elección del vigilante), frecuente: el 9,5 % de las
+    vivificaciones en 29 instancias de calib dejan un par vigilado peor;
+  - el resto del análisis estático, limpio: `-Wshadow=local` y
+    `clang --analyze`, con 13 sombras inofensivas y 3 falsos positivos;
+  - **SATLUTION no replicó**: −61 s dentro de su muestra; en 2026, 253
+    frente a 255 resueltas de su base;
+  - SBVA ya está en Kissat 4.0.x (`factorhops` = 3);
+  - el predicado lex-leader de satsuma favorece el falso, y Kissat empieza
+    en verdadero.
+- **Opciones nuevas de Kissat**, todas a 0, marcadas `[SOLVER]`, con la
+  búsqueda idéntica a la base cuando están apagadas (50 de 50 instancias):
+  - `--decayramp` (M5);
+  - `--eliminatefix` (M9);
+  - `--probeiterate` (M8; `kissat_transitive_reduction` devuelve si redujo);
+  - `--vivifywatchfix` (M10), con la estadística `vivify_watch_mismatch`
+    (solo `--stats`; simula las dos elecciones y cuenta los pares peores);
+  - `--gaussphase` (X2).
+- Topes internos de satsuma (M2), sin tocar `solver/labesat`, que EXP-023
+  vigila con `--guard`:
+  - `scripts/satsuma_topes.sh`, un envoltorio para `LABESAT_SATSUMA`;
+  - `LABESAT_SYMM_ARGS` en el binario integrado (`symmetry.c`), vacío por
+    defecto.
+- **Arneses** (compatibles hacia atrás con las tandas en curso):
+  - `run_ab_interleaved.py --proof-dir-a/-b`: tamaño de la prueba en
+    `<out>.pruebas.csv`, sin tocar el formato del CSV principal;
+  - `compare_satsuma_builds.py --build-args`;
+  - `scan_symmetry.py --satsuma-args`.
+- **Guiones**:
+  - `research12.py`: muestras deterministas y reglas de cribado,
+    confirmación y coste de la prueba;
+  - `x1b_potencial.py`: diagnóstico de X1b;
+  - `exp024.py`, `exp025.py`, `exp031.py` y `exp034.py`;
+  - `test_opciones_m.sh`, también en CI y bajo ASan/UBSan.
+- **EXP-024 a EXP-034 preregistrados** y en `scripts/cola.toml` detrás de
+  EXP-023, con un binario propio (`build-m`, `--pgo --lto`) para no tocar
+  `build/`. Las opciones de búsqueda van en dos etapas: cribado de 40 y
+  confirmación con 60 instancias distintas.
+- **Decisiones nuevas**:
+  - D-021: avisar a Biere del fallo, después de EXP-028;
+  - D-022: el cribado en dos etapas como norma.
+- D-018 se amplía con lo que costaría portar el MAB.
+
+### Arreglado (2026-10-05)
+- **El build `--competition` con X1 no enlazaba**: `gauss.c` llamaba a
+  `kissat_process_time`, que no existe en QUIET. Rompía los trabajos de CI
+  «Build de competición» y «Ruptura de simetrías integrada» del PR #32. El
+  reloj de `gauss.c` solo informa, así que en QUIET vale 0.
+- **`declaracion_ia.sh` fallaba** con `gauss`, `internal`, `proof`,
+  `proplit.h` y `vivify.c` sin clasificar, y CI no lo veía: `| tee` tapaba
+  el código de salida. Ficheros clasificados y `set -o pipefail` en el
+  paso.
+
 ### Añadido (2026-10-04): EXP-023 preregistrado; la entrada de satsuma de 2025, leída
 - **EXP-023** (`scripts/exp023.py`): B4, «siempre» y «nunca» en las 374
   instancias de 2025 de ≤ 512 MiB (`bench/sc2025.list.csv`), con la regla R

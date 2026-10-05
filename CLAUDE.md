@@ -119,6 +119,8 @@ python3 scripts/run_ab_interleaved.py … # A/B (ver docs/experiments/EXP-007 §
 python3 scripts/orquestador.py estado   # cola de experimentos: qué está hecho y qué corre (ADR-0008)
 ./scripts/instalar_servicio.sh          # servicio que ejecuta scripts/cola.toml y sobrevive a apagados
 ./scripts/test_reanudacion.sh           # las tandas sobreviven a un kill -9 / apagón
+./scripts/test_opciones_m.sh [kissat]   # opciones de research/12: apagadas, búsqueda intacta, respuestas verificadas
+python3 scripts/research12.py cribado A.csv B.csv  # regla de la etapa 1 de los A/B en dos etapas (research/12 §10)
 ```
 
 **Máquina de los experimentos (2026-09-23)**: todos los experimentos se
@@ -129,6 +131,13 @@ mitad **no se reanuda en otra máquina**, se relanza de cero donde vaya a
 correr completa. La cola vive en `scripts/cola.toml` y la ejecuta el servicio
 `labesat-experimentos` (ADR-0008): tras un apagado o reinicio, retoma sola
 donde iba, en esta misma máquina.
+
+**Actualizar el árbol con una tanda en marcha (2026-10-05)**: las tandas
+vigilan con `--guard` el SHA-1 de sus binarios y guiones (EXP-023 vigila
+`solver/labesat`). Un `git pull` que cambie un fichero vigilado aborta la
+tanda; uno que no los toque es inocuo (los arneses y la cola admiten los
+cambios hacia atrás). Antes de actualizar, mirar qué vigila la tanda en curso
+(`results/<exp>/A.meta.json`, `guardas_sha1`).
 
 **Memoria (2026-09-24)**: la máquina tiene 15 GB. Una tanda pesada a la vez
 (la cola lo garantiza con un cerrojo); nada de lanzar tandas a mano en

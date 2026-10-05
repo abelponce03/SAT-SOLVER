@@ -224,6 +224,26 @@ opción.
         los modos estable y enfocado (A4.1). Cerrado sin efecto detectado
         (EXP-006); se conserva para reproducir aquel experimento.
 \end{description}
+Las de \emph{research/12}, en medición (EXP-024 a EXP-034); con todas a
+\texttt{0}, la búsqueda es idéntica a la de la configuración adoptada:
+\begin{description}
+  \item[\texttt{--eliminatefix=1}] Arregla un fallo de Kissat (desde la
+        3.1.0) que da la eliminación por completa aunque la última ronda
+        eliminara variables. Cambia la búsqueda (EXP-028).
+  \item[\texttt{--probeiterate=1}] Tras una reducción transitiva con éxito,
+        congruencia y otra reducción transitiva, como SATLUTION (EXP-029).
+  \item[\texttt{--decayramp=N}] En modo estable, el decaimiento de VSIDS
+        empieza en $N$ por mil y baja 10 cada 5000 conflictos hasta
+        \texttt{--decay}; \texttt{200} es la rampa de Glucose (EXP-030).
+  \item[\texttt{--vivifywatchfix=1}] Arregla la elección del vigilante al
+        vivificar (EXP-031).
+  \item[\texttt{--gaussphase=1}] Si X1s descarta la solución de Gauss, la
+        usa como fase inicial de las variables del sistema XOR (X2, EXP-032).
+\end{description}
+Para medir los topes internos de satsuma (EXP-024),
+\texttt{LABESAT\_SATSUMA=scripts/satsuma\_topes.sh} los añade sin cambiar el
+guion; en el binario integrado, la variable \texttt{LABESAT\_SYMM\_ARGS} pasa
+argumentos extra a \texttt{satsuma fix} (vacía por defecto).
 
 \subsection{Ejemplos}
 \begin{lstlisting}[language=bash]

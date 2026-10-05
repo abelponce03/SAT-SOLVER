@@ -32,6 +32,7 @@ import hashlib
 import os
 import re
 import resource
+import shlex
 import shutil
 import subprocess
 import sys
@@ -80,7 +81,7 @@ def descomprimir(src, dst):
         return subprocess.run(cmd, stdout=out, stderr=subprocess.DEVNULL).returncode == 0
 
 
-def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0):
+def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0, extra=()):
     fila = {}
     inp = os.path.join(tmp, "in.cnf")
     if not descomprimir(cnf, inp):
@@ -90,7 +91,7 @@ def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0):
         return {**fila, "status": "GRANDE"}
     out, prf = os.path.join(tmp, "sb.cnf"), os.path.join(tmp, "p.sr")
     cmd = [satsuma, "fix", inp, "--full-skip-limit", "100000000", "--add-reduced-as-unit",
-           "--bsr", "--out-file", out, "--proof-file", prf]
+           "--bsr", "--out-file", out, "--proof-file", prf, *extra]
     t0 = time.time()
 
     def tope_memoria():
@@ -147,7 +148,11 @@ def main():
                     help="tope de memoria virtual de satsuma (RLIMIT_AS); 0 = sin tope. "
                          "La máquina local tiene 15 GB: sin tope, una instancia grande "
                          "puede agotarla (incidencia del 2026-09-24)")
+    ap.add_argument("--satsuma-args", default="",
+                    help="argumentos extra para 'satsuma fix' (topes internos, M2 de "
+                         "research/12; EXP-024), como scripts/satsuma_topes.sh")
     args = ap.parse_args()
+    extra = shlex.split(args.satsuma_args)
 
     insts = []
     for b in args.bench:
@@ -169,7 +174,7 @@ def main():
             tmp = tempfile.mkdtemp(prefix="scan-symm.")
             try:
                 fila = escanear(args.satsuma, cnf, tmp, args.timeout, args.maxbytes,
-                                int(args.mem_gb * (1 << 30)))
+                                int(args.mem_gb * (1 << 30)), extra)
             finally:
                 shutil.rmtree(tmp, ignore_errors=True)
             fila.update(instance=nombre, family=os.path.basename(os.path.dirname(cnf)),
