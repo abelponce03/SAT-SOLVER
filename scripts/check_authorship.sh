@@ -13,12 +13,19 @@
 # (AUTORIA_DESDE).  Lo anterior es la decisión abierta D-001 del registro, y no
 # debe poner CI en rojo mientras el director no la resuelva.
 #
+# Excepción (D-023, opción b, aprobada por el director el 2026-10-05): el
+# mensaje de 4d55340, el squash del PR #49, lleva el pie que el servidor de la
+# sesión añade a la descripción de los PR.  Solo se exime la revisión del
+# MENSAJE de ese SHA exacto; su autor y su committer se siguen revisando.  No
+# se añaden más excepciones sin una decisión nueva en el registro.
+#
 # Uso: scripts/check_authorship.sh [RANGO]      (p. ej. origin/main..HEAD)
 #      AUTORIA_DESDE="2026-09-23 12:00 +0000" scripts/check_authorship.sh
 set -euo pipefail
 RANGO="${1:-origin/main..HEAD}"
 DESDE="${AUTORIA_DESDE:-2026-09-23 12:00:00 +0000}"
 patron_id='(^|[^a-z])claude([^a-z.]|$)|anthropic'
+exentos_msg='4d5534072e3b0a5a5033366b0ce4fc4a55336226'   # D-023
 patron_msg='^co-authored-by:.*(claude|anthropic)|generated (with|by) .*claude|claude\.ai/code/session|noreply@anthropic\.com'
 fallos=0
 while IFS=$'\t' read -r sha autor committer; do
@@ -26,7 +33,9 @@ while IFS=$'\t' read -r sha autor committer; do
     if grep -qiE "$patron_id" <<< "$autor $committer"; then
         echo "FALLO ${sha:0:7}: autoría '$autor' / '$committer'"; fallos=1
     fi
-    if grep -qiE "$patron_msg" <<< "$msg"; then
+    if [[ " $exentos_msg " == *" $sha "* ]]; then
+        echo "EXENTO ${sha:0:7}: mensaje no revisado (D-023)"
+    elif grep -qiE "$patron_msg" <<< "$msg"; then
         echo "FALLO ${sha:0:7}: atribución en el mensaje:"
         grep -iE "$patron_msg" <<< "$msg" | sed 's/^/        /'
         fallos=1
