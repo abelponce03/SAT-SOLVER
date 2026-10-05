@@ -464,3 +464,390 @@ ab --solver solver/labesat --bench bench/sc2025 \
    --timeout 300 --seeds 42 --mem-gb 6
 python3 scripts/exp023.py analizar > results/exp023/informe.md 2>&1
 """
+
+# ---------------------------------------------------------------------------
+# research/12 (2026-10-05): vías M1–M12 y X2, preregistradas en EXP-024 a
+# EXP-034.  Van DESPUÉS de EXP-023, en el orden de research/12 §10: primero lo
+# determinista y barato, después los A/B en dos etapas (cribado de 40
+# instancias; confirmación de 60 distintas solo si el cribado dice PASA).
+# Todas las opciones nuevas viven en solver/kissat/build-m/kissat, compilado
+# desde el commit de los preregistros con --pgo --lto: build/ no se toca.
+# Cada paso termina con una marca results/expNNN/*.hecho escrita por el propio
+# comando, para que `hecho` no dependa de contar instancias.
+
+[[paso]]
+id = "research12-construir"
+descripcion = "research/12: compilar build-m (--pgo --lto) y build-m-stats (--stats) desde el commit"
+hecho = "[ -x solver/kissat/build-m/kissat ] && [ -x solver/kissat/build-m-stats/kissat ] && [ -f results/research12/commit.txt ]"
+comando = """
+./scripts/build.sh --dir=build-m --clean --pgo --lto
+./scripts/build.sh --dir=build-m-stats --clean --stats
+mkdir -p results/research12
+sha1sum solver/kissat/build-m/kissat solver/kissat/build-m-stats/kissat > results/research12/binarios.sha1
+{ git rev-parse HEAD; git status --porcelain -- scripts solver; } > results/research12/commit.txt
+"""
+
+[[paso]]
+id = "exp024-satsuma"
+descripcion = "EXP-024 parte 1: satsuma con y sin los topes internos de zheng (tesis-dev y symm2026)"
+requiere = ["bench/tesis-dev", "bench/symm2026", "tools/satsuma-mclique"]
+hecho = "[ -f results/exp024/satsuma.hecho ]"
+comando = """
+mkdir -p results/exp024
+python3 scripts/compare_satsuma_builds.py --bench bench/tesis-dev bench/symm2026 \
+   --build base=tools/satsuma-mclique --build topes=tools/satsuma-mclique \
+   --build-args "topes=--component-limit 500000 --order-model-limit 750000 --dense-model-limit 20000000" \
+   --timeout 60 --mem-gb 6 --out results/exp024/satsuma.csv --resume
+python3 scripts/exp024.py analizar > results/exp024/informe.md
+touch results/exp024/satsuma.hecho
+"""
+
+[[paso]]
+id = "exp024-ab"
+descripcion = "EXP-024 parte 2 (solo si H2): labesat --symmetry con y sin topes donde la CNF cambia"
+requiere = ["results/exp024/satsuma.hecho", "solver/kissat/build-m/kissat"]
+hecho = "[ -f results/exp024/ab.hecho ]"
+comando = """
+if grep -q "^H2 .*-> se cumple" results/exp024/informe.md; then
+  python3 scripts/exp024.py seleccionar
+  if [ "$(lineas_lista results/exp024/instancias.txt)" -gt 0 ]; then
+    ab --solver solver/labesat --bench bench/tesis-dev bench/symm2026 \
+       --instances results/exp024/instancias.txt \
+       --out-a results/exp024/A.csv --out-b results/exp024/B.csv \
+       --label-a A-sin-topes --label-b B-topes --opts-a=--symmetry --opts-b=--symmetry \
+       --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+       --env-a "LABESAT_SATSUMA=$PWD/tools/satsuma-mclique" \
+       --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+       --env-b "LABESAT_SATSUMA=$PWD/scripts/satsuma_topes.sh" \
+       --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique \
+       --guard scripts/satsuma_topes.sh \
+       --timeout 300 --seeds 42 --mem-gb 6
+    python3 scripts/research12.py confirmacion results/exp024/A.csv results/exp024/B.csv \
+       >> results/exp024/informe.md
+  fi
+else
+  echo "H2 no se cumple: sin parte 2 (EXP-024 §4)" >> results/exp024/informe.md
+fi
+touch results/exp024/ab.hecho
+"""
+
+[[paso]]
+id = "exp025"
+descripcion = "EXP-025: potencial de X1b (Gauss-Jordan) en la muestra de EXP-019"
+requiere = ["results/exp019/muestra.csv", "results/exp019/muestra-dev.csv"]
+hecho = "[ -f results/exp025/x1b.hecho ]"
+comando = """
+mkdir -p results/exp025
+python3 scripts/x1b_potencial.py --muestra results/exp019/muestra.csv \
+   results/exp019/muestra-dev.csv --out results/exp025/x1b.csv
+python3 scripts/exp025.py analizar > results/exp025/informe.md
+touch results/exp025/x1b.hecho
+"""
+
+[[paso]]
+id = "exp031-diagnostico"
+descripcion = "EXP-031 etapa 0: desajustes del vigilante de vivify (--stats, 100 000 conflictos)"
+requiere = ["solver/kissat/build-m-stats/kissat", "bench/tesis-dev"]
+hecho = "[ -f results/exp031/diagnostico.hecho ]"
+comando = """
+mkdir -p results/exp031
+python3 scripts/exp031.py diagnostico --kissat solver/kissat/build-m-stats/kissat \
+   --lista results/research12/cribado.txt --bench bench/tesis-dev \
+   --out results/exp031/diagnostico.csv --conflicts 100000
+python3 scripts/exp031.py analizar results/exp031/diagnostico.csv > results/exp031/diagnostico.txt
+touch results/exp031/diagnostico.hecho
+"""
+
+[[paso]]
+id = "exp026-cribado"
+descripcion = "EXP026 etapa 1 (cribado): fase inicial falsa con ruptura (M1), symm2026 con ruptura"
+requiere = ["solver/kissat/build-m/kissat", "bench/symm2026", "results/exp026/simetricas.txt"]
+hecho = "[ -f results/exp026/cribado.hecho ]"
+comando = """
+mkdir -p results/exp026
+ab --solver solver/labesat --bench bench/symm2026 --instances results/exp026/simetricas.txt \
+   --out-a results/exp026/A1.csv --out-b results/exp026/B1.csv \
+   --label-a A-siempre --label-b B-siempre-fase0 \
+   --opts-a=--symmetry --opts-b="--symmetry --phase=0" \
+   --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+   --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp026/A1.csv results/exp026/B1.csv > results/exp026/cribado.txt
+touch results/exp026/cribado.hecho
+"""
+
+[[paso]]
+id = "exp026-confirmacion"
+descripcion = "EXP026 etapa 2 (solo si PASA): 2025 con ruptura (frescas) e industria con ruptura"
+requiere = ["results/exp026/cribado.hecho", "results/exp023/satsuma.csv", "bench/sc2025", "bench/tesis-dev"]
+hecho = "[ -f results/exp026/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp026/cribado.txt; then
+  [ -f results/exp026/sc2025.txt ] || python3 scripts/research12.py seleccionar-2025
+  ab --solver solver/labesat --bench bench/sc2025 --instances results/exp026/sc2025.txt \
+     --out-a results/exp026/A2a.csv --out-b results/exp026/B2a.csv \
+     --label-a A-siempre --label-b B-siempre-fase0 \
+     --opts-a=--symmetry --opts-b="--symmetry --phase=0" \
+     --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+     --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique --timeout 300 --seeds 42 --mem-gb 6
+  ab --solver solver/labesat --bench bench/tesis-dev --instances results/exp026/industria.txt \
+     --out-a results/exp026/A2b.csv --out-b results/exp026/B2b.csv \
+     --label-a A-siempre --label-b B-siempre-fase0 \
+     --opts-a=--symmetry --opts-b="--symmetry --phase=0" \
+     --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+     --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique --timeout 300 --seeds 42 --mem-gb 6
+  { echo "## 2a (2025, H1)"; python3 scripts/research12.py confirmacion results/exp026/A2a.csv results/exp026/B2a.csv
+    echo "## 2b (industria, H2: no daño si el extremo superior del IC <= +5 s)"
+    python3 scripts/research12.py confirmacion results/exp026/A2b.csv results/exp026/B2b.csv; } > results/exp026/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp026/confirmacion.txt
+fi
+touch results/exp026/confirmacion.hecho
+"""
+
+[[paso]]
+id = "exp027-cribado"
+descripcion = "EXP027 etapa 1 (cribado): configuración --sat con ruptura (M7), symm2026 con ruptura"
+requiere = ["solver/kissat/build-m/kissat", "bench/symm2026", "results/exp026/simetricas.txt"]
+hecho = "[ -f results/exp027/cribado.hecho ]"
+comando = """
+mkdir -p results/exp027
+ab --solver solver/labesat --bench bench/symm2026 --instances results/exp026/simetricas.txt \
+   --out-a results/exp027/A1.csv --out-b results/exp027/B1.csv \
+   --label-a A-siempre --label-b B-siempre-sat \
+   --opts-a=--symmetry --opts-b="--symmetry --sat" \
+   --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+   --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp027/A1.csv results/exp027/B1.csv > results/exp027/cribado.txt
+touch results/exp027/cribado.hecho
+"""
+
+[[paso]]
+id = "exp027-confirmacion"
+descripcion = "EXP027 etapa 2 (solo si PASA): 2025 con ruptura (frescas) e industria con ruptura"
+requiere = ["results/exp027/cribado.hecho", "results/exp023/satsuma.csv", "bench/sc2025", "bench/tesis-dev"]
+hecho = "[ -f results/exp027/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp027/cribado.txt; then
+  [ -f results/exp026/sc2025.txt ] || python3 scripts/research12.py seleccionar-2025
+  ab --solver solver/labesat --bench bench/sc2025 --instances results/exp026/sc2025.txt \
+     --out-a results/exp027/A2a.csv --out-b results/exp027/B2a.csv \
+     --label-a A-siempre --label-b B-siempre-sat \
+     --opts-a=--symmetry --opts-b="--symmetry --sat" \
+     --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+     --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique --timeout 300 --seeds 42 --mem-gb 6
+  ab --solver solver/labesat --bench bench/tesis-dev --instances results/exp026/industria.txt \
+     --out-a results/exp027/A2b.csv --out-b results/exp027/B2b.csv \
+     --label-a A-siempre --label-b B-siempre-sat \
+     --opts-a=--symmetry --opts-b="--symmetry --sat" \
+     --env-a "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" --env-b "LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat" \
+     --guard solver/kissat/build-m/kissat --guard tools/satsuma-mclique --timeout 300 --seeds 42 --mem-gb 6
+  { echo "## 2a (2025, H1)"; python3 scripts/research12.py confirmacion results/exp027/A2a.csv results/exp027/B2a.csv
+    echo "## 2b (industria, H2: no daño si el extremo superior del IC <= +5 s)"
+    python3 scripts/research12.py confirmacion results/exp027/A2b.csv results/exp027/B2b.csv; } > results/exp027/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp027/confirmacion.txt
+fi
+touch results/exp027/confirmacion.hecho
+"""
+
+[[paso]]
+id = "exp028-cribado"
+descripcion = "EXP028 etapa 1 (cribado): arreglo de eliminate.c (M9)"
+requiere = ["solver/kissat/build-m/kissat", "bench/tesis-dev"]
+hecho = "[ -f results/exp028/cribado.hecho ]"
+comando = """
+mkdir -p results/exp028
+ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/cribado.txt \
+   --out-a results/exp028/A1.csv --out-b results/exp028/B1.csv \
+   --label-a A-base --label-b B-eliminatefix --opts-b=--eliminatefix=1 \
+   --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp028/A1.csv results/exp028/B1.csv > results/exp028/cribado.txt
+touch results/exp028/cribado.hecho
+"""
+
+[[paso]]
+id = "exp028-confirmacion"
+descripcion = "EXP028 etapa 2 (solo si el cribado dice PASA): 60 instancias distintas, semillas 42 y 123"
+requiere = ["results/exp028/cribado.hecho"]
+hecho = "[ -f results/exp028/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp028/cribado.txt; then
+  ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/confirmacion.txt \
+     --out-a results/exp028/A2.csv --out-b results/exp028/B2.csv \
+     --label-a A-base --label-b B-eliminatefix --opts-b=--eliminatefix=1 \
+     --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42,123 --mem-gb 6
+  python3 scripts/research12.py confirmacion results/exp028/A2.csv results/exp028/B2.csv > results/exp028/confirmacion.txt
+  python3 scripts/par2.py results/exp028/A2.csv results/exp028/B2.csv --md >> results/exp028/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp028/confirmacion.txt
+fi
+touch results/exp028/confirmacion.hecho
+"""
+
+[[paso]]
+id = "exp029-cribado"
+descripcion = "EXP029 etapa 1 (cribado): congruencia iterada de SATLUTION (M8)"
+requiere = ["solver/kissat/build-m/kissat", "bench/tesis-dev"]
+hecho = "[ -f results/exp029/cribado.hecho ]"
+comando = """
+mkdir -p results/exp029
+ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/cribado.txt \
+   --out-a results/exp029/A1.csv --out-b results/exp029/B1.csv \
+   --label-a A-base --label-b B-probeiterate --opts-b=--probeiterate=1 \
+   --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp029/A1.csv results/exp029/B1.csv > results/exp029/cribado.txt
+touch results/exp029/cribado.hecho
+"""
+
+[[paso]]
+id = "exp029-confirmacion"
+descripcion = "EXP029 etapa 2 (solo si el cribado dice PASA): 60 instancias distintas, semillas 42 y 123"
+requiere = ["results/exp029/cribado.hecho"]
+hecho = "[ -f results/exp029/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp029/cribado.txt; then
+  ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/confirmacion.txt \
+     --out-a results/exp029/A2.csv --out-b results/exp029/B2.csv \
+     --label-a A-base --label-b B-probeiterate --opts-b=--probeiterate=1 \
+     --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42,123 --mem-gb 6
+  python3 scripts/research12.py confirmacion results/exp029/A2.csv results/exp029/B2.csv > results/exp029/confirmacion.txt
+  python3 scripts/par2.py results/exp029/A2.csv results/exp029/B2.csv --md >> results/exp029/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp029/confirmacion.txt
+fi
+touch results/exp029/confirmacion.hecho
+"""
+
+[[paso]]
+id = "exp030-cribado"
+descripcion = "EXP030 etapa 1 (cribado): rampa del decaimiento (M5)"
+requiere = ["solver/kissat/build-m/kissat", "bench/tesis-dev"]
+hecho = "[ -f results/exp030/cribado.hecho ]"
+comando = """
+mkdir -p results/exp030
+ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/cribado.txt \
+   --out-a results/exp030/A1.csv --out-b results/exp030/B1.csv \
+   --label-a A-base --label-b B-decayramp --opts-b=--decayramp=200 \
+   --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp030/A1.csv results/exp030/B1.csv > results/exp030/cribado.txt
+touch results/exp030/cribado.hecho
+"""
+
+[[paso]]
+id = "exp030-confirmacion"
+descripcion = "EXP030 etapa 2 (solo si el cribado dice PASA): 60 instancias distintas, semillas 42 y 123"
+requiere = ["results/exp030/cribado.hecho"]
+hecho = "[ -f results/exp030/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp030/cribado.txt; then
+  ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/confirmacion.txt \
+     --out-a results/exp030/A2.csv --out-b results/exp030/B2.csv \
+     --label-a A-base --label-b B-decayramp --opts-b=--decayramp=200 \
+     --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42,123 --mem-gb 6
+  python3 scripts/research12.py confirmacion results/exp030/A2.csv results/exp030/B2.csv > results/exp030/confirmacion.txt
+  python3 scripts/par2.py results/exp030/A2.csv results/exp030/B2.csv --md >> results/exp030/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp030/confirmacion.txt
+fi
+touch results/exp030/confirmacion.hecho
+"""
+
+[[paso]]
+id = "exp031-cribado"
+descripcion = "EXP031 etapa 1 (cribado): vigilante de vivify (M10), solo si la etapa 0 pasa"
+requiere = ["solver/kissat/build-m/kissat", "bench/tesis-dev", "results/exp031/diagnostico.hecho"]
+hecho = "[ -f results/exp031/cribado.hecho ]"
+comando = """
+if ! grep -q "PASA" results/exp031/diagnostico.txt; then
+  echo "etapa 0 sin pasar: sin A/B (EXP-031 §4)" > results/exp031/cribado.txt
+  touch results/exp031/cribado.hecho; exit 0
+fi
+ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/cribado.txt \
+   --out-a results/exp031/A1.csv --out-b results/exp031/B1.csv \
+   --label-a A-base --label-b B-vivifywatchfix --opts-b=--vivifywatchfix=1 \
+   --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp031/A1.csv results/exp031/B1.csv > results/exp031/cribado.txt
+touch results/exp031/cribado.hecho
+"""
+
+[[paso]]
+id = "exp031-confirmacion"
+descripcion = "EXP031 etapa 2 (solo si el cribado dice PASA): 60 instancias distintas, semillas 42 y 123"
+requiere = ["results/exp031/cribado.hecho"]
+hecho = "[ -f results/exp031/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp031/cribado.txt; then
+  ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev --instances results/research12/confirmacion.txt \
+     --out-a results/exp031/A2.csv --out-b results/exp031/B2.csv \
+     --label-a A-base --label-b B-vivifywatchfix --opts-b=--vivifywatchfix=1 \
+     --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42,123 --mem-gb 6
+  python3 scripts/research12.py confirmacion results/exp031/A2.csv results/exp031/B2.csv > results/exp031/confirmacion.txt
+  python3 scripts/par2.py results/exp031/A2.csv results/exp031/B2.csv --md >> results/exp031/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp031/confirmacion.txt
+fi
+touch results/exp031/confirmacion.hecho
+"""
+
+[[paso]]
+id = "exp033"
+descripcion = "EXP-033: coste de escribir la prueba (misma búsqueda, 300 000 conflictos)"
+requiere = ["solver/kissat/build-m/kissat", "bench/tesis-dev", "results/exp033/instancias.txt"]
+hecho = "[ -f results/exp033/exp033.hecho ]"
+comando = """
+ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev \
+   --instances results/exp033/instancias.txt \
+   --out-a results/exp033/A.csv --out-b results/exp033/B.csv \
+   --label-a A-sin-prueba --label-b B-con-prueba --proof-dir-b results/exp033/pruebas-tmp \
+   --guard solver/kissat/build-m/kissat --conflicts 300000 --seeds 42 --mem-gb 6
+python3 scripts/research12.py coste-prueba results/exp033/A.csv results/exp033/B.csv > results/exp033/informe.txt
+touch results/exp033/exp033.hecho
+"""
+
+[[paso]]
+id = "exp034"
+descripcion = "EXP-034: labesat --symmetry con prueba y verificación con los dos dsr-trim"
+requiere = ["solver/kissat/build-m/kissat", "bench/symm2026", "bench/tesis-dev", "tools/dsr-trim", "tools/dsr-trim-sc2026"]
+hecho = "[ -f results/exp034/exp034.hecho ]"
+comando = """
+LABESAT_KISSAT=$PWD/solver/kissat/build-m/kissat python3 scripts/exp034.py correr \
+   --listas results/exp034/simetricas.txt results/exp034/industria.txt \
+   --bench bench/symm2026 bench/tesis-dev --out results/exp034/verificacion.csv \
+   --timeout 300 --check-timeout 3600 --tmp results/exp034
+python3 scripts/exp034.py analizar results/exp034/verificacion.csv > results/exp034/informe.txt
+touch results/exp034/exp034.hecho
+"""
+
+[[paso]]
+id = "exp032-cribado"
+descripcion = "EXP032 etapa 1 (cribado): fases de Gauss (X2)"
+requiere = ["solver/kissat/build-m/kissat", "bench/tesis-dev"]
+hecho = "[ -f results/exp032/cribado.hecho ]"
+comando = """
+mkdir -p results/exp032
+ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev bench/calib bench/calib2 bench/symm2026 bench/dev --instances results/exp032/cribado.txt \
+   --out-a results/exp032/A1.csv --out-b results/exp032/B1.csv \
+   --label-a A-base --label-b B-gaussphase --opts-b=--gaussphase=1 \
+   --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42 --mem-gb 6
+python3 scripts/research12.py cribado results/exp032/A1.csv results/exp032/B1.csv > results/exp032/cribado.txt
+touch results/exp032/cribado.hecho
+"""
+
+[[paso]]
+id = "exp032-confirmacion"
+descripcion = "EXP032 etapa 2 (solo si el cribado dice PASA): 60 instancias distintas, semillas 42 y 123"
+requiere = ["results/exp032/cribado.hecho"]
+hecho = "[ -f results/exp032/confirmacion.hecho ]"
+comando = """
+if grep -q "PASA" results/exp032/cribado.txt; then
+  ab --solver solver/kissat/build-m/kissat --bench bench/tesis-dev bench/calib bench/calib2 bench/symm2026 bench/dev --instances results/exp032/confirmacion.txt \
+     --out-a results/exp032/A2.csv --out-b results/exp032/B2.csv \
+     --label-a A-base --label-b B-gaussphase --opts-b=--gaussphase=1 \
+     --guard solver/kissat/build-m/kissat --timeout 300 --seeds 42,123 --mem-gb 6
+  python3 scripts/research12.py confirmacion results/exp032/A2.csv results/exp032/B2.csv > results/exp032/confirmacion.txt
+  python3 scripts/par2.py results/exp032/A2.csv results/exp032/B2.csv --md >> results/exp032/confirmacion.txt
+else
+  echo "cerrado en el cribado (research/12 §10)" > results/exp032/confirmacion.txt
+fi
+touch results/exp032/confirmacion.hecho
+"""

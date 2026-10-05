@@ -53,6 +53,7 @@ partir de las instancias de 2026 (EXP-007 §4), y se dice así en cada informe.
 | **P7** | Bandido VSIDS/CHB (Kissat_MAB; 1.º en 2021, 2022 y 2025) | research/07 §4; research/05 lo había aparcado | Medio | **D-018**: candidata a V3. EXP-008 ya decidió la base (4.0.4); pendiente del director |
 | **P8** | **Optimización con trayectoria conservada** (clase E, ADR-0009): compilación (C1: PGO, LTO, `-march`) y puntos calientes que pesen ≥ 5 % | research/08: un 10 % de velocidad vale ≈ −1,5 % de PAR-2 (Proposición 1); el doble, −10 a −17 %. La propagación de Kissat ya es óptima en su modelo (Gent, 2013) | Bajo (C1) a medio (puntos calientes) | **EXP-016** (dónde se va el tiempo) → **EXP-017** (C1, con control negativo de FMA) → candidatas K* con prueba escrita antes de implementar |
 | **P9** | **X1: refutación de sistemas XOR por Gauss con prueba ER** (research/09) | Separación exponencial demostrada (Teorema 1 y Corolario 2). Refuta en 0,02 s la *lights-out* UNSAT `667341ee` de 2026 (346 s el mejor de 2026). research/06 §5: +4 resueltas y ≈ −112 s de PAR-2 en 2026 | Hecho | **Activa por defecto** (2026-10-03): EXP-019 (v1) y EXP-021 (v2, por componentes) |
+| **P10** | **Vías de research/12**: alinear la búsqueda con la ruptura (fase falsa o `--sat` cuando satsuma actúa), topes internos de satsuma, arreglos de dos fallos de Kissat, réplica de SATLUTION, rampa de decaimiento, X1b y X2 | research/12: un fallo de Kissat confirmado por análisis estático; el lex-leader favorece el falso y Kissat empieza en verdadero; lo que solo resuelve «nunca» en 2026 es casi todo SAT | Hecho (opciones apagadas) | **EXP-024 a EXP-034**, en la cola detrás de EXP-023; A/B en dos etapas (D-022) |
 | — | ~~B2, hiper-resolución binaria~~ | Error de hecho: `kissat-mab-hypre` es satsuma + Kissat_MAB (research/07 §2.1) | — | **Retirada** |
 | — | ~~A4.2 (más brazos)~~ | A4.1 no tuvo efecto (EXP-006) | — | **Descartada**: la fase 3 original desaparece |
 
@@ -118,6 +119,7 @@ respalde. **No se presenta nada sin medir.**
 | EXP-014 (simetrías en la industria) | Parte 1: satsuma en 450 instancias; parte 2: ≤ 90 parejas, T = 300 s | ~1 h + ≤ 15 h |
 | EXP-015 (VSA) | 60 instancias × 2 semillas, T = 300 s | ~6 h (≤ 20 h) |
 | EXP-009 (B3) | Entrenamiento con los datos de EXP-007 y de 2026, más validación en ~80 instancias | ~6–8 h |
+| EXP-024 a EXP-034 (research/12) | Deterministas (EXP-024, 025 y 031 etapa 0); A/B en dos etapas (40 + 60 instancias, T = 300 s); pruebas (EXP-033 y 034) | ~40 h realistas; ~60 h si todo pasa el cribado; ~95 h sin cribado (research/12 §10) |
 | H8 (validación final) | 60 instancias de test, T = 1000 s, 2 variantes | ~35 h en secuencial. Por eso se decide antes de H8 cuántas variantes se validan |
 | H7 (benchmarks) | Calibrar ~60 candidatas con MiniSat (60 s) y LabeSAT (≤ 1 h) | ~20–40 h |
 

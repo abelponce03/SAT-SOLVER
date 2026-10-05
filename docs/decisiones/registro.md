@@ -35,6 +35,8 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
 | D-019 | ¿`-march=x86-64-v3` en el paquete de competición? | ✅ **opción a** (2026-10-01): sin `-march` ni en la competición ni en los experimentos; solo PGO + LTO | Director | §D-019 · issue #33 · EXP-017 §7 |
 | D-018 | Reabrir la línea VSIDS/CHB (Kissat_MAB) como candidata a V3 | 🟡 propuesta; nada se implementa antes de EXP-008 | Director | §D-018 · issue #29 · [research/07](../research/07-ganadores-y-banco-tesis.md) §4 |
 | D-020 | Política de simetrías del paquete de competición tras descartar B3 | 🟡 recomendada la a: V1 «siempre» y V2 «nunca», las dos con X1 y PGO + LTO; reforzada por 2025 («siempre», 15.º) | Director | §D-020 · issue #34 · EXP-009 §7 · [research/10](../research/10-distancia-a-los-ganadores-2026.md) §2 |
+| D-021 | ¿Avisar a Biere de los fallos de `eliminate.c` y `vivify.c`? | 🟡 recomendado: sí, después de EXP-028, con el dato | Director (sale del repositorio) | §D-021 · [research/12](../research/12-vias-de-mejora.md) §7 · EXP-028 · EXP-031 |
+| D-022 | ¿Cribado en dos etapas como norma de ADR-0003 para las opciones de búsqueda? | 🟡 aplicado provisionalmente en EXP-026 a EXP-032, cada uno con su regla preregistrada | Director | §D-022 · [research/12](../research/12-vias-de-mejora.md) §10 |
 
 ---
 
@@ -275,6 +277,19 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
   (15.º en 2025 y 1.º en 2026), la rejilla {con / sin simetrías} ×
   {Kissat / MAB} tiene una variante arriba en cada régimen. Es un argumento
   a favor de la opción b para V3/V4 (D-014).
+- **Dato nuevo (2026-10-05)** (research/12 §5): se leyó el código de
+  Kissat_MAB 4.0.2 del paquete oficial de 2026 (`zheng`, MIT).
+  - Portarlo toca **12 ficheros** (~300 líneas): un segundo montículo
+    `scores_chb` en `backtrack`, `compact`, `decide`, `flags` y `resize`; la
+    recompensa de CHB en `propsearch`; el UCB en `restart`.
+  - La versión de `kissat-mab-hypre` **no es la de 2021**: añade un segundo
+    bandido (`strategy`) con estado en variables `static` y un comentario
+    `// MAB bug?`. SATLUTION le corrige que CHB puntuara también durante el
+    sondeo.
+  - Si se elige la b, lo recomendable es portar el **Kissat_MAB de 2021**
+    (UCB simple), detrás de `configure --mab` como X1 (la búsqueda idéntica
+    sin la macro), y no el bandido evolucionado. Sigue sin implementarse
+    nada hasta que el director decida.
 
 ## D-019 — ¿`-march=x86-64-v3` en el paquete de competición?
 
@@ -369,3 +384,72 @@ Las decisiones de diseño ya tomadas y de largo alcance tienen su ADR en
     2025.
 - **Mientras tanto**: no cambia ningún valor por defecto. Los experimentos
   que midan la configuración de V1 la piden con `--symmetry`.
+
+## D-021 — ¿Avisar a Biere de los fallos de Kissat?
+
+- **Surge**: el 2026-10-05, en research/12 §7.
+- **Contexto**:
+  - **`eliminate.c`**: dentro del bucle de rondas, `last_round_eliminated` se
+    declara otra vez y tapa la exterior. La decisión de si la eliminación
+    quedó completa lee siempre 0, así que Kissat la da siempre por completa.
+    - Está desde la 3.1.0 (2023), y sigue en la 4.0.4, en `development` y en
+      sc2026.
+    - Lo señaló el ciclo 6 de SATLUTION; aquí se confirma con
+      `gcc -Wshadow=local`.
+  - **`vivify.c`**: otra sombra (`value`) en
+    `swap_first_literal_with_best_watch`. Es frecuente: el 9,5 % de las
+    vivificaciones en 29 instancias de calib dejan un par vigilado peor. El
+    daño es acotado, porque se recupera al volver al nivel 0.
+  - La conducta con el fallo es la que ha ganado: arreglarlo **cambia la
+    búsqueda**, y no se sabe si a mejor (EXP-028).
+- **Opciones**:
+  - **a.** No avisar.
+  - **b. (recomendada)** Avisar **después** de EXP-028 (y de la etapa 0 de
+    EXP-031), con el diagnóstico y el dato medido: un *issue* en
+    `arminbiere/kissat` o un correo, con el parche de una línea.
+  - **c.** Avisar ya, sin dato.
+- **Por qué b**: el aviso es útil a la comunidad en cualquier caso, pero con
+  el dato es mucho más útil: dice si arreglarlo mejora o empeora. Y no se
+  pierde nada por esperar unos días.
+- **Es una acción fuera del repositorio**: no se hace sin confirmación del
+  director (CLAUDE.md §3). El aviso iría con su autoría, y en la
+  declaración de IA del proyecto constaría que el hallazgo salió del
+  análisis asistido.
+- **Mientras tanto**: los dos arreglos van detrás de opciones apagadas
+  (`--eliminatefix`, `--vivifywatchfix`).
+
+## D-022 — ¿Cribado en dos etapas como norma para las opciones de búsqueda?
+
+- **Surge**: el 2026-10-05, en research/12 §10.
+- **Contexto**:
+  - research/12 deja once experimentos para medir en un portátil de 4
+    núcleos.
+  - Con el diseño de EXP-015 (60 instancias × 2 semillas, T = 300 s),
+    cada opción cuesta ~6 h, y hasta 20 h en el peor caso.
+  - La experiencia del proyecto: casi todas las opciones de búsqueda han
+    salido nulas (A4.1, VSA, K1). Gastar 6 h en confirmar un nulo es lo
+    caro.
+- **Propuesta**:
+  - **Etapa 1 (cribado)**: 40 instancias, T = 300 s, una semilla.
+    - PASA si el ΔPAR-2 medio es negativo o si el factor de velocidad en
+      las resueltas por las dos es < 0,97.
+    - Sin contraste: los p no se usan como evidencia.
+  - **Etapa 2 (confirmación)**: 60 instancias **que el cribado no ha visto**,
+    dos semillas, con los criterios de siempre: Wilcoxon, bootstrap y el
+    factor de velocidad.
+  - El cribado solo puede **descartar**; la evidencia sale entera de la
+    etapa 2, con instancias frescas. No hay comparaciones múltiples ocultas.
+- **Opciones**:
+  - **a.** Mantener ADR-0003 como está: un A/B completo por opción.
+  - **b. (recomendada)** Añadir a ADR-0003 el diseño en dos etapas como
+    opción preregistrable para las opciones de búsqueda.
+  - **c.** b, más una tanda de cribado **multibrazo** (varias opciones
+    intercaladas por instancia con una sola rama base). Ahorraría ~35 %
+    más, pero exige un arnés nuevo.
+- **Riesgo de b**: un efecto real pero pequeño puede no pasar el cribado.
+  Se acepta: un efecto que 40 instancias no muestran ni en el signo no
+  movería el PAR-2 de la competición (research/08 §2).
+- **Mientras tanto**: EXP-026 a EXP-032 llevan cada uno su regla de dos
+  etapas en el preregistro, lo que ya es válido con ADR-0003 (la regla se
+  fija antes de ver datos). D-022 decide si pasa a ser la norma.
+

@@ -833,3 +833,74 @@ al cerrar cada sesión.
     como candidata).
 - **Salió mal**: `gh pr edit` falla por la retirada de *projects classic* en
   GitHub; se usó la API REST.
+
+## 2026-10-05 — research/12: muchas vías de mejora, preparadas para la máquina local
+
+- **Se pidió**: continuar el desarrollo complementando lo hecho en local,
+  atacar LabeSAT desde varios puntos de vista, encontrar muchas vías de
+  mejora, documentar cada hallazgo y dejar preregistrados los experimentos
+  que se validarán en la máquina local.
+- **Se hizo**:
+  - **Sincronización**: la rama de la sesión se rehízo desde la cabeza del
+    PR #32 (`a5429c7`, trabajo local del 25-09 al 04-10). Antes se leyeron
+    research/08 a 11, EXP-016 a 023, D-019 y D-020, y el PR nuevo va
+    apilado sobre el #32.
+  - **Siete ángulos** (research/12): simetrías, álgebra, heurística,
+    inprocesado, calidad del código base, pruebas y metodología.
+  - **Paquete oficial `zheng` de 2026** (Kissat_MAB y SATLUTION, MIT),
+    leído solo para la técnica. De ahí salen el cambio de `probe.c` de
+    SATLUTION, sus cifras dentro de la muestra y el aviso del fallo de
+    `eliminate.c`.
+  - **Análisis estático del Kissat base**:
+    - `gcc -Wshadow=local` da 15 sombras: 2 fallos y 13 inofensivas. Los
+      fallos son `eliminate.c`, desde la 3.1.0, y `vivify.c`, que deja un
+      par vigilado peor en el 9,5 % de las vivificaciones de 29 instancias
+      de calib;
+    - `clang --analyze` da 3 falsos positivos.
+  - **Datos oficiales de 2026**: SATLUTION quedó por detrás de su base, y
+    hubo 12 *checker-timeout* en el top.
+  - **Cinco opciones nuevas apagadas** (M5, M8, M9, M10, X2), un
+    envoltorio de satsuma con topes (M2), el soporte de pruebas en el arnés
+    A/B (M11), cuatro guiones de análisis y `test_opciones_m.sh` (en CI).
+  - **Verificación en la nube, solo de corrección**:
+    - búsqueda idéntica con todo apagado (50 de 50);
+    - respuestas verificadas con cada opción, también con ASan/UBSan.
+  - **Once preregistros** (EXP-024 a EXP-034) y sus pasos en
+    `scripts/cola.toml`, detrás de EXP-023.
+- **Decisiones**:
+  - Los A/B de opciones de búsqueda, en **dos etapas**: cribado de 40 sin
+    contraste y confirmación con 60 instancias distintas. Ahorra ~55 h si
+    las vías salen nulas, como casi todas hasta ahora. Se registra como
+    D-022 para que el director decida si pasa a ser norma.
+  - Los fallos de Kissat **no se arreglan**, se miden: la conducta con el
+    fallo es la que ganó. Avisar a Biere se registra como D-021, porque sale
+    del repositorio.
+  - El bandido MAB **no se porta** sin D-018: solo se documenta lo que
+    costaría y qué versión portar.
+  - **No se toca `solver/labesat`**: EXP-023 lo vigila con `--guard` y un
+    *pull* abortaría la tanda. Los topes de satsuma van en un envoltorio
+    (`scripts/satsuma_topes.sh`).
+- **Salió mal**:
+  - El build `--competition` con X1 **no enlazaba** desde el PR #32
+    (`kissat_process_time` no existe en QUIET). Rompía dos trabajos de CI
+    y se arregló aquí.
+  - `declaracion_ia.sh` llevaba días fallando sin que CI lo viera: el
+    `| tee` tapaba el código de salida. Se clasificaron los ficheros y se
+    añadió `pipefail`.
+  - La primera prueba de X2 usaba dos cláusulas que juntas eran una XOR
+    (Gauss las absorbía). Se cambió por la negación de σ.
+  - El primer diagnóstico de X1b contaba como nuevas unidades que ya da la
+    propagación. Se añadió la propagación en la raíz antes de Gauss.
+  - Otra vez `pkill -f` mató su propia shell (código 144), un error ya
+    anotado el 23-09. Hay que matar por PID.
+  - La numeración inicial dejaba EXP-024 sin medición (solo «orden de la
+    cola»); se renumeró antes de commitear.
+  - El primer contador de M10 contaba cualquier diferencia (~35 %), también
+    elegir entre dos literales no falsos, que da igual. Se rehízo simulando
+    las dos elecciones completas: 9,5 %. La predicción de EXP-031 era «la
+    etapa 0 no pasa»; con este dato pasa, y se dejó escrito como ejecución
+    previa.
+- **Aprendido**: una mejora «evolucionada» medida en su propia muestra
+  (−61 s) puede no sobrevivir fuera (+70 s en la competición). Es el mejor
+  argumento a favor del preregistro que ha aparecido en el proyecto, y
+  sale de datos públicos.

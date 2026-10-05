@@ -204,6 +204,33 @@ Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
       research/11). **EXP-023** preregistrado y en la cola: B4, «siempre» y
       «nunca» en las 374 instancias de 2025 de ≤ 512 MiB.
 
+### Fase 3d — Vías de mejora de research/12 · desde 2026-10-05
+
+Catálogo, hallazgos y orden de la cola en
+[`research/12`](research/12-vias-de-mejora.md). Todo va detrás de opciones
+apagadas, y se mide en la máquina local, detrás de EXP-023.
+
+- [x] Hallazgos:
+  - fallo de Kissat en `eliminate.c` (desde la 3.1.0) y otro probable en
+    `vivify.c`;
+  - SATLUTION no replicó en 2026;
+  - SBVA ya está en Kissat;
+  - la fase inicial va contra la ruptura lex-leader.
+- [x] Opciones `--eliminatefix`, `--probeiterate`, `--decayramp`,
+      `--vivifywatchfix` y `--gaussphase`, y `scripts/satsuma_topes.sh`. Con todas
+      a 0, la búsqueda es idéntica (50 de 50); con cada una, respuestas
+      verificadas (`test_opciones_m.sh`, en CI).
+- [ ] Deterministas y baratos: EXP-024 (topes de satsuma), EXP-025 (X1b),
+      EXP-031 etapa 0 (vigilante).
+- [ ] A/B en dos etapas:
+  - EXP-026 (fase falsa con ruptura) y EXP-027 (`--sat` con ruptura);
+  - EXP-028 (arreglo de la eliminación), EXP-029 (réplica de SATLUTION) y
+    EXP-030 (rampa de decaimiento);
+  - EXP-032 (X2).
+- [ ] Pruebas: EXP-033 (coste de escribirlas) y EXP-034 (verificación a
+      escala; antes de H8).
+- [ ] D-021 (avisar a Biere) y D-022 (cribado en dos etapas como norma).
+
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 
 - [ ] Elegir una familia de problemas nueva. Candidata natural: los dominios del
