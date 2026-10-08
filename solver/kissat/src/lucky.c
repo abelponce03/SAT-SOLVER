@@ -341,6 +341,14 @@ int kissat_lucky (struct kissat *solver) {
 
   int res = 0;
 
+#ifdef LABESAT_GAUSS
+  /* [SOLVER] X1s (research/09 §3.5): si X1 dejó una solución del sistema
+     XOR que satisface todas las cláusulas, se asigna antes que nada. */
+  int kissat_gauss_lucky (struct kissat *);
+  res = kissat_gauss_lucky (solver);
+  if (!res)
+#endif
+#line 344
   if (no_all_negative_clauses (solver)) {
     /* [SOLVER] B3'': este bucle asigna TODAS las variables; en fórmulas de
        millones de variables tarda minutos.  Si se agota el presupuesto a

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# SUSTITUIDO (2026-09-25) por scripts/cola.toml + scripts/orquestador.py (ADR-0008).
+# Se conserva como registro de cómo se lanzó EXP-008. No lo uses para tandas nuevas.
+#
 # reanudar_experimentos.sh — lanza en secuencia los experimentos pendientes
 # del 2026-09-23 (EXP-008, partes 1 y 2 de EXP-010 y EXP-011, y EXP-012).
 #
@@ -114,7 +117,7 @@ paso_exp011_parte2() {
 paso_exp012() {
   log "EXP-012: equivalencia de kissat --symmetry con la tubería"
   if [ ! -x solver/kissat/build-symm/kissat ]; then
-    ./scripts/build.sh --dir=build-symm --symmetry --clean || return 1
+    ./scripts/build.sh --dir=build-symm --symmetry --no-gauss --clean || return 1
   fi
   local esperadas=$(( $(find bench/symm2026 -name '*.cnf*' | wc -l) ))
   if [ "$(filas results/exp012/equivalencia.csv)" -ge "$esperadas" ]; then

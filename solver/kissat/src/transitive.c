@@ -296,16 +296,18 @@ static void schedule_transitive (kissat *solver, unsigneds *probes) {
                        SIZE_STACK (*probes));
 }
 
-void kissat_transitive_reduction (kissat *solver) {
+/* [SOLVER] M8 (research/12): devuelve si quitó alguna binaria, para
+   'probeiterate' en 'probe.c'.  Kissat ignoraba el resultado (era void). */
+bool kissat_transitive_reduction (kissat *solver) {
   if (solver->inconsistent)
-    return;
+    return false;
   assert (solver->watching);
   assert (solver->probing);
   assert (!solver->level);
   if (!GET_OPTION (transitive))
-    return;
+    return false;
   if (TERMINATED (transitive_terminated_2))
-    return;
+    return false;
   START (transitive);
   INC (transitive_reductions);
 #if !defined(NDEBUG) || defined(METRICS)
@@ -386,4 +388,5 @@ void kissat_transitive_reduction (kissat *solver) {
 #ifdef QUIET
   (void) success;
 #endif
+  return reduced > 0;
 }

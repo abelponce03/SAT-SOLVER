@@ -167,6 +167,12 @@ haya.
 - **Por qué**: es donde está el beneficio de §5 (+4 resueltas, −112 s de
   PAR-2 en 2026), con la separación teórica a favor. Además solo toca la
   raíz: no hay que tocar la propagación ni el análisis de conflictos.
+- **Estado (2026-10-01)**:
+  - condición previa **cumplida**;
+  - X1 implementada en Kissat detrás de `configure --gauss` (research/09);
+  - EXP-019 preregistrado.
+  - Ejemplo: refuta en 0,02 s la *lights-out* UNSAT `667341ee` de 2026
+    (`bench/calib2`), y su prueba la verifican los dos `dsr-trim`.
 - **Condición previa** (un spike de un día): generar la prueba para una
   lights-out UNSAT de 2026 y comprobar que la aceptan **los dos dsr-trim**
   dentro de un tiempo razonable. Si no, no se sigue.

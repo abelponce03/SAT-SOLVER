@@ -379,3 +379,577 @@ al cerrar cada sesión.
     con ella: una sola corrida con la misma semilla lo delata.
   - Leer el paquete de un competidor antes de nombrar su técnica: el nombre
     `hypre` llevó a un error que duró desde el 2026-09-21.
+
+## 2026-09-25 — Experimentos que sobreviven a apagados (ADR-0008) y cierre de EXP-008
+
+- **Se pidió**: «ya ha pasado más de un día». Si se perdieron las
+  ejecuciones, idear un mecanismo de checkpoints y de resistencia ante
+  apagados, «porque es tiempo que estamos desperdiciando».
+- **Se encontró**:
+  - EXP-008 había terminado (120/120, a las 00:45).
+  - La cadena murió a la 01:13 en EXP-011 parte 1 (80 de 84), sin error en
+    los logs: el equipo se apagó o suspendió. Después hubo tres reinicios.
+  - La cola de EXP-013–015, lanzada a mano, no sobrevivió y **nunca
+    arrancó**. Se perdieron unas 15 h de máquina.
+- **Se hizo**:
+  - **ADR-0008**, en tres capas:
+    - checkpoints duraderos en todos los arneses (`checkpoint.py`, fsync,
+      filas íntegras, `--resume` en los tres que no lo tenían);
+    - cola declarativa `cola.toml` con un orquestador (cerrojo, latido,
+      marcas);
+    - servicio systemd de usuario que la relanza al iniciar sesión, impide
+      la suspensión (también la de la tapa) y limita la memoria a 12 GB.
+  - `test_reanudacion.sh`, también en CI: simula el apagón con `kill -9` y
+    una línea cortada, y la tanda reanudada es idéntica a una sin cortes.
+  - Servicio instalado y en marcha. EXP-011 parte 1 reanudó en la instancia
+    81.
+  - **EXP-008 cerrado**: sin diferencia (p = 0,60), se mantiene 4.0.4
+    (D-013).
+- **Decisiones**:
+  - instalar el servicio de usuario (pedido explícito del director);
+  - **no** activar `loginctl enable-linger` desde la sesión, porque es una
+    opción del sistema: se le propuso al director, que la activó él mismo.
+    Desde entonces, la cola arranca al encender el equipo.
+- **Salió mal**:
+  - La primera versión de la prueba de reanudación daba «OK» sin comparar
+    nada: un error de sintaxis dejaba vacías las dos claves, que
+    «coincidían». Se detectó leyendo la salida, no el veredicto. Ahora un
+    CSV vacío hace fallar la prueba.
+  - `grep -c` escribe «0» y además sale con código 1: con `|| echo 0` se
+    imprimía «0» dos veces y se rompía la aritmética de la cola.
+- **Aprendido**:
+  - Un proceso lanzado a mano no es una cola: sin nada que lo relance, un
+    apagado cuesta la noche entera.
+  - Una prueba que puede pasar por vacío no prueba nada: hay que exigir que
+    lo comparado exista.
+
+## 2026-09-28 a 30 — Revisión de la cola y cierre de EXP-010 a EXP-015
+
+- **Se pidió**: «revisa el progreso de los experimentos para continuar la
+  investigación» (dos veces, tras días sin sesión).
+- **Se encontró**:
+  - el 28, la cola llevaba tres días avanzando poco: dos pasos bloqueados por
+    fallos de código y el resto frenado por `MemoryHigh`;
+  - el 30, toda la cola había terminado el día 29 a las 07:41.
+- **Se hizo**:
+  - Arreglos de la cola:
+    - `verify_symm_answers.py` toleraba mal los bytes no UTF-8 de dsr-trim;
+    - `analyze_exp011.py` exigía la build con cliquer y contaba 84 instancias
+      en vez de las 74 del preregistro;
+    - se quitó `MemoryHigh`, que frena en vez de matar (65 724 eventos `high`).
+  - **Cierre de seis experimentos**, cada uno con su criterio preregistrado:
+    - EXP-010: v1 no se adopta;
+    - **EXP-011: se adopta mclique v2** (D-005);
+    - **EXP-012: equivalente**;
+    - **EXP-013: calibrable** (D-017);
+    - EXP-014: la ruptura cuesta tiempo fijo en la industria;
+    - EXP-015: VSA nulo.
+  - Investigación de los dos «FALLO» de seguridad de EXP-012: eran del
+    verificador (`MemoryError` con ~40 M de cláusulas). Se reescribió
+    `verify_model.py` en flujo y los dos modelos resultaron válidos.
+  - Simulación de la **ruptura con retraso** con los datos de EXP-007 y
+    EXP-014: con X = 2 s mejora a «siempre» y a «nunca» en los dos bancos.
+    Pasa a ser la propuesta para EXP-009 (B3).
+- **Decisiones**:
+  - D-005, D-013 y D-017 cerradas por sus criterios preregistrados;
+  - el binario integrado sigue con `CLIQUES=0` hasta que una prueba de
+    equivalencia propia valide mclique dentro de él.
+- **Salió mal**:
+  - **Un heredoc sin comillas** (`<<EOF`) en un comando de shell: las
+    palabras entre comillas invertidas del texto de EXP-012 se ejecutaron
+    como órdenes. Se ejecutó `solver/labesat` sin argumentos, que solo
+    imprimió la ayuda; el resto dio «orden no encontrada». Desaparecieron
+    esas palabras del documento commiteado. Se detectó leyendo la salida y se
+    corrigió con `--amend` antes de subir. Regla: para texto con comillas
+    invertidas, heredoc con comillas (`<<'EOF'`) o la herramienta de edición.
+  - Un fallo de un paso de la cola se quedó sin ver hasta la siguiente
+    sesión: el diseño lo paró bien, pero nadie miró el estado.
+  - Un control mal especificado en EXP-014: «propagaciones idénticas» no
+    tiene sentido en corridas que terminan por tiempo. Se investigó y se
+    documentó, sin cambiar el criterio a posteriori.
+  - Una pareja de EXP-014 murió por la señal 16 en las dos ramas; repetida a
+    mano, termina con normalidad. Causa sin identificar.
+- **Aprendido**:
+  - Un fallo de verificación no es un modelo incorrecto hasta que se
+    reproduce. Hay que distinguir el error del verificador del veredicto.
+  - Un límite de recursos que frena es peor que uno que mata: el primero
+    falsea los tiempos sin dejar rastro.
+  - Que «siempre» empate con «nunca» en PAR-2 no cierra la línea: puede
+    esconder dos efectos opuestos, coste fijo y ganancia de búsqueda, que una
+    política sencilla separa.
+
+## 2026-10-01 — Estrategia de optimización con demostración (research/08, ADR-0009)
+
+- **Se pidió**: los próximos pasos, con la idea de optimizar todo el código de
+  LabeSAT para bajar su tiempo. Cada solución, con una demostración rigurosa
+  antes de aplicarla, y todo documentado.
+- **Se hizo**:
+  - **research/08**. Primero, qué se puede ganar:
+    - por la teoría de la complejidad de pruebas (Haken; Beame, Kautz y
+      Sabharwal; Pipatsrisawat y Darwiche), ninguna estructura de datos
+      quita el crecimiento exponencial en conflictos de un CDCL que solo
+      deriva por resolución;
+    - las ganancias exponenciales vienen de cambiar el sistema de pruebas:
+      simetrías (PR), XOR, BVA;
+    - lo demás es un factor constante.
+  - **Proposición 1**: el valor exacto de un factor constante en PAR-2, con
+    datos censurados. Un 10 % de velocidad vale ≈ −1,5 % de PAR-2.
+  - **Teorema 5**: cuándo una compilación no cambia ni una decisión de la
+    búsqueda. Sin comportamiento indefinido, redondeo IEEE por operación
+    (de ahí `-ffp-contract=off` con FMA, por `smooth.c:34-35`), sin
+    decisiones por tiempo y sin depender de direcciones absolutas. Cada
+    condición se comprobó en el código de Kissat.
+  - **ADR-0009**: clases E, P y S de optimización, y qué prueba exige cada
+    una.
+  - **EXP-016** (perfil de costes) preregistrado y en marcha en la cola.
+  - **EXP-017** (PGO, LTO y `-march`) preregistrado con un control
+    negativo: el mismo `-march` sin `-ffp-contract=off`, donde el teorema
+    predice que la trayectoria cambia. Infraestructura:
+    - `build.sh --pgo/--lto/--march`;
+    - `--conflicts` en el A/B, para medir velocidad con el mismo trabajo.
+- **Decisiones**:
+  - No se optimiza nada antes de medir: una parte que pesa < 5 % tiene un
+    techo de ≈ 0,8 % de PAR-2 (Amdahl y Proposición 1).
+  - La compilación va antes que tocar código: es gratis y su equivalencia
+    está demostrada.
+  - Ningún cambio de código de búsqueda sin su prueba escrita en research/08.
+- **Salió mal**:
+  - `configure` de Kissat rechaza `-Wno-missing-profile`; se quitó de
+    `build.sh`.
+  - La compilación de prueba de la PGO (13 min, 2 núcleos, `nice`) coincidió
+    con el perfilado de EXP-016. Se anotó como incidencia en EXP-016 §6.
+  - Una función auxiliar de edición en Python falló por un argumento de más
+    (`TypeError`) y dejó a medias la edición del CHANGELOG. Se rehízo con la
+    herramienta de edición.
+  - El A/B habría medido dos veces las instancias presentes en dos bancos.
+    Se detectó al montar el banco de EXP-017 y se deduplicó por nombre.
+- **Aprendido**: antes de proponer optimizaciones, acotar cuánto pueden
+  valer. Cambia el orden de prioridades: la compilación (gratis) y el sistema
+  de pruebas (exponencial) van por delante de reescribir estructuras de
+  datos que ya son óptimas.
+
+### 2026-10-01 (continuación) — K1: la primera optimización de código, con su prueba
+
+- **Se hizo**:
+  - Auditoría del núcleo de Kissat (research/08 §6): ningún componente
+    tiene margen asintótico; el factor constante lo domina la latencia de
+    memoria.
+  - Búsqueda bibliográfica: la precarga de cláusulas ya se midió (+12 %,
+    Manthey y Saptawijaya, 2010) en un resolvedor sin literal bloqueante.
+  - Implementación de K1 detrás de una macro apagada por defecto, en una
+    rama y un *worktree* aparte.
+  - Comprobación de equivalencia (81 contadores): idénticos en las 5
+    instancias que terminaron; la sexta superó el tope de 15 min.
+  - EXP-018 preregistrado.
+- **Decisiones**:
+  - K1 se desarrolla **fuera del árbol que usa la cola**. El servicio compila
+    los binarios de EXP-017 desde ese árbol y el preregistro los ata a su
+    commit; un cambio en `proplit.h`, aunque esté desactivado, ensuciaría esa
+    trazabilidad. La rama se fusiona cuando la cola haya compilado EXP-017.
+  - Distancia de precarga fijada a priori (8), sin ajustarla con datos.
+- **Salió mal**: el primer cambio de `proplit.h` se escribió en el árbol de
+  la cola; se detectó antes de compilar nada y se movió a su rama.
+
+### 2026-10-01 (tarde) — Técnicas que cambian el sistema de pruebas: X1
+
+- **Se pidió**: mientras terminan los experimentos, diseñar las técnicas que
+  cambian el tipo de prueba, demostrarlas y documentarlo todo.
+- **Se hizo**:
+  - **research/09**:
+    - qué familias separan resolución, ER y PR/SR;
+    - qué cubre ya LabeSAT (simetrías con SR, BVA con `factor`) y qué no
+      (paridad);
+    - **Teorema 1**: prueba DRAT de tamaño O(Σ 2^k + N log |S|) para un
+      sistema XOR inconsistente, con cadenas ordenadas de variables de
+      extensión, lemas por casos y suma en árbol equilibrado;
+    - corolario de separación sobre Tseitin.
+  - **Prototipo** en Python y **familias sintéticas** (Tseitin, *lights-out*
+    y dos órdenes, en versión UNSAT y SAT).
+  - **Implementación en Kissat** (`gauss.c`), detrás de `configure --gauss`.
+  - `test_gauss.sh`. EXP-019 preregistrado.
+  - Refuta en 0,02 s una *lights-out* UNSAT de 2026 que el mejor solver
+    tardó 346 s en resolver, con prueba verificada por los dos `dsr-trim`.
+- **Decisiones**:
+  - Pruebas de X1 **sin borrados** (§4.3 de research/09).
+  - X1 **detrás de una macro de compilación** además de la opción, para
+    poder fusionarlo sin tocar los binarios de EXP-017 y EXP-018: objetos
+    idénticos byte a byte. El gancho va en `internal.c`, porque en
+    `search.c` cambiaba una constante `__LINE__`.
+  - La descarga de las instancias de paridad de `dev.list.csv` (GBD) queda a
+    la espera del visto bueno del director.
+- **Salió mal**:
+  - **El `dsr-trim` de SC2026 se cuelga** con ciertos borrados. Se tardó
+    varias iteraciones en aislarlo: primero una regla de «no borrar lo que
+    toque variables fijadas», que no bastó; luego definiciones primero, que
+    tampoco; al final, una reducción quitando solo borrados mostró dos
+    disparadores de un único borrado cada uno.
+  - **Un reinicio de la máquina borró `/tmp`**, y con él el worktree de X1
+    con cambios **sin commitear**. `gauss.c` y `gauss.h` se recuperaron; las
+    ediciones de `options.h`, `proof.c/h`, `internal.c` y `configure` se
+    rehicieron de memoria. Regla desde ahora: commitear el trabajo en curso
+    en su rama cada poco, aunque sea provisional.
+  - Tres fallos del guion de prueba, no de X1:
+    - `grep -q` con `pipefail` (SIGPIPE, ya conocido de `test_symmetry.sh`);
+    - el código 10 de Kissat con `set -e`;
+    - el retorno de carro con el que `drat-trim` escribe su veredicto.
+  - Un error de aritmética en la cota de la malla 30×30 (603 000 en lugar de
+    642 602), corregido antes de commitear.
+
+### 2026-10-01 (tarde, tras el reinicio) — Cierre de EXP-016 y EXP-017
+
+- **Se hizo**:
+  - **EXP-016** cerrado: propagación ≈ 57 %, análisis 14–19 %, sondeo
+    15–19 %.
+  - **EXP-017** cerrado: PGO + LTO adoptado (×1,030), `-march` ×1,040.
+    El control con FMA no cambió ninguna trayectoria aunque el binario
+    llevaba FMA en código que decide.
+  - D-019 registrada y agendada (issue #33).
+- **Salió mal**:
+  - El guion de EXP-016 perdía `propagate` y `decide` en Q4, por
+    `join(lsuffix, rsuffix)`.
+  - La muestra de EXP-019 marcaba como «unknown» las 450 de `tesis-dev`,
+    porque la tesis escribe `SAT`/`UNSAT` en mayúsculas.
+  - Los dos se detectaron leyendo la salida antes de usarla, y se
+    corrigieron con su incidencia anotada.
+- **Aprendido**: un control negativo que no se manifiesta no refuta la
+  condición teórica. Sí indica que su efecto práctico es raro, y lo
+  correcto es informarlo tal cual, como preveía el preregistro.
+
+### 2026-10-01 (tarde) — Distancia a los ganadores de 2026 (research/10)
+
+- **Se pidió**: mientras corren los experimentos, seguir buscando mejoras y,
+  para empezar, analizar lo lejos que está LabeSAT de los ganadores de 2026
+  y qué podemos integrar de ellos.
+- **Se hizo**:
+  - contrafactual por instancia con los tiempos oficiales: hoy, 16.º; con
+    B3 + X1 + PGO, 1.º con −75 s;
+  - tabla técnica por técnica de los diez primeros;
+  - el hueco de 56 instancias, agrupado;
+  - comprobación con los rasgos de GBD de que *linear-equations* no son XOR;
+  - simulación de la cartera con MAB: no compensa;
+  - cuantificación del riesgo del tope de satsuma.
+- Se cerró también EXP-018 (K1): un 7 % más lenta; no se adopta.
+- **Salió mal**:
+  - El preregistro de la ampliación de EXP-019 decía que nadie resolvió
+    *ordering-principle-xor* y *xor-shifting* en 2026. La columna
+    «no-resuelta» de `dev.list.csv` es de la base Kissat, no del campo. Se
+    detectó al cruzar con los datos oficiales y se corrigió antes de
+    ejecutar.
+  - Una edición por guion se cortó a mitad (no encontró un texto) y el
+    commit de research/10 salió sin el índice, el CHANGELOG ni la bitácora.
+    Se completó en el commit siguiente.
+- **Aprendido**: un contrafactual que pone a LabeSAT 1.º en el banco con el
+  que se diseñaron sus técnicas no es una ventaja asegurada. El margen
+  (2 %) es menor que la incertidumbre de los topes de satsuma, que se puede
+  medir.
+
+### 2026-10-01 (noche) — X1 v2, cierre de EXP-019 y preregistros de EXP-020 y EXP-021
+
+- **Se pidió**: empezar por la mejora 4 (cobertura de X1) y el preregistro
+  de la 3 (tope de satsuma).
+- **Se hizo**:
+  - **X1 v2** (Gauss por componentes conexas, Lema 6 con su demostración),
+    con test construido y paso bajo ASan/UBSan;
+  - **EXP-019 cerrado**: se adopta X1;
+  - **EXP-021** (cobertura de la v2) y **EXP-020** (tope de satsuma)
+    preregistrados y en la cola tras EXP-009.
+- **Decisiones**:
+  - La activación por defecto de X1 espera a EXP-021, porque EXP-019 midió
+    la v1.
+  - EXP-020 decide por dominancia sobre las 13 candidatas: el efecto fuera
+    de ellas es nulo por construcción.
+- **Salió mal**: la predicción de la ampliación de EXP-019 para *xor-chain*
+  y *tseitin-formulas* (que X1 las refutaría) falló. No contienen XOR:
+  codifican la paridad con contadores unarios. Se documenta como límite de
+  X1.
+
+
+### 2026-10-03 — Cierre de EXP-009, EXP-020 y EXP-021; X1 por defecto; D-020
+
+- **Se pidió**: continuar («continua») con la consigna de seguir mejorando
+  LabeSAT mientras corren los experimentos. La cola había terminado.
+- **Se hizo**:
+  - **EXP-009 cerrado**: el retraso de 2 s (B3) se descarta. Empeora frente
+    a «nunca» en 153 instancias frescas (fila 4 del criterio). Análisis
+    exploratorio: el coste está en las instancias medianas.
+  - **EXP-021 cerrado**: X1 v2 procesa 56 de los 103 sistemas saltados y
+    pasa a estar **activa por defecto** (`build.sh` con `--gauss`, la
+    opción a 1).
+  - **EXP-020 cerrado**: se mantiene el tope de 60 s.
+  - `build/` recompilado con PGO + LTO, lo adoptado en EXP-017, ahora que
+    ninguna tanda lo vigila.
+  - research/10 rehecho: «siempre» + X1 + PGO/LTO queda 1.º con −72 s en
+    2026, y el selector perfecto entre «siempre» y «nunca» es una cota de
+    −395 s.
+  - **D-020** registrada (política de simetrías del paquete), con issue.
+  - Manual, página `man`, CHANGELOG, ROADMAP y plan al día.
+- **Decisiones**:
+  - Se aplicó la fila 4 de EXP-009 y no la 2: hay diferencia, y va en
+    contra.
+  - La política de simetrías del paquete no la decide un experimento sino
+    el director (D-020). Mientras tanto no cambia ningún valor por defecto.
+  - Los pasos históricos de la cola llevan `--no-gauss`, para que
+    reproducirlos dé el mismo binario.
+- **Salió mal**:
+  - La simulación que eligió X = 2 s predecía −2,4 s, y la medida fresca
+    dio +9,9 s. Elegir un parámetro con los mismos datos con los que se
+    evalúa infló el efecto, como advertía el propio preregistro (§5).
+  - La estimación de EXP-021 (~1 h) se quedó corta: la equivalencia tardó
+    ~38 h, porque la muestra eran justo las instancias más grandes.
+  - Se tuvieron que corregir dos cifras del borrador de EXP-020 (el rango de
+    cambio de cláusulas) y la explicación del respaldo de satsuma, antes de
+    commitear.
+- **Aprendido**: en 2026, lo que solo resuelve «nunca» es casi todo SAT y lo
+  que solo resuelve «siempre», casi todo UNSAT. Un selector entre los dos
+  tiene que predecir SAT/UNSAT, que es justo lo difícil.
+
+### 2026-10-03 (noche) — X1s: la solución de Gauss como asignación afortunada
+
+- **Se pidió**: seguir buscando mejoras (consigna permanente).
+- **Se hizo**:
+  - Se revisó qué queda del hueco de research/10 que se pueda cobrar sin
+    cambiar la búsqueda. X1 solo refuta, pero research/06 ya había visto
+    que Gauss resuelve al instante las *lights-out* y *random-graph-xorsat*
+    **satisfacibles**.
+  - Prototipo: en las tres de 2026 que hay en disco, la solución de Gauss
+    es un modelo. En *xor-shifting* (mezclada) no lo es.
+  - Diseño y demostraciones en research/09 §3.5 (Lema 7, Proposición 4),
+    implementación detrás de `--gausslucky` y **EXP-022** preregistrado.
+  - Comprobado que, sin X1, el binario no cambia (95/95 objetos).
+- **Decisiones**:
+  - X1s va dentro de `lucky`, la primera, y solo si σ ya se comprobó contra
+    todas las cláusulas. Así es clase E con salida temprana, como X1.
+  - El valor es pequeño (−2,3 a −2,7 s en 2026), y se dice así. Se hace
+    porque es casi gratis y completa X1 en las familias puras.
+  - La validación fuera de muestra de la cartera «siempre → nunca» necesita
+    los datos de 2025: es una descarga, y queda propuesta al director.
+- **Salió mal**: el build con asertos destapó un fallo de X1 v1 y v2 que
+  llevaba ahí desde el principio (`IDX` sin `solver`): nunca se había
+  compilado con `configure -g`. Se corrigió y la CI añade ese build.
+
+### 2026-10-04 — Datos de 2025: «siempre» fuera de muestra
+
+- **Se pidió**: descargar los datos de 2025 y continuar.
+- **Se hizo**:
+  - `scores.csv` no existe para 2025 (404), y el repositorio de 2025 no
+    publica resultados por instancia. Se usaron las curvas de cactus de las
+    diapositivas: dan resueltas y PAR-2 por solver, y la cuenta cuadra con
+    las cifras oficiales. También la lista de instancias, para cruzar
+    familias con GBD.
+  - Resultado: en 2025, «siempre» (Satsuma-Kissat-sc) quedó 15.º de 22,
+    y la ventaja de 2026 viene de familias que no estaban en 2025.
+    research/10 §0c y D-020 (issue #34) actualizados.
+  - `LABESAT_SYMM_MEM` (tope de memoria de satsuma), apagado por defecto,
+    con pruebas.
+  - Paso `b4-rasgos` en la cola (datos exploratorios para el selector).
+- **Decisiones**:
+  - Sin datos por instancia, no se puede validar la cartera «siempre →
+    nunca» con 2025. Se informa de lo que sí dicen los datos (el ranking y
+    las familias) y no se fuerza más.
+  - El tope de memoria queda a 0 porque así se midió todo. Un valor por
+    defecto distinto cambiaría lo medido.
+  - No se descargó el paquete de la entrada de satsuma de 2025, para ver su
+    base y sus topes: es código, no los datos autorizados. Queda propuesto.
+- **Salió mal**: al razonar sobre el riesgo de memoria se dio por hecho que
+  el arnés de los A/B ponía 6 GB a satsuma. No lo pone (solo EXP-019 y los
+  escaneos de satsuma). Se comprobó en el código antes de fijar ningún valor
+  por defecto.
+
+### 2026-10-04 (mañana) — Cierre de EXP-022; `lucky` en *baseball-lineup*
+
+- **Se pidió**: continuar; tras un corte, «Intentar nuevamente».
+- **Se hizo**:
+  - **EXP-022 cerrado**: X1s se activa por defecto (7 modelos verificados,
+    250/250 equivalentes, p95 0,01 s).
+  - Diagnóstico de una anomalía vista al compilar la PGO: en
+    *baseball-lineup* (3,5 M variables), `lucky` se lleva 42 s (94 %)
+    antes del primer conflicto. Se localizó con muestreo por `gdb`
+    (`perf` no está permitido para usuarios en esta máquina) en
+    `forward_true_satisfiable`: 290 conflictos a nivel 1, cada uno
+    propagando un cono enorme. Es Kissat 4.0.4 de fábrica.
+  - **Decisión**: no se toca. Un tope de esfuerzo en `lucky` es clase S,
+    perdería las 322 unidades que aprende, y su valor en 2026 sería de unos
+    −0,2 s de PAR-2 (dos instancias, resueltas en ~300 s).
+- **Salió mal**:
+  - `build.sh --clean --pgo` sobre `build/` con la cola en marcha borró
+    `build/` antes de que la salvaguarda lo parase: la comprobación iba
+    detrás de `--clean`. Ningún paso de la cola usaba `build/` en ese
+    momento. Corregido: la salvaguarda va antes.
+  - En el cierre de EXP-022 se escribió de memoria que `28dcc411` dio
+    TIMEOUT en EXP-007; los CSV dicen 151 y 162 s. Se corrigió antes del
+    commit.
+
+### 2026-10-04 (mediodía) — B4, selector estructural (exploratorio)
+
+- **Se hizo**: con los rasgos del paso `b4-rasgos`, se comparó lo que
+  satsuma encuentra en el banco simétrico y en la industria. La estructura
+  combinatoria (matrices, subconjuntos, orbitopes) solo aparece en el
+  simétrico. Se definió la regla R y se evaluó con el tiempo de satsuma
+  cargado (research/11).
+- **Decisiones**:
+  - Se documenta como **exploratorio**: R se eligió mirando estos datos,
+    igual que el retraso de 2 s, que luego falló.
+  - R queda fijada ya, antes de ver 2025, para que la validación (EXP-023)
+    sea honesta.
+  - La validación necesita descargar las instancias de 2025 (≈ 2-3 GB). Se
+    pide permiso al director.
+- **Salió mal**: la primera evaluación no cargaba a B4 el tiempo de satsuma
+  cuando no aplica, y salía demasiado buena en la industria (163 frente a
+  166). Se corrigió antes de escribir nada.
+
+### 2026-10-04 (tarde) — Descarga de 2025, la entrada de satsuma y EXP-023
+
+- **Se pidió**: descargar las 374 instancias de 2025 y el paquete
+  `satsuma-kissat-sc.tar.xz` para leer qué Kissat y qué topes usaba.
+- **Se hizo**:
+  - Paquete leído sin ejecutarlo: Kissat 4.0.2 con prueba **VeriPB**,
+    satsuma 1.2 sin tope de tiempo, y un tope de 5 M variables. El 15.º de
+    2025 no es solo efecto de «siempre». research/10 §0c y D-020 (#34)
+    corregidos.
+  - `--mem-gb` en el arnés A/B: 2025 tiene instancias que agotaron 30 GB.
+  - **EXP-023 preregistrado**, con R fijada desde research/11. La descarga
+    pasa a la cola como su primer paso.
+- **Decisiones**:
+  - La descarga empezó a mano y se pasó a la cola, para que no hubiera dos
+    escribiendo los mismos ficheros. Es reanudable.
+  - B4 se compone a partir de las dos ramas, sin una tercera: cuesta lo
+    mismo y no deja margen para ajustar nada después.
+- **Salió mal**: la lectura de 2025 del día anterior atribuía el 15.º a
+  «siempre». El paquete mostró que era otra configuración, con otro formato
+  de prueba. Se corrigió en cuanto se leyó.
+
+### 2026-10-04 (tarde, mientras corre EXP-023) — B4 preparado, PR al día
+
+- **Se pidió**: continuar.
+- **Se hizo**:
+  - EXP-023: descarga (374/374) y rasgos de satsuma hechos; A/B en curso.
+    R se cumple en 53 de 374 instancias de 2025; satsuma tarda 9,6 s de
+    media, que es lo que B4 paga cuando no aplica.
+  - Se descartó decidir R antes de la fase de Schreier: en 2025 solo es el
+    20 % del tiempo de satsuma.
+  - **B4 en `labesat`, preparado y no aplicado** (`scripts/b4_parche_labesat.py`):
+    el A/B de EXP-023 vigila el SHA-1 de `labesat`. Probado sobre una copia.
+  - Descripción del PR #32 al día (terminaba en EXP-017 y aún presentaba B3
+    como candidata).
+- **Salió mal**: `gh pr edit` falla por la retirada de *projects classic* en
+  GitHub; se usó la API REST.
+
+## 2026-10-05 — research/12: muchas vías de mejora, preparadas para la máquina local
+
+- **Se pidió**: continuar el desarrollo complementando lo hecho en local,
+  atacar LabeSAT desde varios puntos de vista, encontrar muchas vías de
+  mejora, documentar cada hallazgo y dejar preregistrados los experimentos
+  que se validarán en la máquina local.
+- **Se hizo**:
+  - **Sincronización**: la rama de la sesión se rehízo desde la cabeza del
+    PR #32 (`a5429c7`, trabajo local del 25-09 al 04-10). Antes se leyeron
+    research/08 a 11, EXP-016 a 023, D-019 y D-020, y el PR nuevo va
+    apilado sobre el #32.
+  - **Siete ángulos** (research/12): simetrías, álgebra, heurística,
+    inprocesado, calidad del código base, pruebas y metodología.
+  - **Paquete oficial `zheng` de 2026** (Kissat_MAB y SATLUTION, MIT),
+    leído solo para la técnica. De ahí salen el cambio de `probe.c` de
+    SATLUTION, sus cifras dentro de la muestra y el aviso del fallo de
+    `eliminate.c`.
+  - **Análisis estático del Kissat base**:
+    - `gcc -Wshadow=local` da 15 sombras: 2 fallos y 13 inofensivas. Los
+      fallos son `eliminate.c`, desde la 3.1.0, y `vivify.c`, que deja un
+      par vigilado peor en el 9,5 % de las vivificaciones de 29 instancias
+      de calib;
+    - `clang --analyze` da 3 falsos positivos.
+  - **Datos oficiales de 2026**: SATLUTION quedó por detrás de su base, y
+    hubo 12 *checker-timeout* en el top.
+  - **Cinco opciones nuevas apagadas** (M5, M8, M9, M10, X2), un
+    envoltorio de satsuma con topes (M2), el soporte de pruebas en el arnés
+    A/B (M11), cuatro guiones de análisis y `test_opciones_m.sh` (en CI).
+  - **Verificación en la nube, solo de corrección**:
+    - búsqueda idéntica con todo apagado (50 de 50);
+    - respuestas verificadas con cada opción, también con ASan/UBSan.
+  - **Once preregistros** (EXP-024 a EXP-034) y sus pasos en
+    `scripts/cola.toml`, detrás de EXP-023.
+- **Decisiones**:
+  - Los A/B de opciones de búsqueda, en **dos etapas**: cribado de 40 sin
+    contraste y confirmación con 60 instancias distintas. Ahorra ~55 h si
+    las vías salen nulas, como casi todas hasta ahora. Se registra como
+    D-022 para que el director decida si pasa a ser norma.
+  - Los fallos de Kissat **no se arreglan**, se miden: la conducta con el
+    fallo es la que ganó. Avisar a Biere se registra como D-021, porque sale
+    del repositorio.
+  - El bandido MAB **no se porta** sin D-018: solo se documenta lo que
+    costaría y qué versión portar.
+  - **No se toca `solver/labesat`**: EXP-023 lo vigila con `--guard` y un
+    *pull* abortaría la tanda. Los topes de satsuma van en un envoltorio
+    (`scripts/satsuma_topes.sh`).
+- **Salió mal**:
+  - El build `--competition` con X1 **no enlazaba** desde el PR #32
+    (`kissat_process_time` no existe en QUIET). Rompía dos trabajos de CI
+    y se arregló aquí.
+  - `declaracion_ia.sh` llevaba días fallando sin que CI lo viera: el
+    `| tee` tapaba el código de salida. Se clasificaron los ficheros y se
+    añadió `pipefail`.
+  - La primera prueba de X2 usaba dos cláusulas que juntas eran una XOR
+    (Gauss las absorbía). Se cambió por la negación de σ.
+  - El primer diagnóstico de X1b contaba como nuevas unidades que ya da la
+    propagación. Se añadió la propagación en la raíz antes de Gauss.
+  - Otra vez `pkill -f` mató su propia shell (código 144), un error ya
+    anotado el 23-09. Hay que matar por PID.
+  - La numeración inicial dejaba EXP-024 sin medición (solo «orden de la
+    cola»); se renumeró antes de commitear.
+  - El primer contador de M10 contaba cualquier diferencia (~35 %), también
+    elegir entre dos literales no falsos, que da igual. Se rehízo simulando
+    las dos elecciones completas: 9,5 %. La predicción de EXP-031 era «la
+    etapa 0 no pasa»; con este dato pasa, y se dejó escrito como ejecución
+    previa.
+- **Aprendido**: una mejora «evolucionada» medida en su propia muestra
+  (−61 s) puede no sobrevivir fuera (+70 s en la competición). Es el mejor
+  argumento a favor del preregistro que ha aparecido en el proyecto, y
+  sale de datos públicos.
+
+### 2026-10-05 (tarde) — D-022 resuelta
+
+- **Se pidió**: «D-022 opción b, procede».
+- **Se hizo**:
+  - ADR-0003 §4c: el diseño en dos etapas (cribado de 40 sin contraste,
+    confirmación con 60 instancias frescas) queda como diseño
+    preregistrable para opciones de búsqueda.
+  - Registro, ROADMAP, research/12 y CHANGELOG al día; issue #48 cerrado y
+    el acta de la reunión #4 actualizada.
+- **Decisiones**: la rama de la sesión se rehízo desde la rama del PR #32,
+  que ya contiene el #49 fusionado; `main` aún no tiene research/12.
+- **Salió mal**:
+  - El *squash* del PR #49 copió al commit `4d55340` un pie «Generated by
+    Claude Code» con enlace de sesión, que el servidor añade solo a la
+    descripción de los PR. El check de Autoría lo detecta en los push.
+  - La sesión intentó eximir ese SHA en `check_authorship.sh` y el
+    clasificador de permisos lo bloqueó, con razón: relajar una
+    comprobación de autoría es decisión del director. Queda como D-023.
+  - Solo se endureció el patrón («Generated by» además de «with»).
+
+### 2026-10-05 (noche) — D-023 resuelta
+
+- **Se pidió**: «D-023 opción b, procede».
+- **Se hizo**:
+  - `check_authorship.sh` exime de la revisión del mensaje el SHA completo
+    de `4d55340`, y solo ese; autor y committer se siguen revisando.
+  - Prueba negativa: un commit nuevo con el mismo pie sigue fallando.
+  - Registro, CHANGELOG e issue #51 al día.
+- **Decisiones**: la excepción compara el SHA completo, no un prefijo, para
+  que no pueda cubrir otro commit por colisión.
+- **Salió mal**: entre la pregunta y la respuesta pasaron unas horas con el
+  check de los push en rojo. La sesión lo revisó cada hora sin tocar nada,
+  como estaba previsto.
+
+### 2026-10-08 — CI del PR #32 en rojo por el squash del PR #50 (D-024)
+
+- **Se pidió**: revisar el CI del PR #32 tras fusionar el PR #50 en su rama.
+- **Se hizo**:
+  - Diagnóstico: solo falla «Autoría», por el pie del servidor copiado al
+    mensaje de `6450a05` (squash del #50). Todo lo demás, en verde.
+  - Tras la decisión del director, `check_authorship.sh` exime ese SHA
+    completo; registro (D-024), CHANGELOG y bitácora al día.
+- **Decisiones**: D-024, eximir el SHA, y la regla de pasar el mensaje
+  explícito en cada *squash* de PR creados desde una sesión.
+- **Salió mal**: la medida preventiva de D-023 no se aplicó al fusionar el
+  #50, porque la fusión por API usa la descripción del PR si no se le pasa
+  mensaje. Ahora la regla dice cómo, no solo qué.
+

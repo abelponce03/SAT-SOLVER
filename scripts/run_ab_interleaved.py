@@ -29,7 +29,6 @@ Ojo: las opciones del solver empiezan por "--", así que van con "=" pegado
 (--opts-b="--x=1"); con espacio, argparse las toma por opciones propias.
 """
 import argparse
-import csv
 import json
 import os
 import platform
@@ -39,6 +38,7 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 from run_experiment import (CSV_FIELDS, family_of, find_instances,  # noqa: E402
                             run_one, sha1_of)
 
@@ -68,25 +68,47 @@ def main():
                     help="reanuda una tanda interrumpida: conserva las parejas completas "
                          "(A y B), descarta las filas de parejas a medias y sigue.  Exige "
                          "que los binarios tengan el mismo SHA-1 que en el meta.json")
-    ap.add_argument("--timeout", type=float, required=True)
+    ap.add_argument("--timeout", type=float, default=None,
+                    help="presupuesto de tiempo (s) por corrida")
+    ap.add_argument("--conflicts", type=int, default=None,
+                    help="presupuesto DETERMINISTA de conflictos en vez de tiempo: las dos ramas "
+                         "hacen el mismo trabajo si conservan la trayectoria (ADR-0009, clase E)")
     ap.add_argument("--seeds", default="1")
     ap.add_argument("--guard", action="append", default=[], metavar="FICHERO",
                     help="fichero adicional cuyo SHA-1 no puede cambiar durante la "
                          "tanda (repetible).  Imprescindible cuando --solver es un "
                          "guion como solver/labesat: hay que vigilar también kissat "
                          "y satsuma")
+    ap.add_argument("--proof-dir-a", default=None, metavar="DIR",
+                    help="la rama A escribe su prueba en un fichero temporal de DIR, que se "
+                         "borra tras medir su tamaño (en <out-a>.pruebas.csv). Sin esto, "
+                         "sin prueba, como antes de EXP-033 (M11, research/12)")
+    ap.add_argument("--proof-dir-b", default=None, metavar="DIR",
+                    help="igual para la rama B")
+    ap.add_argument("--mem-gb", type=float, default=0,
+                    help="tope de memoria virtual (RLIMIT_AS) de cada proceso de cada "
+                         "corrida; 0 = sin tope (lo de siempre).  Para bancos con "
+                         "instancias enormes en una máquina de 15 GB (EXP-023)")
     args = ap.parse_args()
+    if (args.timeout is None) == (args.conflicts is None):
+        ap.error("hace falta exactamente uno de --timeout o --conflicts")
+    presupuesto = ("conflicts", args.conflicts) if args.conflicts else ("time", args.timeout)
 
     seeds = [int(x) for x in args.seeds.split(",") if x.strip()]
     solo = None
     if args.instances:
         with open(args.instances) as f:
             solo = {ln.strip() for ln in f if ln.strip() and not ln.startswith("#")}
-    tareas = []
+    tareas, vistas = [], set()
     for bench in args.bench:
         for inst in find_instances(bench):
             if solo is not None and os.path.basename(inst) not in solo:
                 continue
+            # Una misma instancia (mismo nombre = mismo hash) puede estar en dos
+            # bancos; se mide una sola vez: la clave de reanudación es el nombre.
+            if os.path.basename(inst) in vistas:
+                continue
+            vistas.add(os.path.basename(inst))
             for seed in seeds:
                 tareas.append((bench, inst, seed))
     if solo is not None:
@@ -123,7 +145,8 @@ def main():
         if meta_previa["solver_sha1"] != sha or meta_previa.get("solver_b_sha1", sha) != sha_b:
             sys.exit("ABORTADO: --resume con binarios distintos de los de la tanda original")
         for k, out in (("A", args.out_a), ("B", args.out_b)):
-            previas[k] = list(csv.DictReader(open(out)))
+            # solo filas íntegras: tras un apagón, la última puede estar cortada
+            previas[k] = filas_completas(out, CSV_FIELDS)
         claves = {k: {(r["instance"], r["seed"]) for r in previas[k]} for k in previas}
         hechas = claves["A"] & claves["B"]
         for k in previas:
@@ -133,14 +156,22 @@ def main():
                 print(f"[reanudar] se descarta la fila {k} a medias: {r['instance'][:34]} s{r['seed']}")
         print(f"[reanudar] {len(hechas)} parejas completas se conservan")
 
-    ficheros, escritores = {}, {}
+    # Reescritura atómica de lo conservado y fsync por fila (ADR-0008): un
+    # apagón deja como mucho una línea a medias, que --resume descarta.
+    escritores = {k: EscritorDuradero(out, CSV_FIELDS, previas[k])
+                  for k, (_, _, out, _) in ramas.items()}
+    # Pruebas (M11): el tamaño va en un CSV aparte para no cambiar el formato
+    # de A.csv/B.csv, que --resume de las tandas en curso necesita intacto.
+    dirs_prueba = {"A": args.proof_dir_a, "B": args.proof_dir_b}
+    CAMPOS_PRUEBA = ["instance", "seed", "proof_bytes"]
+    pruebas = {}
     for k, (_, _, out, _) in ramas.items():
-        os.makedirs(os.path.dirname(os.path.abspath(out)) or ".", exist_ok=True)
-        ficheros[k] = open(out, "w", newline="")
-        escritores[k] = csv.DictWriter(ficheros[k], fieldnames=CSV_FIELDS)
-        escritores[k].writeheader()
-        escritores[k].writerows(previas[k])
-        ficheros[k].flush()
+        if dirs_prueba[k]:
+            os.makedirs(dirs_prueba[k], exist_ok=True)
+            ruta = os.path.splitext(out)[0] + ".pruebas.csv"
+            prev = [r for r in filas_completas(ruta, CAMPOS_PRUEBA)
+                    if (r["instance"], r["seed"]) in hechas] if args.resume else []
+            pruebas[k] = EscritorDuradero(ruta, CAMPOS_PRUEBA, prev)
 
     # Metadatos de procedencia, como run_experiment.py: el ADR-0003 dice que un
     # resultado sin ellos "no se usa para nada".
@@ -174,9 +205,12 @@ def main():
         "solver_version": subprocess.run([args.solver, "--version"],
                                          capture_output=True, text=True).stdout.strip(),
         "benches": [os.path.abspath(b) for b in args.bench], "n_parejas": len(tareas),
-        "seeds": seeds, "timeout": args.timeout,
-        "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a},
-        "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b},
+        "seeds": seeds, "timeout": args.timeout, "conflicts": args.conflicts,
+        "mem_gb": args.mem_gb,
+        "rama_a": {"label": args.label_a, "opts": args.opts_a, "env": env_a,
+                   "proof_dir": args.proof_dir_a},
+        "rama_b": {"label": args.label_b, "opts": args.opts_b, "env": env_b,
+                   "proof_dir": args.proof_dir_b},
         "instances_filter": os.path.abspath(args.instances) if args.instances else None,
         "host": socket.gethostname(), "nproc": os.cpu_count(),
         "platform": platform.platform(), "loadavg": os.getloadavg(),
@@ -218,27 +252,35 @@ def main():
         for k in orden:
             label, opts, _, env = ramas[k]
             started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            prueba = (os.path.join(dirs_prueba[k], f"ab-{os.getpid()}-{k}.proof")
+                      if dirs_prueba[k] else None)
             status, code, wall, cpu, rss, stats = run_one(
-                args.solver if k == "A" else solver_b, inst, seed, "time",
-                args.timeout, opts, hard_grace=30.0, env=env)
-            escritores[k].writerow({
+                args.solver if k == "A" else solver_b, inst, seed, presupuesto[0],
+                presupuesto[1], opts, hard_grace=30.0, env=env,
+                mem_bytes=int(args.mem_gb * (1 << 30)), proof=prueba)
+            if prueba:
+                tam = os.path.getsize(prueba) if os.path.exists(prueba) else 0
+                if os.path.exists(prueba):
+                    os.remove(prueba)
+                pruebas[k].escribir({"instance": os.path.basename(inst), "seed": seed,
+                                     "proof_bytes": tam})
+            escritores[k].escribir({
                 "label": label, "instance": os.path.basename(inst),
                 "family": family_of(inst, bench), "seed": seed,
                 "status": status, "exit_code": code,
                 "wall_s": f"{wall:.3f}", "cpu_s": f"{cpu:.3f}",
-                "max_rss_mb": f"{rss:.1f}", "budget_kind": "time",
-                "budget_value": args.timeout, "opts": " ".join(opts),
+                "max_rss_mb": f"{rss:.1f}", "budget_kind": presupuesto[0],
+                "budget_value": presupuesto[1], "opts": " ".join(opts),
                 "instance_sha1": "", "started_at": started,
                 "parallel_jobs": 1, **stats,
             })
-            ficheros[k].flush()
             resumen[k] = (status, cpu)
         print(f"[{n:>4}/{len(tareas)}] {os.path.basename(inst)[:34]:<34} s{seed} "
               f"A {resumen['A'][0]:<7} {resumen['A'][1]:7.1f}s | "
               f"B {resumen['B'][0]:<7} {resumen['B'][1]:7.1f}s  ({'-'.join(orden)})")
 
-    for f in ficheros.values():
-        f.close()
+    for e in list(escritores.values()) + list(pruebas.values()):
+        e.close()
     print(f"\nListo. Analiza con:  python3 scripts/par2.py {args.out_a} {args.out_b}")
 
 

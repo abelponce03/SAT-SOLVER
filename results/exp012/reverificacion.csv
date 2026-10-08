@@ -1,0 +1,3 @@
+instance,seguridad_original,seguridad_reverificada,clausulas,memoria_verificador_kb,nota
+f15a3ce898e0c66f309bf07d73744adf.cnf.xz,FALLO,OK,43858644,25940,verify_model.py en flujo (2026-09-30); el FALLO original era MemoryError del verificador
+ee8c86d39745aea1c1731d4f34bcaed7.cnf.xz,FALLO,OK,36005739,861152,ídem

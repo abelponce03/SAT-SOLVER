@@ -1,0 +1,3 @@
+70d4e3c9ccd965a438a2efc70643a8334245d3b4
+?? scripts/gen_paridad.py
+?? scripts/x1_gauss.py

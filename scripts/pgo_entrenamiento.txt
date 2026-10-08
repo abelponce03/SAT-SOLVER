@@ -1,0 +1,37 @@
+# Entrenamiento de la PGO (build.sh --pgo). Formato: ruta [conflictos]
+# DISJUNTO de los bancos de evaluación de EXP-017 (calib, tesis-dev): bench/smoke,
+# bench/symm y las 20 instancias de 2026 de bench/calib2.
+bench/smoke/php_5_4.cnf 50000
+bench/smoke/php_6_5.cnf 50000
+bench/smoke/php_7_6.cnf 50000
+bench/smoke/php_8_7.cnf 50000
+bench/smoke/rand3_120_r4.26_s1.cnf 50000
+bench/smoke/rand3_120_r4.26_s2.cnf 50000
+bench/smoke/rand3_160_r4.26_s1.cnf 50000
+bench/smoke/rand3_160_r4.26_s2.cnf 50000
+bench/smoke/rand3_80_r4.26_s1.cnf 50000
+bench/smoke/rand3_80_r4.26_s2.cnf 50000
+bench/symm/php_12_11.cnf 50000
+bench/symm/php_9_9.cnf 50000
+bench/symm/php9x9_rand160s.cnf 50000
+bench/symm/php9x9_rand160u.cnf 50000
+bench/calib2/allowable-seqence/6f1b15ebd0ac13c05fb052e5b0453f64.cnf.xz 50000
+bench/calib2/baseball-lineup/b54b26f38d40a687b6277c49cf85de69.cnf.xz 50000
+bench/calib2/cellular-automata/6e297bdb1c3f957f6333c37804805ecb.cnf.xz 50000
+bench/calib2/crafted-cec/8390dca257561c53bf4eb6e158a2285f.cnf.xz 50000
+bench/calib2/cryptography/3e912cd2a499b8f956246b866e2f9f64.cnf.xz 50000
+bench/calib2/cryptography-ascon/4989239fbeb6eb40fc0b664d9ba92636.cnf.xz 50000
+bench/calib2/cryptography-cbmc/5553fec254b32349e0e48c7ee1e2d6c7.cnf.xz 50000
+bench/calib2/diagnosis/1f81f7e009f501014cb23a8c2d41836f.cnf.xz 50000
+bench/calib2/fpga-routing/3c4ac805726d78a869ff8116ee3533db.cnf.xz 50000
+bench/calib2/lights-out/667341ee8c1dea3db613db317e2b2c33.cnf.xz 50000
+bench/calib2/maxsat-optimum/e55a49d8065d65650f24c0f3ecef30b6.cnf.xz 50000
+bench/calib2/multiplier-equivalence-checking/fac2035ba83ac2d0c2d67509d3f82b94.cnf.xz 50000
+bench/calib2/ntil/87dbc3302b82c09e19c55059fb943191.cnf.xz 50000
+bench/calib2/ramsey/dc7817dfa2817916b266c1cfacd2ee66.cnf.xz 50000
+bench/calib2/rbsat/3ed56242f55e3653dbceeb4a70221787.cnf.xz 50000
+bench/calib2/school-timetabling/b0abaa97c4663edc2048d86de3e2b226.cnf.xz 50000
+bench/calib2/sgen-balanced/5ee05ef0bcb42cb12bd698978c05178c.cnf.xz 50000
+bench/calib2/trigonometric-functions/bd0b055b890a9ace598a0c4aba40de30.cnf.xz 50000
+bench/calib2/unknown-cases/416e33a8463911546e4cd87d282a7e1e.cnf.xz 50000
+bench/calib2/van-der-waerden/c14f0c610d59a9d5e8cec328485b916f.cnf.xz 50000

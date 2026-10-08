@@ -93,7 +93,8 @@ def main():
                         ok = True
                         for dsr in DSRS:
                             p = subprocess.run([dsr, cnf, proof], capture_output=True,
-                                               text=True, timeout=args.check_timeout)
+                                               text=True, errors="replace",   # dsr-trim escribe bytes no UTF-8
+                                               timeout=args.check_timeout)
                             ok &= any(l.startswith("s VERIFIED")
                                       for l in p.stdout.splitlines())
                         ver = "OK" if ok else "FALLO"

@@ -54,9 +54,19 @@ def main():
     por = defaultdict(dict)
     for f in csv.DictReader(open(os.path.join(D11, "satsuma.csv"))):
         por[f["instance"]][f["build"]] = f
-    insts = sorted(por)
-    print(f"## Parte 1 — satsuma solo ({len(insts)} instancias)\n")
-    for b in ("mit", "mclique1", "mclique2", "cliques"):
+    # El preregistro (§2) habla de las 74 instancias del banco EFECTIVO de
+    # EXP-007: las otras 10 de bench/symm2026 se apartaron por tamaño (> 5 M
+    # cláusulas) antes de medir nada, y labesat no les pasaría satsuma.
+    efectivo = {r["instance"] for r in csv.DictReader(open(os.path.join("results", "exp007", "A.csv")))}
+    fuera = sorted(i[:8] for i in por if i not in efectivo)
+    insts = sorted(i for i in por if i in efectivo)
+    print(f"## Parte 1 — satsuma solo ({len(insts)} instancias del banco efectivo de EXP-007; "
+          f"{len(fuera)} apartadas por tamaño: {fuera})\n")
+    builds = [b for b in ("mit", "mclique1", "mclique2", "cliques") if all(b in por[i] for i in insts)]
+    if "cliques" not in builds:
+        print("- `cliques`: build de referencia con cliquer **no disponible** en esta máquina "
+              "(solo existía en la nube); no entra en ninguna decisión de §4\n")
+    for b in builds:
         malos = [i[:8] for i in insts if por[i][b]["exit"] != "0"]
         print(f"- `{b}`: topes o fallos {len(malos)} {malos if malos else ''}")
     h1 = all(por[i]["mclique2"]["exit"] == "0" for i in insts)
@@ -68,8 +78,9 @@ def main():
     iguales = [i for i in insts if sha(i, "mclique2") == sha(i, "mclique1")]
     print(f"- **H2**: v2 = v1 en {len(iguales)} de {len(insts)}; distintas: "
           f"{[i[:8] for i in insts if i not in iguales]}")
-    print(f"- v2 = cliques en {sum(sha(i, 'mclique2') == sha(i, 'cliques') for i in insts)}"
-          f" de {len(insts)}")
+    if "cliques" in builds:
+        print(f"- v2 = cliques en {sum(sha(i, 'mclique2') == sha(i, 'cliques') for i in insts)}"
+              f" de {len(insts)}")
 
     lista = [i for i in insts
              if sha(i, "mclique2") != sha(i, "mclique1") and sha(i, "mclique2") != sha(i, "mit")]

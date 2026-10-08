@@ -1,0 +1,14 @@
+
+## Principal: retraso (B) frente a nunca (A), tesis-dev fresco (n = 153, T = 300 s)
+- resueltas A 110 / B 108; McNemar solo B 2, solo A 4, p = 0.688
+- PAR-2 A 194.6 / B 204.6; ΔPAR-2 = +9.94 s, IC95 % [-3.56, +22.90]; Wilcoxon p = 2.89e-08
+   S: n = 113, ΔPAR-2 = +8.29 s
+   noS: n = 40, ΔPAR-2 = +14.60 s
+**H1** (retraso mejor que nunca): no
+
+## Secundario: retraso (B) frente a siempre (A), 74 de EXP-007 (n = 74, T = 180 s)
+- resueltas A 70 / B 70; McNemar solo B 0, solo A 0, p = 1
+- PAR-2 A 36.3 / B 37.5; ΔPAR-2 = +1.22 s, IC95 % [+0.09, +1.89]; Wilcoxon p = 1.82e-09
+**H2** (lo que cuesta la espera frente a siempre: IC superior ≤ +5 s): SÍ
+
+**Veredicto (§4)**: no se activa por defecto (H1 no)

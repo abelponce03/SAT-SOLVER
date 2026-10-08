@@ -1,0 +1,3 @@
+label,instance,family,seed,status,exit_code,wall_s,cpu_s,max_rss_mb,conflicts,decisions,propagations,restarts,rephased,budget_kind,budget_value,opts,instance_sha1,started_at,parallel_jobs
+A-sin-cliques,9ba8145e0d02318dea5507fc3ba03472.cnf.xz,H,1,UNSAT,20,29.154,29.037,1106.1,1,0,6811,0,0,time,180.0,--symmetry,,2026-09-28T19:06:00+00:00,1
+A-sin-cliques,9ba8145e0d02318dea5507fc3ba03472.cnf.xz,H,2,UNSAT,20,26.504,26.356,1105.9,1,0,6811,0,0,time,180.0,--symmetry,,2026-09-28T19:07:29+00:00,1

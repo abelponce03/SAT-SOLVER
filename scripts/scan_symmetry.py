@@ -28,16 +28,19 @@ Uso:
 Reanuda: si --out ya existe, salta las instancias ya registradas.
 """
 import argparse
-import csv
 import hashlib
 import os
 import re
 import resource
+import shlex
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CAMPOS = ["instance", "family", "status", "exit_code", "wall_s", "in_vars", "in_clauses",
@@ -78,7 +81,7 @@ def descomprimir(src, dst):
         return subprocess.run(cmd, stdout=out, stderr=subprocess.DEVNULL).returncode == 0
 
 
-def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0):
+def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0, extra=()):
     fila = {}
     inp = os.path.join(tmp, "in.cnf")
     if not descomprimir(cnf, inp):
@@ -88,7 +91,7 @@ def escanear(satsuma, cnf, tmp, timeout, maxbytes, mem_bytes=0):
         return {**fila, "status": "GRANDE"}
     out, prf = os.path.join(tmp, "sb.cnf"), os.path.join(tmp, "p.sr")
     cmd = [satsuma, "fix", inp, "--full-skip-limit", "100000000", "--add-reduced-as-unit",
-           "--bsr", "--out-file", out, "--proof-file", prf]
+           "--bsr", "--out-file", out, "--proof-file", prf, *extra]
     t0 = time.time()
 
     def tope_memoria():
@@ -145,7 +148,11 @@ def main():
                     help="tope de memoria virtual de satsuma (RLIMIT_AS); 0 = sin tope. "
                          "La máquina local tiene 15 GB: sin tope, una instancia grande "
                          "puede agotarla (incidencia del 2026-09-24)")
+    ap.add_argument("--satsuma-args", default="",
+                    help="argumentos extra para 'satsuma fix' (topes internos, M2 de "
+                         "research/12; EXP-024), como scripts/satsuma_topes.sh")
     args = ap.parse_args()
+    extra = shlex.split(args.satsuma_args)
 
     insts = []
     for b in args.bench:
@@ -154,16 +161,10 @@ def main():
                 if re.search(r"\.cnf(\.(xz|gz))?$", f):
                     insts.append(os.path.join(d, f))
     insts.sort()
-    hechas = set()
-    if os.path.exists(args.out):
-        hechas = {r["instance"] for r in csv.DictReader(open(args.out))}
-    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    nuevo = not os.path.exists(args.out)
+    previas = filas_completas(args.out, CAMPOS)   # reanuda siempre (ADR-0008)
+    hechas = {r["instance"] for r in previas}
     s1 = sha1(args.satsuma)
-    with open(args.out, "a", newline="") as fo:
-        w = csv.DictWriter(fo, fieldnames=CAMPOS)
-        if nuevo:
-            w.writeheader()
+    with EscritorDuradero(args.out, CAMPOS, previas) as ed:
         for i, cnf in enumerate(insts, 1):
             nombre = os.path.basename(cnf)
             if nombre in hechas:
@@ -173,14 +174,13 @@ def main():
             tmp = tempfile.mkdtemp(prefix="scan-symm.")
             try:
                 fila = escanear(args.satsuma, cnf, tmp, args.timeout, args.maxbytes,
-                                int(args.mem_gb * (1 << 30)))
+                                int(args.mem_gb * (1 << 30)), extra)
             finally:
                 shutil.rmtree(tmp, ignore_errors=True)
             fila.update(instance=nombre, family=os.path.basename(os.path.dirname(cnf)),
                         satsuma_sha1=s1[:12],
                         started_at=time.strftime("%Y-%m-%dT%H:%M:%S%z"))
-            w.writerow(fila)
-            fo.flush()
+            ed.escribir(fila)
             print(f"[{i}/{len(insts)}] {fila['status']:6} cambia={fila.get('cambia', '')} "
                   f"gens={fila.get('dejavu_gens', '')} {fila.get('wall_s', '')}s {nombre}",
                   flush=True)

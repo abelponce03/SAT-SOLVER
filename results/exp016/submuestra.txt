@@ -1,0 +1,21 @@
+# EXP-016: submuestra de 20 de 2026 para el sobrecoste del nivel 4
+09e0775d2b51c49ec1ec4d214ee7c8c8.cnf.xz
+0be1e12a8e7282d1a4e389bb90f6dbc7.cnf.xz
+1890f49a43a94b97828528b68c32b78e.cnf.xz
+1f81f7e009f501014cb23a8c2d41836f.cnf.xz
+416e33a8463911546e4cd87d282a7e1e.cnf.xz
+4989239fbeb6eb40fc0b664d9ba92636.cnf.xz
+5de866bc7ff4dfde3cd682b5aca75894.cnf.xz
+6d815089fb4095208754622b4c44a8f7.cnf.xz
+6f1b15ebd0ac13c05fb052e5b0453f64.cnf.xz
+75429ff7acb5acb597abe01aa745c2a6.cnf.xz
+7cbc3ce2052ba7c5b501f75af58ab3c4.cnf.xz
+7fa502dfce37c37c1cafd50b3fba263f.cnf.xz
+8db998d5fd64f85a1847115208f73873.cnf.xz
+91860f79f079fede859034c7d76a98a2.cnf.xz
+9d20bb1bd01838d70177ffd3aa284aeb.cnf.xz
+bbcfd33f07cbf6fefa950d8254aa34ce.cnf.xz
+dc7817dfa2817916b266c1cfacd2ee66.cnf.xz
+e55a49d8065d65650f24c0f3ecef30b6.cnf.xz
+e85fb114c33f450dc2622c78bc6fa019.cnf.xz
+f497bda3018958d7ba2d1cd99da3982e.cnf.xz

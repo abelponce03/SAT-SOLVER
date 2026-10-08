@@ -1,0 +1,14 @@
+instance,family,build,exit,secs,clauses_in,clauses_out,proof_bytes,out_sha1
+34360a677fc854189c982294853e6891.cnf.xz,X,mclique2,TOPE,300.218,9993021,,,
+80bb5209e88def5643bf5593320b104f.cnf.xz,X,mclique2,TOPE,300.517,25473117,,,
+8db998d5fd64f85a1847115208f73873.cnf.xz,X,mclique2,0,125.103,7173053,4824073,143413484,fbe20cf5676d1a9f4b008a9b73e7437e55689897
+008e7716c69009090ff6bd0048dc55f8.cnf.xz,hardware-verification,mclique2,0,66.386,207720,202873,295864,2c6628ca831e843591acb81c6e17ecaeffc84cd6
+3728eb69fc6046897251cc33e0b25a5a.cnf.xz,planning,mclique2,-6,119.846,7803199,,,
+fbe4f6664edfbbfb0a395e1bf1ba3b44.cnf.xz,planning,mclique2,-6,83.240,7803199,,,
+8bb5819a23a8f1dff851d608bec008ca.cnf.xz,scheduling,mclique2,0,164.847,214438,204259,6310398,af73388aca4cfeca66c105bfd6a4a25055e96ef3
+8eff8708d366c1044430c0e127ce0fc7.cnf.xz,scheduling,mclique2,0,201.329,177114,166849,6276575,5967f8ea7ca29ab477c26af290bff4774dd033c8
+bc198d71cb3513573584ec4b7ba9a0e0.cnf.xz,scheduling,mclique2,0,178.732,193454,193668,5939044,50ae389c381b37ec191dd6147b3fc02e38454b8c
+3bbdfd39be8452f73c3fda0a1c0b3260.cnf.xz,software-verification,mclique2,-6,56.660,11784087,,,
+613be3fce8fa3e517d10e292f0a2542d.cnf.xz,software-verification,mclique2,-6,45.884,12515823,,,
+b3233e009976748e3a55d7cd0ea30c41.cnf.xz,software-verification,mclique2,-11,48.139,15032078,,,
+bbdc1542ad1cd21301bcb6ab89893615.cnf.xz,software-verification,mclique2,-6,43.182,18768475,,,

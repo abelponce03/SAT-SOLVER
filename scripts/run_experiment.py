@@ -25,7 +25,6 @@ A/B (mismo binario, la feature detrás de una opción — ADR-0002 §3):
     ... --label mod --opts "--mifeature=1"
 """
 import argparse
-import csv
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
@@ -42,6 +41,9 @@ import tempfile
 import sys
 import time
 from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from checkpoint import EscritorDuradero, filas_completas  # noqa: E402
 
 CSV_FIELDS = [
     "label", "instance", "family", "seed", "status", "exit_code",
@@ -101,7 +103,7 @@ def parse_stats(text):
 
 
 def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_grace,
-            env=None):
+            env=None, mem_bytes=0, proof=None):
     """Ejecuta una corrida y devuelve (status, exit_code, wall_s, cpu_s, rss_mb, stats).
 
     El tiempo de CPU se toma de `wait4` sobre ESTE hijo concreto (no de
@@ -109,7 +111,15 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
     cuando hay varias corridas en vuelo (`--jobs > 1`).
 
     `env`: variables de entorno que se AÑADEN a las del proceso (p. ej.
-    LABESAT_SATSUMA para elegir el binario de satsuma de solver/labesat)."""
+    LABESAT_SATSUMA para elegir el binario de satsuma de solver/labesat).
+
+    `mem_bytes` > 0: tope de memoria virtual (RLIMIT_AS) de CADA proceso de la
+    corrida (se hereda: con solver/labesat, satsuma y kissat por separado).
+    0 = sin tope, como en todos los A/B anteriores a EXP-023.
+
+    `proof`: ruta donde el solver escribe la prueba (segundo argumento
+    posicional de kissat y de solver/labesat).  None = sin prueba, como en
+    todos los A/B anteriores a EXP-033 (M11, research/12)."""
     cmd = [solver, "-n", "-s", f"--seed={seed}"]
     if budget_kind == "time":
         # Kissat solo acepta segundos enteros en --time.
@@ -120,14 +130,21 @@ def run_one(solver, instance, seed, budget_kind, budget_value, extra_opts, hard_
         hard_limit = None
     cmd.extend(extra_opts)
     cmd.append(instance)
+    if proof:
+        cmd.append(proof)
 
     t0 = time.monotonic()
     killed = False
     with tempfile.TemporaryFile() as fout:
         # Sesión propia: si hay que matar, se mata el GRUPO.  Con un guion como
         # solver/labesat, matar solo al hijo directo dejaría kissat huérfano.
+        limitar = None
+        if mem_bytes:
+            def limitar():
+                import resource
+                resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
         proc = subprocess.Popen(cmd, stdout=fout, stderr=subprocess.DEVNULL,
-                                start_new_session=True,
+                                start_new_session=True, preexec_fn=limitar,
                                 env={**os.environ, **env} if env else None)
         deadline = (t0 + hard_limit) if hard_limit else None
         delay = 0.002
@@ -180,6 +197,10 @@ def main():
     ap.add_argument("--opts", default="", help="opciones extra para el solver, entre comillas")
     ap.add_argument("--limit", type=int, default=None, help="usar solo las primeras N instancias (pruebas rápidas)")
     ap.add_argument("--append", action="store_true", help="añadir al CSV en vez de sobrescribir")
+    ap.add_argument("--resume", action="store_true",
+                    help="reanudar una tanda cortada (apagado, reinicio): conserva las filas "
+                         "íntegras y salta las (instancia, seed) ya medidas. Aborta si el binario, "
+                         "las opciones o el presupuesto no son los de la tanda original (ADR-0008)")
     ap.add_argument("--jobs", type=int, default=1,
                     help="corridas simultáneas. >1 multiplica el rendimiento del CRIBADO, "
                          "pero contamina la medición de tiempo (contención de memoria y caché): "
@@ -235,14 +256,25 @@ def main():
         "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     meta_path = os.path.splitext(args.out)[0] + ".meta.json"
+    previas, hechas = [], set()
+    if args.resume and os.path.exists(meta_path) and os.path.exists(args.out):
+        vieja = json.load(open(meta_path))
+        for k in ("solver_sha1", "opts", "budget_kind", "budget_value", "seeds"):
+            if vieja.get(k) != meta.get(k):
+                sys.exit(f"ABORTADO: --resume con {k} distinto de la tanda original "
+                         f"({vieja.get(k)!r} frente a {meta.get(k)!r})")
+        previas = filas_completas(args.out, CSV_FIELDS)
+        hechas = {(r["instance"], str(r["seed"])) for r in previas}
+        meta["reanudada"] = vieja.get("reanudada", []) + [
+            {"at": meta["started_at"], "filas_conservadas": len(previas)}]
+        meta["started_at"] = vieja.get("started_at", meta["started_at"])
+        print(f"[reanudar] {len(previas)} corridas íntegras se conservan")
+    elif args.append and os.path.exists(args.out):
+        previas = filas_completas(args.out, CSV_FIELDS)
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
 
-    mode = "a" if args.append and os.path.exists(args.out) else "w"
-    with open(args.out, mode, newline="") as f:
-        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
-        if mode == "w":
-            w.writeheader()
+    with EscritorDuradero(args.out, CSV_FIELDS, previas) as ed:
 
         total = len(instances) * len(seeds)
         done = 0
@@ -252,7 +284,9 @@ def main():
         print("-" * 78)
 
         sha_cache = {inst: sha1_of(inst) for inst in instances}
-        tasks = [(inst, seed) for inst in instances for seed in seeds]
+        tasks = [(inst, seed) for inst in instances for seed in seeds
+                 if (os.path.basename(inst), str(seed)) not in hechas]
+        done = total - len(tasks)
 
         def work(task):
             inst, seed = task
@@ -292,8 +326,7 @@ def main():
 
         for row in results:
             done += 1
-            w.writerow(row)
-            f.flush()
+            ed.escribir(row)
             print(f"{row['instance']:<42} {row['seed']:>4} {row['status']:<8} "
                   f"{float(row['cpu_s']):>9.3f} {str(row['conflicts']):>10}"
                   f"   [{done}/{total}]")

@@ -1,7 +1,7 @@
 # ADR-0003 — Protocolo experimental: métricas, validez estadística y anti-overfitting
 
 - **Estado**: aceptado
-- **Fecha**: 2026-09-21
+- **Fecha**: 2026-09-21 (§4c añadido el 2026-10-05, D-022)
 - **Decide**: Abel Ponce
 
 ## Contexto
@@ -93,6 +93,42 @@ Reglas:
    diferencia de tiempo es de la máquina y no se interpreta.
 3. Ninguna diferencia de tiempo **por debajo del 4 %** entre sesiones distintas
    se reporta como efecto.
+
+### 4c. Diseño en dos etapas para opciones de búsqueda (D-022, 2026-10-05)
+
+Para una opción de búsqueda que cambia la trayectoria, el preregistro puede
+usar este diseño en lugar de un único A/B completo.
+
+1. **Etapa 1 (cribado)**:
+   - 40 instancias, una semilla, el T del preregistro;
+   - **sin contraste**: los p se informan, pero no son evidencia;
+   - PASA si el ΔPAR-2 medio (B − A) es negativo, o si el factor
+     geométrico de velocidad B/A en las resueltas por las dos ramas (con
+     t ≥ 1 s en alguna) es < 0,97. Si no, la opción se cierra «sin señal
+     en el cribado».
+2. **Etapa 2 (confirmación)**, solo si la etapa 1 pasa:
+   - 60 instancias **que el cribado no ha visto**, dos semillas;
+   - los criterios de §3: Wilcoxon p < 0,05 y el IC95 % bootstrap del
+     ΔPAR-2 entero por debajo de 0 (H1); el IC95 % del factor de velocidad
+     entero por debajo de 1 (H2).
+
+Condiciones:
+
+- Las dos listas, disjuntas y deterministas (orden de `md5(hash + sal)`,
+  cuota por familia), y la regla de la etapa 1 se commitean con el
+  preregistro, antes de ejecutar. `scripts/research12.py` las implementa
+  (`cribado` y `confirmacion`).
+- El cribado solo puede **descartar**: toda la evidencia de una mejora sale
+  de la etapa 2, con instancias frescas. No hay comparaciones múltiples
+  ocultas ni reutilización de datos.
+- Riesgo aceptado: un efecto real pero pequeño puede no pasar el cribado.
+  Un efecto que 40 instancias no muestran ni en el signo no movería el PAR-2
+  de la competición (research/08 §2).
+- Motivo: con 4 núcleos, casi todas las opciones de búsqueda medidas han
+  salido nulas (A4.1, VSA, K1). El cribado cierra una vía nula en ~3 h en
+  vez de ~6–20 h (research/12 §10).
+- Las desviaciones de §3.2 (dos semillas y no tres en la etapa 2) se
+  declaran en cada preregistro, como hasta ahora.
 
 ### 5. Escalado del timeout
 

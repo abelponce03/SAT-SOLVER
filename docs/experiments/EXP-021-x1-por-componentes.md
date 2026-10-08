@@ -1,0 +1,135 @@
+# EXP-021 — X1 v2: Gauss por componentes conexas (preregistrado)
+
+- **Estado**: **cerrado (2026-10-03): se activa X1 v2 por defecto.** H0, H1
+  y H2 se cumplen; resultados en §7. Se commiteó antes de ejecutar, junto
+  con `scripts/exp021.py` y `results/exp021/muestra.csv`. La implementación
+  (research/09 §3.4, commit `14f2a2e`) solo se había ejecutado en
+  `test_gauss.sh`, con familias sintéticas.
+- **Fecha**: 2026-10-01
+- **Decide**: si la versión de X1 que se activa por defecto es la v2 (por
+  componentes) o la v1 que validó EXP-019.
+
+---
+
+## 1. Qué se quiere saber
+
+- EXP-019 adoptó X1 (v1). En 103 de 577 instancias, la v1 **se saltó el
+  sistema XOR**: la matriz entera, con el historial, superaba los topes.
+- La v2 parte el sistema en componentes conexas (Lema 6) y elimina cada una
+  por separado, con el tope de memoria por componente y un presupuesto de
+  trabajo común.
+- Por el Lema 6 es igual de correcta. Queda medir lo mismo que en EXP-019
+  justo donde la v2 actúa distinto:
+  - que no se equivoca;
+  - que no cambia la búsqueda cuando no refuta;
+  - que no cuesta más de lo admitido;
+  - y cuántos de esos sistemas pasa a procesar y a refutar.
+
+## 2. Hipótesis
+
+Son las de EXP-019, con los mismos umbrales, sobre las 103 instancias:
+
+> **H0 (seguridad, vinculante).** Ninguna refutación de instancias SAT
+> conocidas (35 en la muestra). Toda refutación con prueba verificada por
+> los dos `dsr-trim`.
+>
+> **H1 (equivalencia, vinculante).** Contadores idénticos con `--gauss=1` y
+> `--gauss=0` (20 000 conflictos, semilla 1) donde no refuta.
+>
+> **H2 (coste).** Tiempo de X1 por instancia con p95 ≤ 1 s y máximo ≤ 10 s.
+>
+> **H3 (cobertura, descriptiva).** Cuántas instancias pasan de «saltada» a
+> «consistente» o a «refutada».
+
+**Predicción honesta**:
+
+- H0 y H1 se cumplen (Lema 6 y `test_gauss.sh`).
+- H2 es la incertidumbre: la v2 hace más trabajo en estas instancias, y el
+  presupuesto común (`gaussops` = 4·10⁹ operaciones de palabra) puede
+  llevar a algunas cerca de 2–4 s.
+- H3: la mayoría pasa a «consistente», porque en la industria las XOR son
+  puertas que se definen unas a otras. Pocas o ninguna refutación, aunque
+  hay 41 UNSAT en la muestra.
+
+## 3. Diseño
+
+- **Binario**: `solver/kissat/build-x1v2/kissat`, con
+  `./scripts/build.sh --dir=build-x1v2 --gauss`, compilado por la cola desde
+  el commit de este preregistro (paso `exp021-construir`).
+- **Muestra** (`exp021.py muestra`): las 103 instancias con resultado
+  «saltada» en `results/exp019/x1.csv`.
+- **Corridas**: `exp021.py correr` y `exp021.py equivalencia`. Son el
+  arnés de EXP-019 (`exp019.py`) con otras rutas, la misma medida.
+- **Análisis**: `exp021.py analizar`, que es el de EXP-019 más la tabla
+  v1 → v2.
+- **Cuándo**: en la cola, después de EXP-009 y antes de EXP-020. Coste
+  estimado: ~1 h (X1 solo y ~100 parejas de equivalencia).
+
+## 4. Criterio de decisión
+
+| resultado | decisión |
+|---|---|
+| H0, H1 y H2 | Se activa por defecto **X1 v2**: `build.sh` compila con `--gauss` y la opción vale 1 |
+| H0 y H1, pero no H2 | Se activa la v2 con el presupuesto de trabajo reducido hasta cumplir H2 en estas instancias, o la v1 si no se puede |
+| H0 o H1 fallan | Se activa la **v1** (EXP-019) y se busca el fallo de la v2 |
+
+## 5. Amenazas a la validez
+
+- La muestra la eligió el resultado de la v1: es justo donde la v2 actúa
+  distinto.
+- En el resto de instancias, el sistema cabía entero. Ahí v1 y v2 dan el
+  **mismo resultado** (refutada o consistente) por el Lema 6. Solo pueden
+  diferir:
+  - el certificado elegido, con su prueba, igual de válida;
+  - el tiempo.
+- En ninguna de las dos versiones toca X1 el estado del solver cuando no
+  refuta. Aun así, H1 se vuelve a comprobar aquí: no se hereda de EXP-019.
+- Mismo arnés y misma máquina que EXP-019, con un tope de 6 GB por proceso.
+
+## 6. Incidencias de ejecución
+
+- **La equivalencia tardó ~38 h, no ~1 h** (del 2026-10-02 a las 03:03 UTC
+  al 2026-10-03 a las 17:00 UTC). Son las instancias más grandes de los
+  bancos, hasta 127 MB comprimidas: justo las que la v1 saltaba por tamaño.
+  20 000 conflictos en ellas, dos veces, cuestan mucho más que en la muestra
+  de EXP-019. El log no guarda tiempos por instancia. Ninguna corrida llegó
+  al tope de 3600 s: las 103 parejas tienen los 81 contadores. No afecta a
+  la validez, solo a la estimación del coste.
+- **El informe se titula «EXP-019»**: `exp021.py analizar` reutiliza el
+  análisis de EXP-019 (§3), y la tabla v1 → v2 sí es la de EXP-021.
+
+## 7. Resultados
+
+Informe: `results/exp021/informe.md`. Binario: `build-x1v2`, compilado por
+la cola desde el commit de `results/exp021/commit.txt`.
+
+| Hipótesis | Resultado | ¿Se cumple? |
+|---|---|---|
+| H0 (seguridad) | Ninguna refutación: 0 errores y 0 pruebas que verificar | Sí (no se puso a prueba en este experimento) |
+| H1 (equivalencia) | **103 de 103** parejas con los 81 contadores idénticos: 18 SAT, 17 UNSAT y 68 sin decidir a los 20 000 conflictos | Sí |
+| H2 (coste) | Mediana 0,080 s, **p95 0,34 s**, **máximo 1,47 s** | Sí (≤ 1 s y ≤ 10 s) |
+
+**H3 (cobertura)**:
+
+| v1 → v2 | Instancias |
+|---|---|
+| saltada → **consistente** | **56** |
+| saltada → saltada | 47 |
+| saltada → refutada | 0 |
+
+- **Se cumplió la predicción**: la mayoría pasa a «consistente» y ninguna
+  se refuta, aunque había 41 UNSAT en la muestra. Las XOR industriales
+  forman sistemas consistentes, porque son puertas que se definen unas a
+  otras.
+- **Las 47 que siguen saltadas** tienen una componente gigante que supera
+  por sí sola los 256 Mbit. La mayor tiene 230 530 filas sobre 252 422
+  variables (`d1dbf88a`), que con historial son ≈ 10¹¹ bits. Ni el tope ni
+  el Lema 6 cambian eso: haría falta eliminar sin historial (X1 v3,
+  research/10 §5) o con matrices dispersas.
+- **H2 holgada**: la v2 hace más trabajo que la v1 en estas instancias, y
+  aun así el máximo (1,47 s, en `d1dbf88a`, que acaba saltada) queda lejos
+  de 10 s.
+
+**Decisión (§4, fila 1)**: se activa por defecto **X1 v2**. `build.sh`
+compila con `--gauss` salvo que se pida `--no-gauss`, y la opción `--gauss`
+vale 1.

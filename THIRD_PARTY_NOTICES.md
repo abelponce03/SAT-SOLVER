@@ -8,12 +8,13 @@ salvo Kissat, que está vendorizado.
 |---|---|---|---|---|---|
 | **Kissat** | Base del solver (vendorizado y modificado) | 4.0.4, upstream `8af8e56` | MIT | Armin Biere, Mathias Fleury, Florian Pollitt (U. Freiburg); Armin Biere (JKU Linz) | `solver/kissat/LICENSE` |
 | **satsuma** | Ruptura de simetrías. **Vendorizado sin modificar** y compilado dentro del binario con `configure --symmetry` (ADR-0007); también como programa externo en `tools/` para los experimentos | `c6ad1b5`, `CLIQUES=0` | MIT | Markus Anders | `solver/satsuma/LICENSE` |
-| **mclique** | Clique máxima para satsuma en lugar de cliquer (`tools/satsuma-mclique`); **en validación** (EXP-010) | este repositorio, `solver/mclique/` | MIT | LabeSAT (código propio, escrito en sala limpia) | `LICENSE` |
+| **mclique** | Clique máxima para satsuma en lugar de cliquer (`tools/satsuma-mclique`); **adoptada en EXP-011** (2026-09-30) como satsuma por defecto de `solver/labesat --symmetry` | este repositorio, `solver/mclique/` | MIT | LabeSAT (código propio, escrito en sala limpia) | `LICENSE` |
 | **dejavu** | Detección de automorfismos, usado por satsuma (vendorizado sin modificar) | `4c275e9` | MIT | Markus Anders | `solver/satsuma/src/dejavu/LICENSE` |
 | **tsl robin-map** | Tablas hash usadas por satsuma (vendorizado sin modificar) | la copia que trae satsuma `c6ad1b5` | MIT | Thibaut Goetghebuer-Planchon | cabecera de `solver/satsuma/src/tsl/*.h` |
 | **dsr-trim** | Verificador de pruebas SR/DSR. Solo pruebas y CI, **no se distribuye** | `c3119d8` y `8f857dd` (SC2026) | Apache 2.0 | Cayden R. Codel | `tools/dsr-trim-src/LICENSE` |
 | **Kissat sc2026** | Candidata a nueva base; **solo experimentos** (EXP-008), no se distribuye | Paquete oficial de la SAT Competition 2026, sha256 `69fbdae7…` | MIT | Armin Biere, Mathias Fleury, Florian Pollitt | `tools/kissat-sc2026-src/LICENSE` |
 | **drat-trim** | Verificador de pruebas DRAT. Solo pruebas y CI, **no se distribuye** | HEAD en la descarga | MIT | Marijn Heule, Nathan Wetzler (UT Austin) | `tools/drat-trim-src/LICENSE` |
+| **Kissat_MAB / SATLUTION** (`kissat-mab-hypre-satlution`) | **Idea** de M8 (`--probeiterate`, research/12 §6): congruencia y una segunda reducción transitiva tras una reducción con éxito. Se reescribió en `probe.c`; es una idea de 3 líneas, no se copió código. También señaló el fallo de `eliminate.c` (M9) | Paquete oficial de la SAT Competition 2026 (`zheng.tar.xz`, leído el 2026-10-05) | MIT (la licencia de Kissat) | Armin Biere et al.; cambios de los autores de Kissat_MAB y SATLUTION | `LICENSE` del paquete |
 
 ## Lo que **no** se usa
 

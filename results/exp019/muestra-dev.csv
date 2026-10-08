@@ -1,0 +1,6 @@
+instance,bank,path,known
+01d6fa8efd18ebfecd06af408958477b.cnf.xz,dev,bench/dev/lights-out/01d6fa8efd18ebfecd06af408958477b.cnf.xz,sat
+22c8d6aa86d51e15ef5ab37479eda22b.cnf.xz,dev,bench/dev/ordering-principle-xor/22c8d6aa86d51e15ef5ab37479eda22b.cnf.xz,unsat
+7e21850936d6127540157afaaf912c02.cnf.xz,dev,bench/dev/tseitin-formulas/7e21850936d6127540157afaaf912c02.cnf.xz,unknown
+3a8409393cc1ebae1444a079d216f221.cnf.xz,dev,bench/dev/xor-chain/3a8409393cc1ebae1444a079d216f221.cnf.xz,unknown
+a60a138325ac9c88ab293ec0c801a95c.cnf.xz,dev,bench/dev/xor-shifting/a60a138325ac9c88ab293ec0c801a95c.cnf.xz,sat

@@ -150,10 +150,87 @@ vigente es el del plan.
 - [x] research/07: ganadores 2021–2026. **B2 retirada** (era satsuma + MAB);
       reinicios fríos a ciegas descartados por simulación.
 - [x] VSA (P6) implementada detrás de `vivifyactivity`.
-- [ ] EXP-013 (calibración con la tesis) → D-017.
-- [ ] EXP-014 (simetrías en la industria) → datos para B3 y P5.
-- [ ] EXP-015 (VSA).
-- [ ] D-018: línea VSIDS/CHB, tras EXP-008.
+- [x] EXP-013: la tesis es calibrable (esta máquina es 2–4× más rápida por
+      conflicto); D-017 resuelta.
+- [x] EXP-014: en la industria, la ruptura cuesta tiempo fijo en instancias
+      triviales (+1,2 a +2,9 s de PAR-2); 80 ejemplos para B3.
+- [x] EXP-015: VSA sin efecto (p = 0,65); queda apagada.
+- [x] EXP-008: se mantiene 4.0.4 (D-013). EXP-010/011: **mclique v2
+      adoptada** (D-005). EXP-012: el binario integrado es equivalente a la
+      tubería.
+- [x] **EXP-009 (B3)**: la ruptura con retraso de 2 s **se descarta**. En
+      153 instancias industriales frescas empeora frente a «nunca» (+9,9 s,
+      Wilcoxon p = 2,9·10⁻⁸); la simulación era optimista. Cómo se activan
+      las simetrías en el paquete: **D-020** (recomendado: V1 «siempre» y
+      V2 «nunca»).
+- [ ] D-018: línea VSIDS/CHB, pendiente del director.
+
+### Fase 3c — Optimización con demostración · desde 2026-10-01
+
+Estrategia en [`research/08`](research/08-estrategia-de-optimizacion.md) y
+reglas en [ADR-0009](adr/0009-optimizaciones-que-conservan-la-trayectoria.md).
+Orden: medir, luego optimizar lo que pesa, y cada cambio con su prueba.
+
+- [x] research/08: límites teóricos, valor exacto de una aceleración en
+      PAR-2 (Proposición 1) y Teorema 5 (compilaciones que conservan la
+      búsqueda).
+- [x] **EXP-016**: la propagación es ~57 % del tiempo; análisis 14–19 %;
+      sondeo 15–19 %.
+- [x] **EXP-017**: PGO + LTO adoptado (×1,030, trayectorias idénticas);
+      `-march` ×1,040, descartado por el director (D-019): no se usa.
+- [x] **EXP-018**: K1 conserva la trayectoria (85/85), pero es un 7 % más
+      lenta (×0,931): no se adopta.
+- [ ] Puntos calientes con *p* ≥ 5 % (de EXP-016): análisis de complejidad y
+      prueba escrita antes de implementar.
+- [ ] Palancas del sistema de pruebas (las únicas con ganancia exponencial):
+      la ruptura de simetrías (D-020) y X1.
+  - [x] research/09: familias que separan los sistemas, diseño y Teorema 1
+        de X1.
+  - [x] X1 en Kissat detrás de `configure --gauss`; `test_gauss.sh` en
+        verde con los tres verificadores.
+  - [x] **EXP-019**: se adopta X1 (0 errores, 321/321 equivalentes, p95
+        0,37 s).
+  - [x] **EXP-021**: X1 v2 procesa 56 de los 103 sistemas saltados, sin
+        cambiar la búsqueda. **X1 v2 activa por defecto** (2026-10-03);
+        `build/` compilado con PGO + LTO.
+  - [x] **X1s** (research/09 §3.5): la solución de Gauss como asignación
+        afortunada. **EXP-022: activa por defecto** (7 modelos verificados,
+        250/250 equivalentes, p95 0,01 s).
+  - [ ] X1 v3: eliminación sin historial para las 47 componentes gigantes.
+  - [ ] X1b (unidades y equivalencias del sistema XOR).
+- [x] **EXP-020**: se mantiene el tope de satsuma de 60 s (300 s resuelve
+      las mismas y cuesta +24,6 s). El riesgo de research/10 §2.2 se declara.
+- [ ] B4: selector estructural entre «siempre» y «nunca» (D-020, opción d;
+      research/11). **EXP-023** preregistrado y en la cola: B4, «siempre» y
+      «nunca» en las 374 instancias de 2025 de ≤ 512 MiB.
+
+### Fase 3d — Vías de mejora de research/12 · desde 2026-10-05
+
+Épica: #35 (EXP-024 a EXP-034: #36 a #46; D-021 #47, D-022 #48). Catálogo,
+hallazgos y orden de la cola en [`research/12`](research/12-vias-de-mejora.md). Todo va detrás de opciones
+apagadas, y se mide en la máquina local, detrás de EXP-023.
+
+- [x] Hallazgos:
+  - fallo de Kissat en `eliminate.c` (desde la 3.1.0) y otro probable en
+    `vivify.c`;
+  - SATLUTION no replicó en 2026;
+  - SBVA ya está en Kissat;
+  - la fase inicial va contra la ruptura lex-leader.
+- [x] Opciones `--eliminatefix`, `--probeiterate`, `--decayramp`,
+      `--vivifywatchfix` y `--gaussphase`, y `scripts/satsuma_topes.sh`. Con todas
+      a 0, la búsqueda es idéntica (50 de 50); con cada una, respuestas
+      verificadas (`test_opciones_m.sh`, en CI).
+- [ ] Deterministas y baratos: EXP-024 (topes de satsuma), EXP-025 (X1b),
+      EXP-031 etapa 0 (vigilante).
+- [ ] A/B en dos etapas:
+  - EXP-026 (fase falsa con ruptura) y EXP-027 (`--sat` con ruptura);
+  - EXP-028 (arreglo de la eliminación), EXP-029 (réplica de SATLUTION) y
+    EXP-030 (rampa de decaimiento);
+  - EXP-032 (X2).
+- [ ] Pruebas: EXP-033 (coste de escribirlas) y EXP-034 (verificación a
+      escala; antes de H8).
+- [x] D-022: el cribado en dos etapas pasa a ADR-0003 §4c (opción b).
+- [ ] D-021: avisar a Biere de los fallos de Kissat.
 
 ### Fase 4 — Los 20 benchmarks obligatorios · febrero–marzo 2027
 

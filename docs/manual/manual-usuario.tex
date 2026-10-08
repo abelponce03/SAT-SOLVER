@@ -103,6 +103,11 @@ cd SAT-SOLVER
 \texttt{get\_tools.sh} descarga cada herramienta fijada a un commit concreto,
 para que cualquier resultado sea reproducible. satsuma se compila \emph{sin}
 la biblioteca cliquer (GPL), de modo que todo lo que se distribuye es MIT.
+Desde el experimento EXP-011, \texttt{solver/labesat} usa por defecto
+\texttt{tools/satsuma-mclique}: el mismo satsuma, pero con la clique máxima
+calculada por \emph{mclique}, una reimplementación propia con licencia MIT.
+Recupera lo que aportaba cliquer sin salir de la licencia MIT. Con
+\texttt{LABESAT\_SATSUMA} se puede elegir otro binario.
 
 \subsection{Ruptura de simetrías dentro del binario}
 Con \texttt{./scripts/build.sh --dir=build-symm --symmetry}, satsuma (incluido
@@ -124,6 +129,15 @@ entrega a la SAT Competition. No admite opciones en tiempo de ejecución, salvo
 las de la aplicación (\texttt{-n}, \texttt{--time}, \texttt{--append-proof},
 \ldots).
 
+La compilación adoptada añade \texttt{--pgo --lto} (EXP-017): compilación
+guiada por perfil, entrenada con instancias que no están en los bancos de
+evaluación, y optimización en el enlace. Acelera $\times$1{,}03 sin cambiar la
+búsqueda. No se usa \texttt{-march} (D-019).
+\begin{lstlisting}[language=bash]
+./scripts/build.sh --clean --pgo --lto                 # el binario que se mide
+./scripts/build.sh --clean --competition --pgo --lto   # el que se entrega
+\end{lstlisting}
+
 %======================================================================
 \section{Uso}
 
@@ -140,16 +154,61 @@ solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>
   \item[\texttt{--symmetry}] Activa la ruptura de simetrías (satsuma). Hoy está
         \textbf{desactivada por defecto}: el experimento EXP-007 mostró que gana
         mucho en instancias con simetría explotable (37 de 45 resueltas frente a
-        8), pero ralentiza 1{,}42$\times$ las que no la tienen. Se activará sola
-        cuando la activación condicional (B3) esté validada. También se puede
-        activar con \texttt{LABESAT\_SYMMETRY=1}.
+        8), pero en la industria cuesta un poco (EXP-014 y EXP-009). La
+        activación condicional con retraso (B3) se descartó en EXP-009; cómo
+        se activa en el paquete de competición está pendiente de decisión
+        (D-020). También se puede activar con \texttt{LABESAT\_SYMMETRY=1}.
   \item[\texttt{--no-symmetry}] Desactiva satsuma aunque \texttt{LABESAT\_SYMMETRY=1}.
+  \item[\texttt{--symmetry-delay=N}] \emph{Ruptura con retraso}. Con
+        \texttt{--symmetry}, kissat intenta primero la fórmula original
+        durante \texttt{N} segundos y solo aplica satsuma si no la resuelve.
+        Por defecto 0 (sin retraso). EXP-009 la \textbf{descartó} con
+        \texttt{N} = 2: en instancias industriales frescas empeora frente a
+        no romper simetrías. Se conserva para reproducir aquel experimento.
+        También con \texttt{LABESAT\_SYMM\_DELAY}.
   \item[\texttt{--time=N}] Límite de \textbf{tiempo total} en segundos. El
         tiempo que consume satsuma se descuenta del de kissat.
   \item[otras opciones] Cualquier opción que empiece por \texttt{-} se pasa a
         kissat; por ejemplo, \texttt{-n} (no imprimir el modelo),
         \texttt{-q} o \texttt{--seed=S}. Lista completa: \texttt{kissat -h}.
 \end{description}
+
+\subsection{Refutación de sistemas XOR (X1)}
+Antes de buscar, kissat extrae las restricciones XOR de la fórmula (de hasta
+6 literales) y comprueba por eliminación de Gauss si el sistema lineal sobre
+GF(2) que forman tiene solución (research/09). Está \textbf{activa por
+defecto} desde los experimentos EXP-019 y EXP-021.
+\begin{itemize}
+  \item Si el sistema no tiene solución, la fórmula es insatisfacible: kissat
+        responde \texttt{s UNSATISFIABLE} sin buscar y escribe una prueba DRAT
+        con variables de extensión, de tamaño polinómico, también en familias
+        de paridad (Tseitin, \emph{lights-out}) que la resolución sola no
+        refuta en tiempo polinómico.
+  \item Si tiene solución, o si no hay XOR, la búsqueda es \textbf{exactamente
+        la misma} que sin X1: lo único que cambia es el tiempo de la
+        comprobación (mediana de 0{,}02 a 0{,}08~s, máximo medido 1{,}8~s).
+  \item El sistema se trata por componentes conexas. Si una componente supera
+        los topes, se salta solo esa.
+  \item \emph{X1s} (EXP-022): si el sistema es consistente y una solución suya
+        satisface todas las cláusulas, se asigna antes de buscar y la
+        respuesta es \texttt{s SATISFIABLE} sin un solo conflicto. Resuelve
+        al instante las familias de paridad puras satisfacibles
+        (\emph{lights-out}, \emph{random-graph-xorsat}). Si la solución
+        incumple alguna cláusula, no se toca nada.
+\end{itemize}
+\begin{description}
+  \item[\texttt{--gauss=0}] Desactiva X1 (y con ella X1s).
+  \item[\texttt{--gausslucky=0}] Desactiva solo X1s.
+  \item[\texttt{--gaussmaxsize=k}] Longitud máxima de las XOR extraídas (6;
+        de 2 a 8).
+  \item[\texttt{--gaussbits=M}] Tope de memoria por componente, en megabits
+        (256).
+  \item[\texttt{--gaussops=M}] Presupuesto total, en millones de operaciones de
+        palabra (4000).
+  \item[\texttt{--gaussclauses=N}] Tope de cláusulas candidatas (10 millones).
+\end{description}
+\texttt{./scripts/build.sh --no-gauss} compila un binario sin X1, idéntico a
+los de los experimentos anteriores a EXP-019.
 
 \subsection{Opciones experimentales de LabeSAT}
 Cambian la búsqueda y están \textbf{desactivadas por defecto} hasta que un
@@ -160,11 +219,31 @@ opción.
         actividad} (VSA, de Kissat-VSA, SAT Competition 2025). En modo estable,
         vivifica antes las cláusulas cuya variable menos activa tiene mayor
         puntuación. Con \texttt{0}, la búsqueda es idéntica a la de Kissat
-        4.0.4. En evaluación: EXP-015.
+        4.0.4. Cerrada sin efecto detectado (EXP-015).
   \item[\texttt{--modeadaptive=1}] Reparto adaptativo del presupuesto entre
         los modos estable y enfocado (A4.1). Cerrado sin efecto detectado
         (EXP-006); se conserva para reproducir aquel experimento.
 \end{description}
+Las de \emph{research/12}, en medición (EXP-024 a EXP-034); con todas a
+\texttt{0}, la búsqueda es idéntica a la de la configuración adoptada:
+\begin{description}
+  \item[\texttt{--eliminatefix=1}] Arregla un fallo de Kissat (desde la
+        3.1.0) que da la eliminación por completa aunque la última ronda
+        eliminara variables. Cambia la búsqueda (EXP-028).
+  \item[\texttt{--probeiterate=1}] Tras una reducción transitiva con éxito,
+        congruencia y otra reducción transitiva, como SATLUTION (EXP-029).
+  \item[\texttt{--decayramp=N}] En modo estable, el decaimiento de VSIDS
+        empieza en $N$ por mil y baja 10 cada 5000 conflictos hasta
+        \texttt{--decay}; \texttt{200} es la rampa de Glucose (EXP-030).
+  \item[\texttt{--vivifywatchfix=1}] Arregla la elección del vigilante al
+        vivificar (EXP-031).
+  \item[\texttt{--gaussphase=1}] Si X1s descarta la solución de Gauss, la
+        usa como fase inicial de las variables del sistema XOR (X2, EXP-032).
+\end{description}
+Para medir los topes internos de satsuma (EXP-024),
+\texttt{LABESAT\_SATSUMA=scripts/satsuma\_topes.sh} los añade sin cambiar el
+guion; en el binario integrado, la variable \texttt{LABESAT\_SYMM\_ARGS} pasa
+argumentos extra a \texttt{satsuma fix} (vacía por defecto).
 
 \subsection{Ejemplos}
 \begin{lstlisting}[language=bash]
@@ -210,6 +289,7 @@ Variable & Efecto & Por defecto \\
 \texttt{LABESAT\_SATSUMA} & Binario de satsuma & \texttt{tools/satsuma} \\
 \texttt{LABESAT\_SYMM\_TIMEOUT} & Segundos máximos para satsuma & 60 \\
 \texttt{LABESAT\_SYMM\_MAXBYTES} & Tamaño máximo de la CNF para aplicar satsuma & 512\,MiB \\
+\texttt{LABESAT\_SYMM\_MEM} & Tope de memoria virtual de satsuma, en bytes; si lo supera, muere solo satsuma y se resuelve la CNF original & 0 (sin tope) \\
 \texttt{LABESAT\_KISSAT\_ARGS} & Argumentos extra para kissat & (vacío) \\
 \texttt{LABESAT\_SYMMETRY} & 1 activa la ruptura de simetrías & 0 \\
 \bottomrule
@@ -238,7 +318,10 @@ tools/dsr-trim formula.cnf prueba.out           # debe imprimir: s VERIFIED UNSA
 tools/dsr-trim-sc2026 formula.cnf prueba.out    # versión exacta de la SAT Competition 2026
 \end{lstlisting}
 Si no se usó \texttt{--symmetry}, o si satsuma no llegó a actuar, la prueba es
-DRAT pura y también la acepta \texttt{tools/drat-trim}.
+DRAT pura y también la acepta \texttt{tools/drat-trim}. Las pruebas de X1 son
+DRAT, pero \texttt{drat-trim} puede tardar mucho en ellas: no tienen borrados,
+porque el \texttt{dsr-trim} de la SAT Competition 2026 falla con algunos
+(research/09 §4.3). \texttt{dsr-trim} las verifica mucho más deprisa.
 
 %======================================================================
 \section{Reproducir los experimentos}

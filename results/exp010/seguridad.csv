@@ -1,0 +1,17 @@
+instance,status,cpu_s,verificacion
+bench/symm2026/H/043c91001968a1fbd1ef419540fcb396.cnf.xz,UNSAT,1.601,OK
+bench/symm2026/H/043c91001968a1fbd1ef419540fcb396.cnf.xz,UNSAT,1.49,OK
+bench/symm2026/H/0f1070ba60b55aa62d3a98798a14700e.cnf.xz,UNSAT,0.311,OK
+bench/symm2026/H/0f1070ba60b55aa62d3a98798a14700e.cnf.xz,UNSAT,0.323,OK
+bench/symm2026/H/1a3bef9e03bab1ed4e9e34506d72a451.cnf.xz,UNSAT,0.719,OK
+bench/symm2026/H/1a3bef9e03bab1ed4e9e34506d72a451.cnf.xz,UNSAT,0.661,OK
+bench/symm2026/H/65bf849f3e86ab275e339934f4d140a0.cnf.xz,UNSAT,0.565,OK
+bench/symm2026/H/65bf849f3e86ab275e339934f4d140a0.cnf.xz,UNSAT,0.61,OK
+bench/symm2026/H/6ddda96839bb24cd7389d5556d3ab16d.cnf.xz,UNSAT,1.49,OK
+bench/symm2026/H/6ddda96839bb24cd7389d5556d3ab16d.cnf.xz,UNSAT,1.428,OK
+bench/symm2026/H/9ba8145e0d02318dea5507fc3ba03472.cnf.xz,TIMEOUT,180.795,SALTADA
+bench/symm2026/H/9ba8145e0d02318dea5507fc3ba03472.cnf.xz,TIMEOUT,180.547,SALTADA
+bench/symm2026/H/e5787bb4c8c29aa39b14a5e11387999d.cnf.xz,UNSAT,0.495,OK
+bench/symm2026/H/e5787bb4c8c29aa39b14a5e11387999d.cnf.xz,UNSAT,0.285,OK
+bench/symm2026/N/f52a349677a5b5b5315b5954b3181fe3.cnf.xz,SAT,23.36,OK
+bench/symm2026/N/f52a349677a5b5b5315b5954b3181fe3.cnf.xz,SAT,24.598,OK

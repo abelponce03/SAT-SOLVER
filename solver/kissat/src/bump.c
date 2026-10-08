@@ -40,9 +40,23 @@ void kissat_rescale_scores (kissat *solver) {
                 factor);
 }
 
+/* [SOLVER] M5 (research/12): rampa de decaimiento, como la de Glucose
+   (Audemard y Simon): el decaimiento empieza en 'decayramp' por mil y baja
+   10 por mil cada 5000 conflictos hasta 'decay'.  Con 'decayramp' = 0 (por
+   defecto) o no mayor que 'decay', el decaimiento es el de Kissat. */
+static unsigned ramped_decay (kissat *solver) {
+  const unsigned decay = GET_OPTION (decay);
+  const unsigned ramp = GET_OPTION (decayramp);
+  if (ramp <= decay)
+    return decay;
+  const uint64_t steps = CONFLICTS / 5000;
+  const uint64_t drop = 10 * steps;
+  return drop >= ramp - decay ? decay : ramp - (unsigned) drop;
+}
+
 void kissat_bump_score_increment (kissat *solver) {
   const double old_scinc = solver->scinc;
-  const double decay = GET_OPTION (decay) * 1e-3;
+  const double decay = ramped_decay (solver) * 1e-3;
   assert (0 <= decay), assert (decay <= 0.5);
   const double factor = 1.0 / (1.0 - decay);
   const double new_scinc = old_scinc * factor;

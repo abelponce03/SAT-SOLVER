@@ -26,9 +26,21 @@
 #
 # Parámetros (variables de entorno; los valores por defecto se fijan en EXP-007):
 #   LABESAT_KISSAT            binario de kissat   (defecto: junto a este script)
-#   LABESAT_SATSUMA           binario de satsuma  (defecto: junto a este script)
+#   LABESAT_SATSUMA           binario de satsuma  (defecto: junto a este script;
+#                             si no, tools/satsuma-mclique —clique máxima MIT,
+#                             adoptado en EXP-011— y, en su falta, tools/satsuma)
 #   LABESAT_SYMM_TIMEOUT      segundos máximos para satsuma            (60)
 #   LABESAT_SYMM_MAXBYTES     tamaño máximo de CNF sin comprimir       (536870912)
+#   LABESAT_SYMM_MEM          tope de memoria virtual de satsuma, en
+#                             bytes (RLIMIT_AS); si lo supera, muere y
+#                             se cae a kissat solo.  0 = sin tope, como
+#                             en todos los A/B medidos (research/10 §0c,
+#                             P5): se fija con el límite de las reglas  (0)
+#   LABESAT_SYMM_DELAY        ruptura con RETRASO (B3, EXP-009): con
+#                             --symmetry, kissat corre antes N segundos
+#                             sobre la CNF original y, solo si no resuelve,
+#                             se aplica satsuma.  0 = sin retraso    (0)
+#                             También con la opción --symmetry-delay=N.
 #   LABESAT_KISSAT_ARGS       argumentos extra para kissat             ("")
 set -u
 
@@ -38,17 +50,20 @@ ROOT="$(cd "$HERE/.." && pwd)"
 # -f además de -x: un directorio también es "ejecutable" (solver/kissat lo es)
 first_exe() { for f in "$@"; do [ -f "$f" ] && [ -x "$f" ] && { echo "$f"; return; }; done; }
 KISSAT="${LABESAT_KISSAT:-$(first_exe "$HERE/kissat" "$HERE/kissat/build/kissat")}"
-SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma")}"
+SATSUMA="${LABESAT_SATSUMA:-$(first_exe "$HERE/satsuma" "$ROOT/tools/satsuma-mclique" "$ROOT/tools/satsuma")}"
 SYMM_TIMEOUT="${LABESAT_SYMM_TIMEOUT:-60}"
 SYMM_MAXBYTES="${LABESAT_SYMM_MAXBYTES:-536870912}"
+SYMM_MEM="${LABESAT_SYMM_MEM:-0}"
 read -r -a KARGS <<< "${LABESAT_KISSAT_ARGS:-}"
 
 symmetry="${LABESAT_SYMMETRY:-0}"
+DELAY="${LABESAT_SYMM_DELAY:-0}"
 TIME=""
 while [ $# -gt 0 ] && [ "${1#-}" != "$1" ] && [ "$1" != "-" ]; do
     case "$1" in
         --symmetry)    symmetry=1 ;;
         --no-symmetry) symmetry=0 ;;
+        --symmetry-delay=*) DELAY="${1#--symmetry-delay=}" ;;
         --time=*)      TIME="${1#--time=}" ;;
         *)             KARGS+=("$1") ;;
     esac
@@ -84,6 +99,44 @@ TMP="$(mktemp -d "${TMPDIR:-/tmp}/labesat.XXXXXX")" || run_plain "sin directorio
 trap 'rm -rf "$TMP"' EXIT
 trap 'exit 143' TERM INT
 
+# Ruptura con RETRASO (B3, EXP-009).  Fase 1: kissat sobre la CNF ORIGINAL
+# durante DELAY segundos.  En EXP-014 el daño de la ruptura en la industria era
+# casi todo coste fijo de satsuma en instancias que kissat resuelve en
+# segundos; con el retraso, esas no lo pagan.  Si la fase 1 no resuelve, su
+# salida y su prueba se descartan (la prueba se trunca más abajo) y se sigue
+# con satsuma como siempre, con el tiempo que quede.
+case "$DELAY" in ''|*[!0-9]*) echo "labesat: --symmetry-delay espera segundos enteros" >&2; exit 1 ;; esac
+if [ "$DELAY" -gt 0 ]; then
+    if [ -n "$TIME" ] && [ "$TIME" -le "$DELAY" ]; then
+        run_plain "presupuesto total (${TIME}s) <= retraso (${DELAY}s)"
+    fi
+    say "retraso: kissat solo durante ${DELAY}s antes de satsuma"
+    t0=$(date +%s.%N)
+    # Si llega SIGTERM en la fase 1 (fin del tiempo en la competición), kissat
+    # imprime su 's UNKNOWN' y sus estadísticas: se reenvían tal cual.
+    trap 'kill -TERM "$pid1" 2>/dev/null; wait "$pid1"; cat "$TMP/fase1.out"; exit 143' TERM INT
+    if [ -n "$PROOF" ]; then
+        "$KISSAT" "${KARGS[@]}" --time="$DELAY" "$CNF" "$PROOF" > "$TMP/fase1.out" 2>&1 &
+    else
+        "$KISSAT" "${KARGS[@]}" --time="$DELAY" "$CNF" > "$TMP/fase1.out" 2>&1 &
+    fi
+    pid1=$!
+    wait "$pid1"; st1=$?
+    trap 'exit 143' TERM INT
+    if [ "$st1" -eq 10 ] || [ "$st1" -eq 20 ]; then
+        say "resuelto en la fase 1, sin satsuma"
+        cat "$TMP/fase1.out"
+        exit "$st1"
+    fi
+    t1=$(date +%s.%N)
+    gastado=$(awk -v a="$t0" -v b="$t1" 'BEGIN { s = b - a; u = int(s); if (u < s) u++; print u }')
+    say "fase 1 sin respuesta en ${gastado}s: se aplica satsuma"
+    if [ -n "$TIME" ]; then
+        TIME=$((TIME - gastado))
+        if [ "$TIME" -lt 1 ]; then say "sin tiempo tras la fase 1"; echo "s UNKNOWN"; exit 0; fi
+    fi
+fi
+
 # satsuma sólo lee DIMACS sin comprimir
 INPUT="$CNF"
 case "$CNF" in
@@ -101,7 +154,12 @@ sargs=(fix "$INPUT" --silent --full-skip-limit 100000000 --add-reduced-as-unit
 [ -n "$PROOF" ] && { : > "$PROOF"; sargs+=(--proof-file "$PROOF"); }
 
 t0=$(date +%s.%N)
-timeout -s KILL "$SYMM_TIMEOUT" "$SATSUMA" "${sargs[@]}" </dev/null >/dev/null 2>&1
+# El tope de memoria, solo para satsuma (subshell).  Si el entorno ya tiene
+# uno menor, 'ulimit' falla y se queda el del entorno.
+(
+    if [ "$SYMM_MEM" -gt 0 ] 2>/dev/null; then ulimit -v $((SYMM_MEM / 1024)) 2>/dev/null; fi
+    exec timeout -s KILL "$SYMM_TIMEOUT" "$SATSUMA" "${sargs[@]}"
+) </dev/null >/dev/null 2>&1
 st=$?
 t1=$(date +%s.%N)
 secs=$(awk -v a="$t0" -v b="$t1" 'BEGIN { printf "%.2f", b - a }')

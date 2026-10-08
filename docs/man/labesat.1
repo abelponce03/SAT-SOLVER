@@ -1,5 +1,5 @@
 .\" Página de manual de labesat. Fuente canónica (roff).  Ver:  man -l docs/man/labesat.1
-.TH LABESAT 1 "2026-09-23" "LabeSAT" "Órdenes de usuario"
+.TH LABESAT 1 "2026-10-03" "LabeSAT" "Órdenes de usuario"
 .SH NOMBRE
 labesat \- solver SAT (Kissat 4.0.4 + ruptura de simetrías verificable)
 .SH SINOPSIS
@@ -27,6 +27,15 @@ escribe en ese fichero una prueba de insatisfacibilidad en formato SR
 Si satsuma falla, se pasa de tiempo o la entrada es demasiado grande,
 resuelve la fórmula original solo con kissat, y la prueba es DRAT.
 .PP
+Antes de buscar, kissat extrae las restricciones XOR de la fórmula y, si el
+sistema lineal sobre GF(2) que forman no tiene solución, la refuta por
+eliminación de Gauss (X1). La prueba sigue siendo DRAT: define variables de
+extensión y deriva la cláusula vacía en un número polinómico de pasos, también
+en las familias de paridad que la resolución no refuta en tiempo polinómico.
+Si el sistema tiene solución y esta satisface todas las cláusulas, la fórmula
+es satisfacible y se responde sin buscar (X1s); si no, la búsqueda es
+exactamente la misma que sin X1.
+.PP
 El binario de Kissat compilado con
 .B "configure \-\-symmetry"
 hace lo mismo sin este guion:
@@ -38,13 +47,40 @@ respaldo (ADR\-0007).
 .SH OPCIONES
 .TP
 .B \-\-symmetry
-Ejecuta satsuma antes de kissat. Desactivado por defecto hasta validar la
-activación condicional (EXP-007: gana mucho con simetría explotable, pero
-ralentiza 1.42x las instancias sin ella).
+Ejecuta satsuma antes de kissat. Desactivado por defecto: gana mucho con
+simetría explotable (EXP-007), pero en la industria cuesta un poco
+(EXP-014 y EXP-009). La activación en el paquete de competición está
+pendiente de decisión (D-020).
 .TP
 .B \-\-no\-symmetry
 No ejecuta satsuma aunque
 .B LABESAT_SYMMETRY=1.
+.TP
+.BI \-\-symmetry\-delay= N
+Ruptura con retraso: con
+.BR \-\-symmetry ,
+kissat intenta primero la fórmula original durante
+.I N
+segundos y solo aplica satsuma si no la resuelve. Por defecto 0. EXP-009 la
+descartó con N = 2 (empeora frente a no romper simetrías); se conserva para
+reproducir aquel experimento. También con
+.BR LABESAT_SYMM_DELAY .
+.TP
+.BR \-\-gauss=0
+Desactiva X1, la refutación de sistemas XOR por Gauss, que está activa por
+defecto (EXP-019 y EXP-021), y con ella X1s. Con
+.B \-\-gausslucky=0
+se desactiva solo X1s (EXP-022): asignar, antes de buscar, una solución del
+sistema XOR que satisfaga todas las cláusulas. Sus topes:
+.BI \-\-gaussmaxsize= k
+(longitud máxima de las XOR extraídas, 6),
+.BI \-\-gaussbits= M
+(megabits por componente conexa del sistema, 256),
+.BI \-\-gaussops= M
+(millones de operaciones de palabra en total, 4000) y
+.BI \-\-gaussclauses= N
+(cláusulas candidatas, 10 000 000). Si se supera alguno, X1 no se aplica a
+esa componente y la búsqueda sigue igual.
 .TP
 .BI \-\-time= N
 Límite de tiempo \fItotal\fP en segundos. El tiempo de satsuma se descuenta
@@ -57,9 +93,16 @@ Cualquier opción que empiece por \- se pasa a kissat (p. ej.
 .BR \-\-seed=\fIS\fP ).
 Opciones experimentales de LabeSAT, apagadas por defecto:
 .B \-\-vivifyactivity=1
-(vivificación programada por actividad, en evaluación en EXP-015) y
+(vivificación programada por actividad, cerrada sin efecto en EXP-015) y
 .B \-\-modeadaptive=1
 (A4.1, cerrada sin efecto en EXP-006).
+En medición (research/12, EXP-024 a EXP-034):
+.BR \-\-eliminatefix=1 ,
+.BR \-\-probeiterate=1 ,
+.BR \-\-decayramp=\fIN\fP ,
+.B \-\-vivifywatchfix=1
+y
+.BR \-\-gaussphase=1 .
 .B labesat \-\-id
 y
 .B labesat \-\-version
@@ -94,6 +137,8 @@ Binario de kissat (por defecto, el que está junto al guion).
 .TP
 .B LABESAT_SATSUMA
 Binario de satsuma (por defecto,
+.IR tools/satsuma-mclique ,
+con la clique máxima en MIT, adoptado en EXP-011; si no existe,
 .IR tools/satsuma ).
 .TP
 .B LABESAT_SYMM_TIMEOUT
@@ -102,8 +147,14 @@ Segundos máximos para satsuma (60).
 .B LABESAT_SYMM_MAXBYTES
 Tamaño máximo de la CNF para aplicar satsuma (536870912).
 .TP
+.B LABESAT_SYMM_MEM
+Tope de memoria virtual de satsuma, en bytes (RLIMIT_AS, solo para satsuma).
+Si lo supera, satsuma muere y se resuelve la CNF original con kissat.
+Por defecto 0, sin tope.
+.TP
 .B LABESAT_KISSAT_ARGS
 Argumentos extra para kissat.
+
 .TP
 .B LABESAT_SYMMETRY
 1 activa la ruptura de simetrías (por defecto 0).
@@ -112,6 +163,7 @@ Argumentos extra para kissat.
 labesat formula.cnf
 labesat \-\-symmetry \-\-time=5000 formula.cnf.xz prueba.out
 dsr\-trim formula.cnf prueba.out
+labesat \-\-gauss=0 formula.cnf
 .fi
 .SH VÉASE TAMBIÉN
 .BR kissat (1),

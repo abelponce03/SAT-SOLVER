@@ -1,0 +1,2 @@
+# EXP-011 parte 2: SHA-1(v2) != SHA-1(v1) y != SHA-1(mit) (regla de §3)
+9ba8145e0d02318dea5507fc3ba03472.cnf.xz

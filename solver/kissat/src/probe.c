@@ -36,7 +36,18 @@ static void probe (kissat *solver) {
   kissat_vivify (solver);
   kissat_sweep (solver);
   kissat_substitute (solver, false);
-  kissat_transitive_reduction (solver);
+  const bool transitive_reduced = kissat_transitive_reduction (solver);
+  /* [SOLVER] M8 (research/12): si la reducción transitiva quitó binarias,
+     congruencia otra vez y una segunda reducción, que limpie las binarias
+     de equivalencia nuevas (SATLUTION, ciclos 42 y 51, sobre Kissat_MAB;
+     MIT).  Apagado por defecto: en 2026 esa variante quedó por detrás de su
+     base (253 frente a 255 resueltas), así que se replica con A/B. */
+  if (GET_OPTION (probeiterate) && transitive_reduced &&
+      !solver->inconsistent) {
+    kissat_congruence (solver);
+    if (!solver->inconsistent)
+      kissat_transitive_reduction (solver);
+  }
   kissat_binary_clauses_backbone (solver);
   kissat_factor (solver);
   STOP_SIMPLIFIER_AND_RESUME_SEARCH (probe);

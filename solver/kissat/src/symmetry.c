@@ -31,6 +31,7 @@ void kissat_symmetry_cleanup (symmetry_outcome *res) { (void) res; }
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -91,10 +92,18 @@ static long long decompress (file *opened, const char *plain,
 
 /* Proceso hijo: descomprime si hace falta y ejecuta satsuma.  Nunca vuelve. */
 static void child (const char *input, const char *proof, const char *dir,
-                   const char *out, double max_bytes) {
+                   const char *out, double max_bytes, double max_memory) {
 #ifdef __linux__
   prctl (PR_SET_PDEATHSIG, SIGKILL); /* si el solver muere, satsuma también */
 #endif
+  if (max_memory > 0) { /* solo el hijo: si lo supera, cae al respaldo */
+    struct rlimit rl;
+    if (!getrlimit (RLIMIT_AS, &rl) &&
+        (rl.rlim_max == RLIM_INFINITY || (double) rl.rlim_max > max_memory)) {
+      rl.rlim_cur = (rlim_t) max_memory;
+      (void) setrlimit (RLIMIT_AS, &rl);
+    }
+  }
   int null = open ("/dev/null", O_RDWR);
   if (null >= 0) {
     dup2 (null, 0), dup2 (null, 1), dup2 (null, 2);
@@ -117,7 +126,7 @@ static void child (const char *input, const char *proof, const char *dir,
     if ((double) kissat_file_size (input) > max_bytes)
       _exit (EXIT_TOO_BIG);
   }
-  char *argv[16];
+  char *argv[16 + 32];
   int argc = 0;
   argv[argc++] = (char *) "satsuma";
   argv[argc++] = (char *) "fix";
@@ -133,6 +142,23 @@ static void child (const char *input, const char *proof, const char *dir,
     argv[argc++] = (char *) "--proof-file";
     argv[argc++] = (char *) proof;
   }
+  /* [SOLVER] M2 (research/12, EXP-024): argumentos extra para 'satsuma
+     fix', separados por blancos ('labesat' usa scripts/satsuma_topes.sh).  Si
+     no caben, el hijo falla y se cae al respaldo, como con cualquier otro
+     fallo de satsuma. */
+  static char extra[4096];
+  const char *env = getenv ("LABESAT_SYMM_ARGS");
+  if (env && *env) {
+    if (strlen (env) >= sizeof extra)
+      _exit (EXIT_FAILURE);
+    strcpy (extra, env);
+    for (char *tok = strtok (extra, " \t\n"); tok;
+         tok = strtok (0, " \t\n")) {
+      if (argc >= (int) (sizeof argv / sizeof *argv) - 1)
+        _exit (EXIT_FAILURE);
+      argv[argc++] = tok;
+    }
+  }
   argv[argc] = 0;
   _exit (labesat_satsuma_main (argc, argv));
 }
@@ -142,6 +168,8 @@ void kissat_symmetry_preprocess (const char *input, const char *proof,
   memset (res, 0, sizeof *res);
   const double timeout = env_double ("LABESAT_SYMM_TIMEOUT", 60);
   const double max_bytes = env_double ("LABESAT_SYMM_MAXBYTES", 536870912);
+  /* 0 o ausente: sin tope de memoria, como en los A/B medidos. */
+  const double max_memory = env_double ("LABESAT_SYMM_MEM", 0);
   double limit = timeout;
   if (budget > 0 && budget < limit)
     limit = budget;
@@ -182,7 +210,7 @@ void kissat_symmetry_preprocess (const char *input, const char *proof,
     return;
   }
   if (!pid)
-    child (input, proof, res->dir, res->path, max_bytes);
+    child (input, proof, res->dir, res->path, max_bytes, max_memory);
 
   int status = 0;
   bool killed = false;

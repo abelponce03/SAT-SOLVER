@@ -70,6 +70,12 @@ if [ $? = 20 ] && grep -q 'sin simetr' "$TMP/fb.out" \
     ok "respaldo (tope de tamaño): prueba DRAT pura verificada por drat-trim"
 else bad "respaldo"; fi
 
+LABESAT_SYMM_MEM=1048576 "$K" --symmetry bench/symm/php9x9_rand160u.cnf "$TMP/fm.proof" > "$TMP/fm.out"
+if [ $? = 20 ] && grep -q 'sin simetr' "$TMP/fm.out" \
+    && tools/drat-trim bench/symm/php9x9_rand160u.cnf "$TMP/fm.proof" 2>&1 | grep -aq 's VERIFIED'; then
+    ok "respaldo (tope de memoria de satsuma): prueba DRAT pura verificada por drat-trim"
+else bad "respaldo (tope de memoria)"; fi
+
 "$K" bench/symm/php_9_9.cnf > "$TMP/off.out"
 grep -q 'symmetry' "$TMP/off.out" && bad "sin --symmetry hay paso de simetrías" \
     || ok "sin --symmetry no hay paso de simetrías (apagado por defecto)"

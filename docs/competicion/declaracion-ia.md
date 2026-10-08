@@ -12,6 +12,9 @@ Plan Main Track §5.
   autor. El proceso está en `docs/metodologia/`.
 - **Código de terceros sin modificar**: satsuma, dejavu y, en verificación,
   dsr-trim y drat-trim. Cuentan como 0 líneas de IA.
+- **mclique** (`solver/mclique/`, MIT): la clique máxima que satsuma usa desde
+  EXP-011 en lugar de cliquer la escribió el asistente en sala limpia, a partir
+  de los algoritmos publicados (D-005). Cuenta como código escrito por IA.
 
 ## 2. Heurísticas y parámetros ajustados con procesos asistidos por IA
 
@@ -27,6 +30,8 @@ una búsqueda automática de parámetros.
 | B3″: las fases *lucky* ceden al terminador | — | Corrección de comportamiento, no ajuste. Neutral en EXP-004 | Sí |
 | A4.1: `modeadaptive`, `modeadaptivedecay`, `modeadaptivegain` | 0 (apagado), 800, 1000 | Diseño asistido; sin efecto en EXP-006 | **No** |
 | B3 (activación condicional de simetrías) | — | Pendiente (EXP-009) | — |
+| Presupuesto de trabajo de mclique v2 | el de `solver/mclique` v2 | Fijado por tiempo, no por resultados, antes de medir (EXP-011); validado por su criterio preregistrado | Sí, si se activa `--symmetry` |
+| VSA: `vivifyactivity` | 0 (apagado) | Sin efecto en EXP-015 | **No** |
 
 ## 3. Benchmarks
 

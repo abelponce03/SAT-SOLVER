@@ -1,0 +1,14 @@
+label,instance,family,seed,status,exit_code,wall_s,cpu_s,max_rss_mb,conflicts,decisions,propagations,restarts,rephased,budget_kind,budget_value,opts,instance_sha1,started_at,parallel_jobs
+A-tope60,34360a677fc854189c982294853e6891.cnf.xz,X,42,SAT,10,1.403,1.494,216.2,0,0,10110,0,0,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T17:29:51+00:00,1
+A-tope60,80bb5209e88def5643bf5593320b104f.cnf.xz,X,42,SAT,10,68.733,9.148,537.9,0,0,12350,0,0,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T17:35:02+00:00,1
+A-tope60,8db998d5fd64f85a1847115208f73873.cnf.xz,X,42,SAT,10,1.003,1.065,149.4,0,0,5442,0,0,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T17:36:11+00:00,1
+A-tope60,008e7716c69009090ff6bd0048dc55f8.cnf.xz,hardware-verification,42,UNSAT,20,81.474,81.068,135.4,2402186,7193874,156213336,59693,34,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T17:37:35+00:00,1
+A-tope60,3728eb69fc6046897251cc33e0b25a5a.cnf.xz,planning,42,TIMEOUT,0,1204.694,1190.292,5936.4,759520,20112849,1778077594,20701,22,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T18:52:28+00:00,1
+A-tope60,fbe4f6664edfbbfb0a395e1bf1ba3b44.cnf.xz,planning,42,TIMEOUT,0,1202.142,1198.306,5941.3,1356601,39270977,2978953397,33618,27,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T19:52:39+00:00,1
+A-tope60,8bb5819a23a8f1dff851d608bec008ca.cnf.xz,scheduling,42,SAT,10,91.375,31.287,44.8,355050,5280326,338584185,9964,17,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T20:12:41+00:00,1
+A-tope60,8eff8708d366c1044430c0e127ce0fc7.cnf.xz,scheduling,42,SAT,10,1.504,1.473,20.5,15191,171479,17905335,538,5,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T20:16:36+00:00,1
+A-tope60,bc198d71cb3513573584ec4b7ba9a0e0.cnf.xz,scheduling,42,TIMEOUT,0,1259.128,1191.964,104.6,17404164,108618651,8435183537,292099,74,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T20:16:37+00:00,1
+A-tope60,3bbdfd39be8452f73c3fda0a1c0b3260.cnf.xz,software-verification,42,UNSAT,20,96.802,96.065,5785.2,45620,469403,214333239,171,7,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T20:59:05+00:00,1
+A-tope60,613be3fce8fa3e517d10e292f0a2542d.cnf.xz,software-verification,42,UNSAT,20,596.074,593.660,6568.0,582646,6307783,2886926566,5917,20,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T21:00:42+00:00,1
+A-tope60,b3233e009976748e3a55d7cd0ea30c41.cnf.xz,software-verification,42,UNSAT,20,200.523,196.855,7069.6,178528,2509557,609571697,2164,13,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T21:24:30+00:00,1
+A-tope60,bbdc1542ad1cd21301bcb6ab89893615.cnf.xz,software-verification,42,TIMEOUT,0,1225.051,1214.800,7150.0,892491,15474510,5555074370,7636,22,time,1200.0,--symmetry --symmetry-delay=2,,2026-10-03T21:27:51+00:00,1
