@@ -161,8 +161,8 @@ vigente es el del plan.
 - [x] **EXP-009 (B3)**: la ruptura con retraso de 2 s **se descarta**. En
       153 instancias industriales frescas empeora frente a «nunca» (+9,9 s,
       Wilcoxon p = 2,9·10⁻⁸); la simulación era optimista. Cómo se activan
-      las simetrías en el paquete: **D-020** (recomendado: V1 «siempre» y
-      V2 «nunca»).
+      las simetrías en el paquete: **D-020, resuelta (2026-10-08)**: V1
+      «siempre» y V2 «nunca».
 - [ ] D-018: línea VSIDS/CHB, pendiente del director.
 
 ### Fase 3c — Optimización con demostración · desde 2026-10-01
