@@ -132,6 +132,7 @@ y el coste de §10.
 - Se proponen dos decisiones nuevas para el director:
   - **D-021**: ¿avisar a Biere del fallo de `eliminate.c`?
   - **D-022**: ¿hacer del cribado en dos etapas la norma de ADR-0003?
+    **Resuelta (opción b)**: ADR-0003 §4c.
 
 ---
 
@@ -166,7 +167,7 @@ B = de la literatura o de un envío sin ablación; C = solo un argumento.
 | **M10** | Arreglo del vigilante en `vivify` | C (el fallo es frecuente: 9,5 % de las vivificaciones en 19 de 29 instancias de calib) | Efecto pequeño: el vigilante falso solo estorba hasta que la vivificación retrocede | Hecho (`--vivifywatchfix`) | **EXP-031** (diagnóstico primero) |
 | **M11** | Coste de escribir la prueba | — | < 3 % | Hecho (`--proof-dir-b`) | **EXP-033** |
 | **M12** | Verificación de las pruebas a escala | A: 12 *checker-timeout* en 2026 | Todas verifican; el tiempo es la incógnita | Hecho | **EXP-034** |
-| **M13** | Cribado en dos etapas | — | Ahorra ~60 % del cómputo en las vías nulas | Hecho (`research12.py`) | **D-022** |
+| **M13** | Cribado en dos etapas | — | Ahorra ~60 % del cómputo en las vías nulas | Hecho (`research12.py`) | **D-022 ✅**: ADR-0003 §4c |
 | — | Calibración de los topes de memoria de satsuma con los datos de M2 | — | — | — | Dentro de EXP-024 |
 
 ## 3. Ángulo A — Simetrías
