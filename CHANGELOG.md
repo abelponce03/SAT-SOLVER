@@ -5,6 +5,15 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cambiado (2026-10-08): D-020 resuelta, dos variantes de simetrías
+- El director elige la opción a: **V1** = `labesat --symmetry` («siempre»,
+  tope de 60 s) + X1 + PGO/LTO; **V2** = sin simetrías + X1 + PGO/LTO.
+- Se fija sin esperar a EXP-023: B4 solo cambiaría lo que va en V1 (lo
+  sustituye o entra como V3 si cumple H1 y H2).
+- No cambia ningún valor por defecto; `--symmetry` sigue apagado. Registro,
+  ROADMAP, plan, research/10, manual y página `man` al día; issue #34
+  cerrado.
+
 ### Cambiado (2026-10-08): D-024 resuelta, excepción de autoría para `6450a05`
 - El *squash* del PR #50 repitió el caso de D-023: el pie que el servidor
   añade a los PR entró en el mensaje de `6450a05` y el check de Autoría del

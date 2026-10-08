@@ -155,9 +155,8 @@ solver/labesat [--symmetry | --no-symmetry] [opciones de kissat] <cnf> [<prueba>
         \textbf{desactivada por defecto}: el experimento EXP-007 mostró que gana
         mucho en instancias con simetría explotable (37 de 45 resueltas frente a
         8), pero en la industria cuesta un poco (EXP-014 y EXP-009). La
-        activación condicional con retraso (B3) se descartó en EXP-009; cómo
-        se activa en el paquete de competición está pendiente de decisión
-        (D-020). También se puede activar con \texttt{LABESAT\_SYMMETRY=1}.
+        activación condicional con retraso (B3) se descartó en EXP-009. En el paquete de competición va
+        activada en la variante V1 y apagada en la V2 (D-020). También se puede activar con \texttt{LABESAT\_SYMMETRY=1}.
   \item[\texttt{--no-symmetry}] Desactiva satsuma aunque \texttt{LABESAT\_SYMMETRY=1}.
   \item[\texttt{--symmetry-delay=N}] \emph{Ruptura con retraso}. Con
         \texttt{--symmetry}, kissat intenta primero la fórmula original

@@ -953,3 +953,19 @@ al cerrar cada sesión.
   #50, porque la fusión por API usa la descripción del PR si no se le pasa
   mensaje. Ahora la regla dice cómo, no solo qué.
 
+### 2026-10-08 — D-020 resuelta
+
+- **Se pidió**: preparar la decisión sobre la política de simetrías del
+  paquete (D-020) con un resumen de opciones, evidencia y recomendación; el
+  director respondió «Me quedo con la a».
+- **Se hizo**:
+  - Resumen leído de D-020, EXP-007, EXP-009, EXP-014, EXP-020, EXP-023,
+    research/10 y research/11, sin tocar código.
+  - Resolución escrita en el registro, ROADMAP, plan, research/10, manual,
+    página `man` y CHANGELOG; issue #34 cerrado.
+- **Decisiones**: la a se fija sin esperar a EXP-023, porque B4 solo
+  cambiaría el contenido de V1. Ningún valor por defecto cambia.
+- **Salió mal**: los documentos de D-020 solo estaban en la rama del PR
+  #32, no en `main`; la sesión arrancó sobre `main` y hubo que buscarlos.
+  Además, `.git/config` del clon traía otra identidad y se corrigió antes
+  del commit.

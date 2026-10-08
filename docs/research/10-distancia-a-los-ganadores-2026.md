@@ -68,8 +68,8 @@
   - El coste industrial de «siempre» ya está dentro de los tiempos del
     ganador.
 - **Sin simetrías**, con X1 y PGO/LTO: 240 resueltas, **15.º** (+887 s).
-- **Cómo se activa en el paquete** lo decide el director: **D-020**. Se
-  recomiendan dos variantes (D-014): V1 «siempre» y V2 «nunca».
+- **Cómo se activa en el paquete**: **D-020**, resuelta el 2026-10-08 con
+  dos variantes (D-014): V1 «siempre» y V2 «nunca».
 - **Un selector perfecto** entre «siempre» y «nunca» daría 291 resueltas y
   PAR-2 3252 (−395 s).
   - Es una cota de oráculo: aprovecha también la variación entre dos
