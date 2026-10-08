@@ -5,6 +5,13 @@ Este proyecto no versiona releases todavía; se versionan **hitos** del solver.
 
 ## [No publicado]
 
+### Cambiado (2026-10-08): D-024 resuelta, excepción de autoría para `6450a05`
+- El *squash* del PR #50 repitió el caso de D-023: el pie que el servidor
+  añade a los PR entró en el mensaje de `6450a05` y el check de Autoría del
+  PR #32 falló. El director elige eximir ese SHA, solo su mensaje.
+- Regla nueva: los *squash* de PR creados desde una sesión pasan el mensaje
+  del commit de forma explícita.
+
 ### Cambiado (2026-10-05): D-023 resuelta, excepción de autoría para `4d55340`
 - El director elige la opción b: `check_authorship.sh` exime de la
   revisión del mensaje solo el SHA de `4d55340` (squash del PR #49), que

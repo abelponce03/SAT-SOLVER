@@ -19,13 +19,16 @@
 # MENSAJE de ese SHA exacto; su autor y su committer se siguen revisando.  No
 # se añaden más excepciones sin una decisión nueva en el registro.
 #
+# Excepción (D-024, aprobada por el director el 2026-10-08): el mismo caso con
+# 6450a05, el squash del PR #50.  Mismas condiciones que D-023.
+#
 # Uso: scripts/check_authorship.sh [RANGO]      (p. ej. origin/main..HEAD)
 #      AUTORIA_DESDE="2026-09-23 12:00 +0000" scripts/check_authorship.sh
 set -euo pipefail
 RANGO="${1:-origin/main..HEAD}"
 DESDE="${AUTORIA_DESDE:-2026-09-23 12:00:00 +0000}"
 patron_id='(^|[^a-z])claude([^a-z.]|$)|anthropic'
-exentos_msg='4d5534072e3b0a5a5033366b0ce4fc4a55336226'   # D-023
+exentos_msg='4d5534072e3b0a5a5033366b0ce4fc4a55336226 6450a050ccacf2b4155947f3ee8370afcbe154fd'   # D-023, D-024
 patron_msg='^co-authored-by:.*(claude|anthropic)|generated (with|by) .*claude|claude\.ai/code/session|noreply@anthropic\.com'
 fallos=0
 while IFS=$'\t' read -r sha autor committer; do
@@ -34,7 +37,7 @@ while IFS=$'\t' read -r sha autor committer; do
         echo "FALLO ${sha:0:7}: autoría '$autor' / '$committer'"; fallos=1
     fi
     if [[ " $exentos_msg " == *" $sha "* ]]; then
-        echo "EXENTO ${sha:0:7}: mensaje no revisado (D-023)"
+        echo "EXENTO ${sha:0:7}: mensaje no revisado (D-023, D-024)"
     elif grep -qiE "$patron_msg" <<< "$msg"; then
         echo "FALLO ${sha:0:7}: atribución en el mensaje:"
         grep -iE "$patron_msg" <<< "$msg" | sed 's/^/        /'

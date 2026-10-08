@@ -939,3 +939,17 @@ al cerrar cada sesión.
   check de los push en rojo. La sesión lo revisó cada hora sin tocar nada,
   como estaba previsto.
 
+### 2026-10-08 — CI del PR #32 en rojo por el squash del PR #50 (D-024)
+
+- **Se pidió**: revisar el CI del PR #32 tras fusionar el PR #50 en su rama.
+- **Se hizo**:
+  - Diagnóstico: solo falla «Autoría», por el pie del servidor copiado al
+    mensaje de `6450a05` (squash del #50). Todo lo demás, en verde.
+  - Tras la decisión del director, `check_authorship.sh` exime ese SHA
+    completo; registro (D-024), CHANGELOG y bitácora al día.
+- **Decisiones**: D-024, eximir el SHA, y la regla de pasar el mensaje
+  explícito en cada *squash* de PR creados desde una sesión.
+- **Salió mal**: la medida preventiva de D-023 no se aplicó al fusionar el
+  #50, porque la fusión por API usa la descripción del PR si no se le pasa
+  mensaje. Ahora la regla dice cómo, no solo qué.
+
